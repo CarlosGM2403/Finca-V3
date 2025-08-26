@@ -1,0 +1,163 @@
+/* Imagen de fondo */
+body {
+    background: url("../img/fondo.png") no-repeat center center fixed;
+    background-size: cover;
+    font-family: Arial, sans-serif;
+}
+
+/* logo MFG */
+.logo {
+    position: absolute; 
+    top: 10px; 
+    left: 10px; 
+    width: 50px ; 
+    height: auto; 
+}
+
+
+/* Título de bienvenida */
+.titulo-bienvenida {
+    text-align: center;
+    margin-top: 40px;
+    color: white;
+    font-size: 4rem;
+    font-weight: bold;
+}
+
+/* Contenedor principal del login */
+.contenedor-login {
+    background-color: transparent;
+    max-width: 400px;
+    margin: 40px auto;
+    padding: 30px;
+    border: 4px solid rgb(233, 233, 233);
+    border-radius: 30px;
+}
+
+/* Icono de usuario */
+.icono-login {
+    text-align: center;
+    font-size: 5rem;
+    color: rgb(224, 224, 224);
+    margin-bottom: 20px;
+}
+
+/* Estilo de campos */
+.form-floating input {
+    border-radius: 20px;
+    background-color: transparent;
+    border:3px solid cornsilk;
+}
+
+.form-floating label {
+    color: #e9e8e8;
+}
+
+/* Enlace de "Olvidé mi contraseña" */
+.form-options {
+    text-align: left;
+    margin-bottom: 15px;
+}
+
+.forgot-link {
+    color: #9b9b9b;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.forgot-link:hover {
+    text-decoration: underline;
+    color: #5a5a5a;
+}
+
+/* Ingreso boton */
+button[type="submit"] {
+    background-color: transparent; 
+    color: white; 
+    padding: 10px 10px; 
+    border: 4px solid rgb(55, 206, 67); 
+    border-radius: 25px; 
+    cursor: pointer; 
+    font-size: 20px;
+    width: 50% !important; 
+}
+
+button[type="submit"]:hover {
+    border: 4px solid rgb(55, 206, 67);
+    background-color: rgb(55, 206, 67); 
+}
+
+
+
+/* Media query para pantallas pequeñas */
+@media (max-width: 768px) {
+
+    .titulo-bienvenida {
+    margin-top: 150px;
+}
+
+    .contenedor-login {
+        margin-top: 50px; 
+    }
+
+    /* Opcional: ajustar el ancho para que quepa mejor en móviles */
+    .contenedor-login {
+        width: 90%;
+        max-width: 350px;
+    }
+
+}
+
+/* Media query para pantallas grandes */
+@media (min-width: 1200px) {
+    .contenedor-login {
+        max-width: 450px;  
+        margin-top: 30px;  
+        padding: 40px;     
+        border: 11px solid rgb(233, 233, 233);
+    }
+
+    .titulo-bienvenida {
+        margin-top: 20px;
+        font-size: 5rem;    
+    }
+
+    .icono-login {
+        font-size: 5rem;    
+        margin-bottom: 30px;
+    }
+
+    .form-floating input {
+        font-size: 1.3rem;  
+        padding: 15px;
+        border-width: 4px;  
+    }
+
+    .form-floating label {
+        font-size: 1rem;  
+    }
+
+    button[type="submit"] {
+        font-size: 18px;    
+        padding: 15px 20px;
+        border-width: 5px;
+        width: 60%;         
+    }
+
+    .form-options .forgot-link {
+        font-size: 1rem;    
+    }
+}
+
+
+
+.planta {
+    position: fixed;      
+    bottom: -4rem;                
+    right: 15rem;                  
+    max-width: 200px !important;          
+    height: auto !important;              
+    z-index: -1;
+    display: block;
+    pointer-events: none;
+}

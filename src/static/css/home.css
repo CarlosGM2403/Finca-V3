@@ -1,0 +1,289 @@
+/*estilos del body*/
+body {
+    margin: 0;
+    height: 100vh;
+    background: url("../img/fondo_principal.png") no-repeat center center fixed;
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.logout-btn {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    z-index: 1000;
+}
+
+.logout-btn button {
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 25px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background 0.3s;
+}
+
+/* Estilos personalizados para el modal */
+#logoutModal .modal-content {
+    background: #3a3a3ada;              
+    color: #f1f1f1;                 
+    border-radius: 3rem;                
+    border: none;                       
+    box-shadow: 0 8px 25px rgba(0,0,0,0.5);     
+    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+}
+
+#logoutModal .modal-header {
+    border-bottom: none;            
+    padding: 1.2rem;
+}
+
+#logoutModal .modal-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #56c45f;                
+}
+
+#logoutModal .btn-close {
+  filter: invert(1);                
+  opacity: 0.8;
+}
+#logoutModal .btn-close:hover {
+  opacity: 1;
+}
+
+#logoutModal .modal-body {
+  font-size: 1.5rem;
+  padding: 1.5rem;
+  text-align: center;               
+}
+
+#logoutModal .modal-footer {
+  border-top: none;                 
+  justify-content: center;          
+  gap: 1rem;                        
+  padding-bottom: 2rem;
+}
+
+
+#logoutModal .btn-secondary {
+  background-color: #4d4d4d;
+  border: none;
+  border-radius: 30px;
+  padding: 0.5rem 1rem;
+  transition: 0.3s;
+}
+#logoutModal .btn-secondary:hover {
+  background-color: #555;
+}
+
+#logoutModal .btn-danger {
+  background: #46a346;
+  border: none;
+  border-radius: 30px;
+  padding: 5.5rem 1rem;
+  font-weight: 600;
+  transition: 0.3s;
+}
+#logoutModal .btn-danger:hover {
+  background: #3f8638;
+  transform: scale(1.05);
+}
+
+
+.modal.fade .modal-dialog {
+  transform: translateY(-20%);
+  transition: transform 0.3s ease-out;
+}
+
+.modal.show .modal-dialog {
+  transform: translateY(0);
+}
+
+
+
+    /* Botón hamburguesa */
+.menu-btn {
+    position: fixed;
+    top: 20px;
+    left: 25px;
+    background: #5f886f;
+    border: none;
+    padding: 12px 12px;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+.menu-btn span {
+    display: block;
+    width: 22px;
+    height: 3px;
+    margin: 4px;
+    background: #fff;
+    border-radius: 2px;
+    transition: 0.3s;
+}
+
+/* Menú desplegable */
+.menu {
+    position: fixed;
+    top: 60px;
+    left: 80px;
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    padding: 15px;       /* espacio interno */
+    background: #333333ad; /* color de fondo del cuadro */
+    border-radius: 30px; /* bordes redondeados */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3); /* sombra */
+    z-index: 999;
+}
+
+.menu a {
+    text-decoration: none;
+    color: white;
+    background: #5f886f;
+    padding: 8px 15px;
+    border-radius: 20px;
+    text-align: center;
+    transition: background 0.3s;
+    font-weight: bold;
+}
+
+.menu a:hover {
+    background: #4a7a5f;
+}
+
+/* Mostrar menú cuando esté activo */
+.menu.show {
+    display: flex;
+}
+
+
+.logo {
+    position: absolute; /* La imagen se posiciona de forma absoluta*/
+    top: 50%; /* Centra verticalmente */
+    left: 40%; /* Centra horizontalmente */
+    transform: translate(-50%, -60%); /* Ajusta la posición: -50% la centra, -60% la sube un poco */
+    width: 60px; /* Ajusta el tamaño de la imagen */
+    height: auto; /* Mantiene proporciones */
+    pointer-events: none; /* Evita que bloquee clics en el botón */
+}
+
+
+
+/*botones izquierda*/
+.grupo-izquierda {
+    position: fixed;         
+    bottom: 25px;            
+    left: 80px;              
+    display: flex;           
+    gap: 60px;               
+}
+
+.grupo-izquierda .btn-normal {
+    padding: 10px 36px;      
+    border: 3px solid #636363a2; 
+    border-radius: 20px;     
+    background: #0000009a;  
+    color: #fff;             
+    font-size: 18px;         
+    font-weight: bold;       
+    cursor: pointer;        
+}
+
+/*botones derecha*/
+.grupo-derecha {
+    position: fixed;         
+    bottom: 25px;            
+    right: 100px;             
+    display: flex;           
+    gap: 60px;               
+}
+
+.grupo-derecha .btn-normal {
+    padding: 10px 36px;      /* MÁS grandes: aumenta el tamaño interno */
+    border: 3px solid #6363639c; /* Borde gris */
+    border-radius: 20px;     /* Bordes más redondeados */
+    background: #0000009c;   /* Fondo negro translúcido */
+    color: #fff;             /* Texto blanco */
+    font-size: 18px;         /* Texto más grande */
+    font-weight: bold;       /* Texto más grueso */
+    cursor: pointer;         /* Cambia cursor al pasar encima */
+}
+
+
+.btn-wrapper {
+    position: fixed;            /* Mantiene el contenedor fijo en pantalla */
+    bottom: -120px;             /* Coloca el botón medio oculto en la parte inferior */
+    left: 50%;                  /* Centrado horizontal */
+    transform: translateX(-50%);/* Ajusta para centrar exactamente */
+    display: flex;              /* Flexbox para centrar */
+    justify-content: center;    /* Centrado horizontal */
+    align-items: center;        /* Centrado vertical */
+}
+
+.btn {
+    position: relative;         /* Para posicionar elementos hijos relativos al botón */
+    width: 220px;               /* Tamaño ancho del botón circular */
+    height: 220px;              /* Tamaño alto del botón circular */
+    border-radius: 50%;         /* Botón circular */
+    background: #1d4424;        /* Color de fondo verde oscuro */
+    color: white;               /* Texto blanco */
+    font-size: 30px;            /* Tamaño del texto */
+    font-weight: bold;          /* Texto en negrita */
+    border: 5px solid #4c9677;  /* Borde verde más claro */
+    cursor: pointer;            /* Cambia cursor a mano */
+    z-index: 2;                 /* Mantiene el botón por encima de animaciones */
+    padding-bottom: 100px;      /* Ajusta posición del texto hacia arriba */
+    transition: background 0.5s ease; /* Transición suave en hover */
+}
+
+/* Estado hover */
+.btn:hover {
+    background: #174623;  /* Un verde un poco más claro al pasar el mouse */
+}
+
+.btn:active {
+    background: #256d37;  /* Mantiene el color del hover */
+    opacity: 1;           /* Evita que se vuelva transparente */
+    transform: scale(0.97); /* Efecto de "presionado" sin perder color */
+}
+
+/* círculos detrás */
+.circle {
+    position: absolute;        /* Los coloca flotando en relación al contenedor */
+    border-radius: 50%;        /* Hace que sean redondos */
+    background: rgba(255, 255, 255, 0.466); /* Color semitransparente para el efecto de onda */
+    z-index: 1;                /* Se colocan detrás del botón */
+    animation: pulse 3s infinite ease-out; /* Animación de onda infinita */
+}
+
+.circle1 {
+    width: 220px;              /* Tamaño del primer círculo (ancho*/
+    height: 220px;             /* Tamaño del primer círculo (largo*/
+    animation-delay: 0s;       /* Empieza primero */
+}
+
+.circle2 {
+    width: 250px;              /* Tamaño del segundo círculo (ancho */
+    height: 250px;             /* Tamaño del segundo círculo (largo*/
+    animation-delay: 2.5s;     /* Empieza después del primero */
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1.0);   /* mas pequeño cando comienza */
+        opacity: 0.6;            /* transparencia */
+  }
+  100% {
+    transform: scale(1.2);   /* Se expande hacia afuera */
+    opacity: 0;              /* Se desvanece */
+  }
+}
