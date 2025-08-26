@@ -49,7 +49,7 @@
   </button>
 </div>
 
-<!-- MODAL LOGOUT -->
+<!-- LOGOUT -->
 <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content rounded-3 shadow-lg">
@@ -82,6 +82,22 @@
   <a href="#">Solicitudes de Insumos</a>
   <a href="#">Registro de Siembra</a>
 </div>
+
+<script>
+  function toggleMenu() {
+    document.getElementById("menu").classList.toggle("show");
+  }
+
+  //cerrar si se hace clic fuera del menú
+  document.addEventListener("click", function(event) {
+    const menu = document.getElementById("menu");
+    const btn = document.querySelector(".menu-btn");
+
+    if (!menu.contains(event.target) && !btn.contains(event.target)) {
+      menu.classList.remove("show");
+    }
+  });
+  </script>
 
 <!-- GRUPOS DE BOTONES -->
 <div class="grupo-izquierda">
