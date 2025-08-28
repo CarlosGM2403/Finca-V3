@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}usuarios{% endblock %}
+
+{% block CustomCSS %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/usuarios.css')}}">
+{% endblock %}
+
+{% block body %}
+<div class="container">
+    <h2 class="title">Gestión de Usuarios</h2>
+
+    <!-- Formulario para crear usuario -->
+    <form action="{{ url_for('create_user') }}" method="POST" class="form">
+        <div class="form-group">
+            <label for="fullname">Nombre completo:</label>
+            <input type="text" name="fullname" id="fullname" required>
+        </div>
+        <div class="form-group">
+            <label for="username">Correo electrónico:</label>
+            <input type="email" name="username" id="username" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Contraseña:</label>
+            <input type="password" name="password" id="password" required>
+        </div>
+        <div class="form-group">
+                <label for="rol">Rol:</label>
+                <select id="rol" name="rol" required>
+                    <option value="" disabled selected>Seleccione un rol</option>
+                    <option value="administrador">Administrador</option>
+                    <option value="supervisor">Supervisor</option>
+                    <option value="empleado">Empleado</option>
+                    <option value="cuidador">Cuidador</option>
+                </select>
+            </div>
+        <button type="submit" class="btn btn-primary">Crear Usuario</button>
+    </form>
+
+    <hr>
+
+    <!-- Tabla de usuarios -->
+    <h3 class="subtitle">Lista de Usuarios</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre Completo</th>
+                <th>Correo</th>
+                <th>Rol</th>
+                <th>Accione</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.fullname }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.rol }}</td>
+                <td>
+                    <a href="{{ url_for('editar_usuario', id=user.id) }}" class="btn btn-warning">Editar</a>
+                    <a href="{{ url_for('delete_user', id=user.id) }}" class="btn btn-danger">Eliminar</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4">No hay usuarios registrados.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

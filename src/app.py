@@ -109,6 +109,78 @@ def cambiar_password():
 
     return render_template("cambiar_password.html")
 
+@app.route('/usuarios')
+def listar_usuarios():
+    cursor = db.connection.cursor()
+    cursor.execute("SELECT id, fullname, username, rol FROM user")
+    rows = cursor.fetchall()
+    cursor.close()
+
+    # Convertimos a lista de diccionarios para que coincida con el template
+    users = []
+    for row in rows:
+        users.append({
+            "id": row[0],
+            "fullname": row[1],
+            "username": row[2],
+            'rol': row[3]
+        })
+
+    return render_template('auth/usuarios.html', users=users)
+
+
+@app.route('/usuarios/crear', methods=['POST'])
+def create_user():
+    fullname = request.form['fullname']
+    username = request.form['username']
+    password = request.form['password']
+    rol = request.form['rol']
+
+    password = generate_password_hash(password)
+
+    cursor = db.connection.cursor()
+    sql = "INSERT INTO user (fullname, username, password, rol) VALUES (%s, %s, %s,%s)"
+    cursor.execute(sql, (fullname, username, password, rol))
+    db.connection.commit()
+    cursor.close()
+
+    return redirect(url_for('listar_usuarios'))
+
+
+# Eliminar usuario
+@app.route('/usuarios/eliminar/<int:id>', methods=['POST', 'GET'])
+def delete_user(id):
+    cursor = db.connection.cursor()
+    cursor.execute("DELETE FROM user WHERE id = %s", (id,))
+    db.connection.commit()
+    cursor.close()
+    return redirect(url_for('listar_usuarios'))
+
+
+# Editar usuario
+@app.route('/usuarios/editar/<int:id>', methods=['GET', 'POST'])
+def editar_usuario(id):
+    cursor = db.connection.cursor()
+    cursor.execute("SELECT id, fullname, username, rol FROM user WHERE id = %s", (id,))
+    usuario = cursor.fetchone()
+
+    if request.method == 'POST':
+        fullname = request.form['fullname']
+        username = request.form['username']
+        rol = request.form['rol']
+
+        cursor.execute("""
+            UPDATE user 
+            SET fullname=%s, username=%s, rol=%s
+            WHERE id=%s
+        """, (fullname, username, rol, id))
+        db.connection.commit()
+        cursor.close()
+        return redirect(url_for('listar_usuarios'))
+
+    cursor.close()
+    return render_template('auth.editar_usuario', usuario=usuario)
+
 
 if __name__ == '__main__':
     app.config.from_object(config['development'])

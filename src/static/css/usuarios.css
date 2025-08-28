@@ -1,0 +1,108 @@
+/* Estilos generales */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #2c2c2c;
+    background-image: url("../img/fondo.png");
+}
+
+/* Contenedor */
+.container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 20px;
+    background: rgba(0,0,0,0.7);
+    border-radius: 12px;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Títulos */
+.title {
+    color: #ddd;
+    font-size: 24px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.subtitle {
+    color: #ddd;
+    margin-top: 30px;
+    font-size: 20px;
+}
+
+/* Formulario */
+.form {
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    color: #ddd;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+}
+
+input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+/* Botones */
+.btn {
+    display: inline-block;
+    padding: 8px 16px;
+    text-decoration: none;
+    border-radius: 6px;
+    color: #fff;
+    transition: 0.3s;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: #2b7634;
+}
+
+.btn-primary:hover {
+    background: #004616;
+}
+
+.btn-warning {
+    background: #ffc107;
+    color: #000;
+}
+
+.btn-warning:hover {
+    background: #2c9842;
+}
+
+.btn-danger {
+    background: #dc3545;
+}
+
+.btn-danger:hover {
+    background: #a71d2a;
+}
+
+/* Tabla */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.table th, .table td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+
+.table th {
+    background: #118c2b;
+    color: #ebebeb;
+}
