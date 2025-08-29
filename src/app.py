@@ -28,30 +28,36 @@ def load_user(id):
 def index():
     return redirect(url_for('login'))
 
-# Login
-
 @app.route('/login', methods=['GET','POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
 
-        cur =db.connection.cursor()
+        cur = db.connection.cursor()
         cur.execute("SELECT id, password, must_change_password FROM user WHERE username=%s", (username,))
         row = cur.fetchone()
         cur.close()
 
         if row and check_password_hash(row[1], password):
+            # Crear objeto User para Flask-Login
+            user = ModelUser.get_by_id(db, row[0])
+            login_user(user)  # Esto marca al usuario como logueado
+
+            # También puedes mantener session si quieres
             session['user_id'] = row[0]
 
             # Verificamos si debe cambiar contraseña
             if row[2] == 1:  
                 return redirect(url_for('cambiar_password'))
-            
-            return redirect(url_for('home'))
+
+            # Redirigir al destino original si existe
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('home'))
         else:
             flash("Usuario o contraseña incorrectos", "error")
     return render_template("auth/login.html")
+
 
     
 # Logout
@@ -75,6 +81,13 @@ def status_401(error):
 
 def status_404(error):
     return "<h1>Página no encontrada</h1>", 404
+
+#olvide mi contraseña
+
+@app.route('/forgot_password')
+def forgot_password():
+    return render_template('auth/forgot_password.html')
+
 
 # Cambiar_password
 
@@ -109,77 +122,66 @@ def cambiar_password():
 
     return render_template("cambiar_password.html")
 
-@app.route('/usuarios')
-def listar_usuarios():
-    cursor = db.connection.cursor()
-    cursor.execute("SELECT id, fullname, username, rol FROM user")
-    rows = cursor.fetchall()
-    cursor.close()
 
-    # Convertimos a lista de diccionarios para que coincida con el template
-    users = []
-    for row in rows:
-        users.append({
-            "id": row[0],
-            "fullname": row[1],
-            "username": row[2],
-            'rol': row[3]
-        })
-
-    return render_template('auth/usuarios.html', users=users)
-
-
-@app.route('/usuarios/crear', methods=['POST'])
-def create_user():
-    fullname = request.form['fullname']
-    username = request.form['username']
-    password = request.form['password']
-    rol = request.form['rol']
-
-    password = generate_password_hash(password)
-
-    cursor = db.connection.cursor()
-    sql = "INSERT INTO user (fullname, username, password, rol) VALUES (%s, %s, %s,%s)"
-    cursor.execute(sql, (fullname, username, password, rol))
-    db.connection.commit()
-    cursor.close()
-
-    return redirect(url_for('listar_usuarios'))
-
-
-# Eliminar usuario
-@app.route('/usuarios/eliminar/<int:id>', methods=['POST', 'GET'])
-def delete_user(id):
-    cursor = db.connection.cursor()
-    cursor.execute("DELETE FROM user WHERE id = %s", (id,))
-    db.connection.commit()
-    cursor.close()
-    return redirect(url_for('listar_usuarios'))
-
-
-# Editar usuario
-@app.route('/usuarios/editar/<int:id>', methods=['GET', 'POST'])
-def editar_usuario(id):
-    cursor = db.connection.cursor()
-    cursor.execute("SELECT id, fullname, username, rol FROM user WHERE id = %s", (id,))
-    usuario = cursor.fetchone()
-
+#registrar usuarios
+@app.route('/Registrar_usuarios', methods=['GET', 'POST'])
+def registrar_usuario():
     if request.method == 'POST':
-        fullname = request.form['fullname']
         username = request.form['username']
+        password = request.form['password']
+        fullname = request.form['fullname']
         rol = request.form['rol']
 
-        cursor.execute("""
-            UPDATE user 
-            SET fullname=%s, username=%s, rol=%s
-            WHERE id=%s
-        """, (fullname, username, rol, id))
-        db.connection.commit()
-        cursor.close()
-        return redirect(url_for('listar_usuarios'))
+        # encriptar contraseña
+        password = generate_password_hash(password)
 
-    cursor.close()
-    return render_template('auth.editar_usuario', usuario=usuario)
+        # usar flask_mysqldb
+        cur = db.connection.cursor()
+
+        sql = """INSERT INTO user
+                 (username, password, fullname, must_change_password, rol, estado, fecha_registro) 
+                 VALUES (%s, %s, %s, %s, %s, %s, NOW())"""
+        values = (username, password, fullname, 1, rol, "Habilitado")
+
+        cur.execute(sql, values)
+        db.connection.commit()
+        cur.close()
+
+        flash("Usuario registrado con éxito")
+        return redirect(url_for('registrar_usuario'))
+
+    return render_template('auth/Registrar_usuarios.html')
+
+
+# Listar usuarios
+@app.route('/usuarios')
+@login_required
+def usuarios():
+    cur = db.connection.cursor()
+    cur.execute("SELECT id, fullname, rol, estado, fecha_registro FROM user")
+    usuarios = cur.fetchall()
+    cur.close()
+    return render_template('auth/usuarios.html', usuarios=usuarios)
+
+
+# Cambiar estado de usuario
+@app.route('/cambiar_estado/<int:id>')
+@login_required
+def cambiar_estado(id):
+    cur = db.connection.cursor()
+    # Obtener estado actual
+    cur.execute("SELECT estado FROM user WHERE id=%s", (id,))
+    estado = cur.fetchone()[0]
+    nuevo_estado = "Inhabilitado" if estado == "Habilitado" else "Habilitado"
+
+    # Actualizar estado
+    cur.execute("UPDATE user SET estado=%s WHERE id=%s", (nuevo_estado, id))
+    db.connection.commit()
+    cur.close()
+
+    flash(f"Estado del usuario cambiado a {nuevo_estado}", "success")
+    return redirect(url_for('usuarios'))
+
 
 #Borrar la caché y no dejar regresar
 @app.after_request

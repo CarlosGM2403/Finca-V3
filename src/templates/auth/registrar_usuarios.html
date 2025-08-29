@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Cambio de Contraseña{% endblock %}
+
+{% block CustomCSS %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/Registrar_usuarios.css') }}">
+{% endblock %}
+
+{% block body %}
+
+<div class="logo">
+    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+</div>
+
+ <div class="container">
+        <!-- Título fuera del cuadro -->
+        <h1 class="page-title">Registro de Usuario</h1>
+
+        <!-- Cuadro del formulario -->
+        <div class="form-box">
+            <form action="{{ url_for('registrar_usuario') }}" method="POST">
+                <label for="fullname">Nombre</label>
+                <input type="text" id="fullname" name="fullname" required>
+
+                <label for="username">Correo electronico</label>
+                <input type="text" id="username" name="username" required>
+
+                <label for="password">Contraseña</label>
+                <div class="password-container">
+                    <input type="password" id="password" name="password" required>
+                    <span class="toggle-password" onclick="togglePassword()">👁</span>
+                </div>
+
+                <label for="rol">Rol</label>
+                <select id="rol" name="rol" required>
+                    <option value="">Seleccione un rol</option>
+                    <option value="admin">Administrador</option>
+                    <option value="supervisor">Supervisor</option>
+                    <option value="empleado">Empleado</option>
+                    <option value="cuidador">Cuidador</option>
+                </select>
+
+                <div class="planta">
+                    <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta">
+                </div>
+
+
+                <button type="submit">Registrar</button>
+            </form>
+        </div>
+    </div>
+
+ <script>
+    function togglePassword() {
+      const passwordInput = document.getElementById("password");
+      const toggleButton = document.querySelector(".toggle-password");
+      if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        toggleButton.textContent = "ocultar";
+      } else {
+        passwordInput.type = "password";
+        toggleButton.textContent = "👁";
+      }
+    }
+  </script>
+           
+{% endblock %}

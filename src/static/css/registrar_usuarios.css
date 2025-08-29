@@ -1,0 +1,113 @@
+/* Fondo general con imagen */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: url('../img/fondo_forms.png') no-repeat center center/cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* logo MFG */
+        .logo {
+            position: absolute; 
+            top: 10px; 
+            left: 10px; 
+            width: 50px ; 
+            height: auto; 
+        }
+
+/* Contenedor general */
+.container {
+    text-align: center;
+}
+
+/* Título grande fuera del cuadro */
+.page-title {
+    font-size: 2.7rem;
+    color: white;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+    font-weight: 700;
+}
+
+/* Cuadro del formulario */
+.form-box {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    padding: 25px;
+    border-radius: 15px;
+    width: 350px;
+    margin: 0 auto;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+}
+
+/* Inputs */
+form label {
+    display: block;
+    color: white;
+    text-align: left;
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
+
+form input, form select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: none;
+    border-radius: 8px;
+    outline: none;
+    font-size: 1rem;
+}
+
+.password-container {
+      position: relative;
+    }
+
+    .password-container input {
+      width: 100%;
+      padding-right: 40px; /* espacio para el ícono */
+    }
+
+    .toggle-password {
+      position: absolute;
+      top: 50%;
+      right: 10px;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 18px;
+      color: #333;
+    }
+
+/* Botón */
+button {
+    margin-top: 20px;
+    width: 100%;
+    padding: 12px;
+    background: #3f9637;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+button:hover {
+    background: #196b20;
+}
+
+
+.planta {
+    position: fixed;      
+    bottom: -6rem;                
+    right: -15rem;                  
+    max-width: 200px !important;          
+    height: auto !important;              
+    z-index: -1;
+    display: block;
+    pointer-events: none;
+}

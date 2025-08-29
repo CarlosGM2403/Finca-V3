@@ -1,74 +1,49 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
-{% block title %}usuarios{% endblock %}
+{% block title %}Usuarios{% endblock %}
 
 {% block CustomCSS %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/usuarios.css')}}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/usuarios.css') }}">
 {% endblock %}
 
 {% block body %}
-<div class="container">
-    <h2 class="title">Gestión de Usuarios</h2>
 
-    <!-- Formulario para crear usuario -->
-    <form action="{{ url_for('create_user') }}" method="POST" class="form">
-        <div class="form-group">
-            <label for="fullname">Nombre completo:</label>
-            <input type="text" name="fullname" id="fullname" required>
-        </div>
-        <div class="form-group">
-            <label for="username">Correo electrónico:</label>
-            <input type="email" name="username" id="username" required>
-        </div>
-        <div class="form-group">
-            <label for="password">Contraseña:</label>
-            <input type="password" name="password" id="password" required>
-        </div>
-        <div class="form-group">
-                <label for="rol">Rol:</label>
-                <select id="rol" name="rol" required>
-                    <option value="" disabled selected>Seleccione un rol</option>
-                    <option value="administrador">Administrador</option>
-                    <option value="supervisor">Supervisor</option>
-                    <option value="empleado">Empleado</option>
-                    <option value="cuidador">Cuidador</option>
-                </select>
-            </div>
-        <button type="submit" class="btn btn-primary">Crear Usuario</button>
-    </form>
+<h1 class="titulo-principal">Lista de Usuarios</h1>
 
-    <hr>
+<div class="cuadro-usuarios">
+    
 
-    <!-- Tabla de usuarios -->
-    <h3 class="subtitle">Lista de Usuarios</h3>
-    <table class="table">
+    <table class="tabla-usuarios">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Nombre Completo</th>
-                <th>Correo</th>
+                <th>Nombre</th>
                 <th>Rol</th>
-                <th>Accione</th>
+                <th>Estado</th>
+                <th>Fecha Registro</th>
+                <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
-            {% for user in users %}
+            {% for usuario in usuarios %}
             <tr>
-                <td>{{ user.id }}</td>
-                <td>{{ user.fullname }}</td>
-                <td>{{ user.username }}</td>
-                <td>{{ user.rol }}</td>
+                <td>{{ usuario[1] }}</td>
+                <td>{{ usuario[2] }}</td>
+                <td>{{ usuario[3] }}</td>
+                <td>{{ usuario[4] }}</td>
                 <td>
-                    <a href="{{ url_for('editar_usuario', id=user.id) }}" class="btn btn-warning">Editar</a>
-                    <a href="{{ url_for('delete_user', id=user.id) }}" class="btn btn-danger">Eliminar</a>
+                    <a href="{{ url_for('cambiar_estado', id=usuario[0]) }}">
+                        <button class="btn-normal">Cambiar Estado</button>
+                    </a>
                 </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="4">No hay usuarios registrados.</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+
+    <!-- Botón para registrar nuevo usuario -->
+    <a href="{{ url_for('registrar_usuario') }}">
+        <button class="btn-normal">Registrar Usuario</button>
+    </a>
 </div>
+
 {% endblock %}

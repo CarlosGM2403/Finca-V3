@@ -1,108 +1,81 @@
-/* Estilos generales */
 body {
+    background-image: url('../img/fondo_forms.png'); /* ruta de tu imagen */
+    background-size: cover;
+    background-position: center;
     font-family: Arial, sans-serif;
-    background-color: #2c2c2c;
-    background-image: url("../img/fondo.png");
+    margin: 0;
+    padding: 0;
 }
 
-/* Contenedor */
-.container {
-    max-width: 900px;
-    margin: 40px auto;
-    padding: 20px;
-    background: rgba(0,0,0,0.7);
-    border-radius: 12px;
-    box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
-}
-
-/* Títulos */
-.title {
-    color: #ddd;
-    font-size: 24px;
-    margin-bottom: 20px;
+/* Título */
+.titulo-principal {
     text-align: center;
-}
-
-.subtitle {
-    color: #ddd;
-    margin-top: 30px;
-    font-size: 20px;
-}
-
-/* Formulario */
-.form {
-    margin-bottom: 20px;
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-label {
-    color: #ddd;
-    font-weight: bold;
-    display: block;
-    margin-bottom: 5px;
-}
-
-input {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-}
-
-/* Botones */
-.btn {
-    display: inline-block;
-    padding: 8px 16px;
-    text-decoration: none;
-    border-radius: 6px;
     color: #fff;
-    transition: 0.3s;
-    border: none;
-    cursor: pointer;
+    margin: 40px 0 20px 0;
+    text-shadow: 1px 1px 5px rgba(0,0,0,0.7);
 }
 
-.btn-primary {
-    background: #2b7634;
-}
-
-.btn-primary:hover {
-    background: #004616;
-}
-
-.btn-warning {
-    background: #ffc107;
-    color: #000;
-}
-
-.btn-warning:hover {
-    background: #2c9842;
-}
-
-.btn-danger {
-    background: #dc3545;
-}
-
-.btn-danger:hover {
-    background: #a71d2a;
+/* Cuadro de la tabla */
+.cuadro-usuarios {
+    background-color: rgba(30,30,30,0.9); /* fondo oscuro semi-transparente */
+    margin: 0 auto 50px auto;
+    padding: 20px;
+    width: 90%;
+    max-width: 1000px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
 /* Tabla */
-.table {
+.tabla-usuarios {
     width: 100%;
     border-collapse: collapse;
     margin-top: 15px;
 }
 
-.table th, .table td {
+.tabla-usuarios th, .tabla-usuarios td {
+    border: 1px solid #fff; /* borde blanco */
     padding: 12px;
     text-align: center;
-    border-bottom: 1px solid #ddd;
+    color: #fff;
 }
 
-.table th {
-    background: #118c2b;
-    color: #ebebeb;
+.tabla-usuarios th {
+    background-color: #222;
+}
+
+/* Botones grandes */
+.btn-normal {
+    padding: 10px 20px;
+    border-radius: 25px;
+    border: 2px solid transparent;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin: 10px 5px 0 5px;
+    transition: all 0.3s ease;
+}
+
+/* Botón verde */
+.btn-registrar {
+    background-color: transparent;
+    color: #0f0;
+    border-color: #0f0;
+}
+
+.btn-registrar:hover {
+    background-color: #0f0;
+    color: #000;
+}
+
+/* Botón rojo */
+.btn-estado {
+    background-color: transparent;
+    color: #f00;
+    border-color: #f00;
+}
+
+.btn-estado:hover {
+    background-color: #f00;
+    color: #fff;
 }
