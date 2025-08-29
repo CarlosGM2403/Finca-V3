@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Perfil{% endblock %}
+
+{% block CustomCSS %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/perfil.css') }}">
+{% endblock %}
+
+{% block body %}
+
+<div class="logo">
+  <img src="{{ url_for('static', filename='img/Logo_icon.png') }}" alt="Logo">
+</div>
+
+<!-- Botón volver al inicio -->
+<div class="logout-btn">
+  <a href="{{ url_for('home') }}">
+    <button title="Volver al inicio">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+  </a>
+</div>
+
+<h1 class="titulo-perfil">Perfil de Usuario</h1>
+
+<div class="container-perfil">
+
+  <!-- Botón editar -->
+  <div class="edit-btn">
+    <a href="{{ url_for('editar_perfil') }}" title="Editar perfil">
+      <i class="fa-solid fa-pen-to-square"></i>
+    </a>
+  </div>
+
+  <!-- Foto -->
+  <div class="perfil-foto">
+      <img src="{{ url_for('static', filename='img/usuario_icon.png') }}" alt="Foto usuario">
+      <a href="#" class="cambiar-foto">Cambiar foto</a>
+  </div>
+
+  <!-- Info -->
+  <div class="perfil-info">
+      <h2>Nombre: {{ usuario[2] }}</h2> <!-- Nombre más destacado -->
+      <p class="rol">Rol: {{ usuario[3] }}</p>
+      <p><i class="fa-solid fa-envelope"></i>Correo: {{ usuario[1] }}</p>
+      <p><i class="fa-solid fa-circle"></i>Estado: {{ usuario[4] }}</p>
+      <p><i class="fa-solid fa-calendar"></i>Fecha Registro: {{ usuario[5] }}</p>
+
+      <div class="perfil-actions">
+        <a href="{{ url_for('cambiar_password') }}" class="btn-password">Cambiar Contraseña</a>
+      </div>
+  </div>
+</div>
+
+
+{% endblock %}

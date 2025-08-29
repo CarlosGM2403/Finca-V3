@@ -191,6 +191,58 @@ def add_no_cache_headers(response):
     response.headers['Expires'] = '0'
     return response
 
+#Perfil
+@app.route('/perfil')
+def perfil():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    cur = db.connection.cursor()
+    cur.execute(""" 
+        SELECT id, username, fullname, rol, estado, fecha_registro
+        FROM user WHERE id=%s
+    """, (session['user_id'],))
+    usuario = cur.fetchone()
+    cur.close()
+
+    return render_template('auth/perfil.html', usuario=usuario)
+
+# Editar perfil
+@app.route('/editar_perfil', methods=['GET', 'POST'])
+def editar_perfil():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))  # Si no está logueado
+
+    cursor = db.connection.cursor()  # ✅ usa db, no mysql/MySQL
+
+    if request.method == 'POST':
+        fullname = request.form['fullname']
+        rol = request.form['rol']
+        estado = request.form['estado']
+
+        # Ojo: en tu SELECT usas tabla "user", pero aquí pusiste "usuarios"
+        # corrígelo para que sea consistente (creo que tu tabla real es `user`)
+        cursor.execute("""
+            UPDATE user 
+            SET fullname = %s, rol = %s, estado = %s
+            WHERE id = %s
+        """, (fullname, rol, estado, session['user_id']))
+
+        db.connection.commit()   # ✅ también con db
+        cursor.close()
+
+        flash("Perfil actualizado con éxito", "success")
+        return redirect(url_for('perfil'))
+
+    # Si es GET, trae los datos actuales
+    cursor.execute("SELECT id, username, fullname, rol, estado FROM user WHERE id = %s", (session['user_id'],))
+    usuario = cursor.fetchone()
+    cursor.close()
+
+    return render_template('auth/editar_perfil.html', usuario=usuario)
+
+
+
 
 if __name__ == '__main__':
     app.config.from_object(config['development'])
