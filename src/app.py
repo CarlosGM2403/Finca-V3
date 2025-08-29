@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response
 from flask_mysqldb import MySQL
 from flask_login import LoginManager,login_user,logout_user,login_required
 
@@ -180,6 +180,14 @@ def editar_usuario(id):
 
     cursor.close()
     return render_template('auth.editar_usuario', usuario=usuario)
+
+#Borrar la caché y no dejar regresar
+@app.after_request
+def add_no_cache_headers(response):
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, private, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 
 if __name__ == '__main__':
