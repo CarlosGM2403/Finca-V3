@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Evidencias{% endblock %}
+
+{% block CustomCSS %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ver_fotos.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="logo">
+    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+</div>
+
+<!-- Botón volver arriba a la derecha -->
+<div class="btn-top-right">
+  <a href="{{ url_for('registrar_actividad') }}" class="btn-volver">
+    ← Volver
+  </a>
+</div>
+
+<div class="galeria">
+  <h1>
+    Evidencias Registradas - {{ usuario }}
+  </h1>
+
+  {% if fotos %}
+    <div class="grid-fotos">
+      {% for foto in fotos %}
+        <div class="foto-item">
+          <img src="{{ url_for('static', filename='uploads/' ~ foto.nombre_archivo) }}" alt="Evidencia">
+          <p class="fecha-foto">Fecha Subida {{ foto.fecha }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="sin-evidencias"> No hay evidencias registradas.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+body {
+  font-family: 'Poppins', sans-serif;
+  background-image: url(../img/fondo_forms.png);
+  margin: 0;
+  padding: 0;
+  color: #ffffff;
+}
+
+/* Logo */
+.logo {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 50px;
+  height: auto;
+}
+
+/* Botón volver */
+.btn-top-right {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+}
+
+.btn-volver {
+  background: #dc3545;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.btn-volver:hover {
+  background: #a71d2a;
+}
+
+/* Galería */
+.galeria {
+  max-width: 1000px;
+  margin: 80px auto;
+  text-align: center;
+}
+
+.galeria h2 {
+  font-size: 28px;
+  margin-bottom: 25px;
+}
+
+/* Grid fotos */
+.grid-fotos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.foto-item {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.foto-item img {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.fecha-foto {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #bbb;
+}

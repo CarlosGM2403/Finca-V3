@@ -1,32 +1,47 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_mysqldb import MySQL
-from flask_login import LoginManager,login_user,logout_user,login_required
-
+from flask_login import LoginManager, login_user, logout_user, login_required
+import os
+from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from config import config
 
 # Modelos:
 from models.ModelUser import ModelUser
-
 # Entidades:
 from models.entities.User import User
 
-app=Flask(__name__)
-app.config.from_object(config['development'])  # <-- primero
+app = Flask(__name__)
+app.config.from_object(config['development'])
 app.secret_key = "cambia_esta_clave"
 
+#  Carpeta para subir imágenes (ruta absoluta)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+# Debug: imprime la ruta absoluta
+print("UPLOAD_FOLDER configurado en:", UPLOAD_FOLDER)
+
+# ---------------------- BASE DE DATOS ----------------------
 db = MySQL(app)
-login_manager_app=LoginManager(app)
+
+# ---------------------- LOGIN MANAGER ----------------------
+login_manager_app = LoginManager(app)
 login_manager_app.login_view = 'login'
 
 @login_manager_app.user_loader
 def load_user(id):
     return ModelUser.get_by_id(db, id)
 
+
+# ---------------------- RUTAS PRINCIPALES ----------------------
+
 @app.route('/')
 def index():
     return redirect(url_for('login'))
+
 
 @app.route('/login', methods=['GET','POST'])
 def login():
@@ -40,18 +55,13 @@ def login():
         cur.close()
 
         if row and check_password_hash(row[1], password):
-            # Crear objeto User para Flask-Login
             user = ModelUser.get_by_id(db, row[0])
-            login_user(user)  # Esto marca al usuario como logueado
-
-            # También puedes mantener session si quieres
+            login_user(user)
             session['user_id'] = row[0]
 
-            # Verificamos si debe cambiar contraseña
             if row[2] == 1:  
                 return redirect(url_for('cambiar_password'))
 
-            # Redirigir al destino original si existe
             next_page = request.args.get('next')
             return redirect(next_page or url_for('home'))
         else:
@@ -59,22 +69,21 @@ def login():
     return render_template("auth/login.html")
 
 
-    
-# Logout
-
 @app.route('/logout')
 def logout():
     logout_user()
     session.clear()
     return redirect(url_for('login'))
 
-# Home
-    
+
 @app.route('/home')
 def home():
     if 'user_id' not in session:
         return redirect(url_for('login'))
     return render_template('home.html')
+
+
+# ---------------------- ERRORES ----------------------
 
 def status_401(error):
     return redirect(url_for('login'))
@@ -82,14 +91,13 @@ def status_401(error):
 def status_404(error):
     return "<h1>Página no encontrada</h1>", 404
 
-#olvide mi contraseña
+
+# ---------------------- FUNCIONALIDADES ----------------------
 
 @app.route('/forgot_password')
 def forgot_password():
     return render_template('auth/forgot_password.html')
 
-
-# Cambiar_password
 
 @app.route('/cambiar_password', methods=['GET','POST'])
 def cambiar_password():
@@ -112,9 +120,7 @@ def cambiar_password():
             db.connection.commit()
             cur.close()
 
-            # Cerrar toda la sesión
             session.clear()
-
             flash("Contraseña actualizada con éxito. Vuelve a iniciar sesión.", "success")
             return redirect(url_for('login'))
         
@@ -123,7 +129,6 @@ def cambiar_password():
     return render_template("cambiar_password.html")
 
 
-#registrar usuarios
 @app.route('/Registrar_usuarios', methods=['GET', 'POST'])
 def registrar_usuario():
     if request.method == 'POST':
@@ -132,17 +137,13 @@ def registrar_usuario():
         fullname = request.form['fullname']
         rol = request.form['rol']
 
-        # encriptar contraseña
         password = generate_password_hash(password)
 
-        # usar flask_mysqldb
         cur = db.connection.cursor()
-
         sql = """INSERT INTO user
                  (username, password, fullname, must_change_password, rol, estado, fecha_registro) 
                  VALUES (%s, %s, %s, %s, %s, %s, NOW())"""
         values = (username, password, fullname, 1, rol, "Habilitado")
-
         cur.execute(sql, values)
         db.connection.commit()
         cur.close()
@@ -153,7 +154,6 @@ def registrar_usuario():
     return render_template('auth/Registrar_usuarios.html')
 
 
-# Listar usuarios
 @app.route('/usuarios')
 @login_required
 def usuarios():
@@ -164,17 +164,13 @@ def usuarios():
     return render_template('auth/usuarios.html', usuarios=usuarios)
 
 
-# Cambiar estado de usuario
 @app.route('/cambiar_estado/<int:id>')
 @login_required
 def cambiar_estado(id):
     cur = db.connection.cursor()
-    # Obtener estado actual
     cur.execute("SELECT estado FROM user WHERE id=%s", (id,))
     estado = cur.fetchone()[0]
     nuevo_estado = "Inhabilitado" if estado == "Habilitado" else "Habilitado"
-
-    # Actualizar estado
     cur.execute("UPDATE user SET estado=%s WHERE id=%s", (nuevo_estado, id))
     db.connection.commit()
     cur.close()
@@ -183,7 +179,6 @@ def cambiar_estado(id):
     return redirect(url_for('usuarios'))
 
 
-#Borrar la caché y no dejar regresar
 @app.after_request
 def add_no_cache_headers(response):
     response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, private, max-age=0'
@@ -191,7 +186,7 @@ def add_no_cache_headers(response):
     response.headers['Expires'] = '0'
     return response
 
-#Perfil
+
 @app.route('/perfil')
 def perfil():
     if 'user_id' not in session:
@@ -207,34 +202,31 @@ def perfil():
 
     return render_template('auth/perfil.html', usuario=usuario)
 
-# Editar perfil
+
 @app.route('/editar_perfil', methods=['GET', 'POST'])
 def editar_perfil():
     if 'user_id' not in session:
-        return redirect(url_for('login'))  # Si no está logueado
+        return redirect(url_for('login'))
 
-    cursor = db.connection.cursor()  # ✅ usa db, no mysql/MySQL
+    cursor = db.connection.cursor()
 
     if request.method == 'POST':
         fullname = request.form['fullname']
         rol = request.form['rol']
         estado = request.form['estado']
 
-        # Ojo: en tu SELECT usas tabla "user", pero aquí pusiste "usuarios"
-        # corrígelo para que sea consistente (creo que tu tabla real es `user`)
         cursor.execute("""
             UPDATE user 
             SET fullname = %s, rol = %s, estado = %s
             WHERE id = %s
         """, (fullname, rol, estado, session['user_id']))
 
-        db.connection.commit()   # ✅ también con db
+        db.connection.commit()
         cursor.close()
 
         flash("Perfil actualizado con éxito", "success")
         return redirect(url_for('perfil'))
 
-    # Si es GET, trae los datos actuales
     cursor.execute("SELECT id, username, fullname, rol, estado FROM user WHERE id = %s", (session['user_id'],))
     usuario = cursor.fetchone()
     cursor.close()
@@ -242,10 +234,68 @@ def editar_perfil():
     return render_template('auth/editar_perfil.html', usuario=usuario)
 
 
+# ---------------------- ACTIVIDADES + EVIDENCIAS ----------------------
 
+@app.route('/registrar_actividad', methods=['GET', 'POST'])
+@login_required
+def registrar_actividad():
+    if request.method == 'POST':
+        actividad = request.form['actividad']
+        insumos = request.form['insumos']
+        observaciones = request.form['observaciones']
+
+        evidencia = None
+        if 'evidencia' in request.files:
+            file = request.files['evidencia']
+            if file and file.filename != '':
+                filename = secure_filename(file.filename)
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(file_path)
+                evidencia = filename
+
+        cur = db.connection.cursor()
+        cur.execute("""
+        INSERT INTO actividades (id_usuario, actividad, insumos, observaciones, evidencia, fecha)
+        VALUES (%s, %s, %s, %s, %s, NOW())
+        """, (session['user_id'], actividad, insumos, observaciones, evidencia))
+        db.connection.commit()
+        cur.close()
+
+        flash("Actividad registrada con éxito ", "success")
+        return redirect(url_for('registrar_actividad'))
+
+    return render_template("auth/registrar_actividad.html")
+
+
+# ✅ Ruta para ver evidencias (solo del usuario logueado)
+@app.route('/ver_fotos')
+@login_required
+def ver_fotos():
+    cursor = db.connection.cursor()
+    query = """
+        SELECT a.evidencia, a.fecha, u.fullname
+        FROM actividades a
+        JOIN user u ON a.id_usuario = u.id
+        WHERE u.id = %s
+    """
+    cursor.execute(query, (session['user_id'],))
+    resultados = cursor.fetchall()
+
+    fotos = [
+        {"nombre_archivo": row[0], "fecha": row[1], "usuario": row[2]}
+        for row in resultados if row[0]
+    ]
+
+    usuario = fotos[0]["usuario"] if fotos else "Sin evidencias"
+    cursor.close()
+
+    return render_template("ver_fotos.html", fotos=fotos, usuario=usuario)
+
+
+# ---------------------- MAIN ----------------------
 
 if __name__ == '__main__':
     app.config.from_object(config['development'])
-    app.register_error_handler(401,status_401)
-    app.register_error_handler(404,status_404)
+    app.register_error_handler(401, status_401)
+    app.register_error_handler(404, status_404)
     app.run()
