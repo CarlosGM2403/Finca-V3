@@ -233,6 +233,63 @@ def editar_perfil():
 
     return render_template('auth/editar_perfil.html', usuario=usuario)
 
+# ---------------------- CULTIVOS ----------------------
+
+@app.route('/cultivos')
+@login_required
+def cultivos():
+    cur = db.connection.cursor()
+    query = """
+        SELECT c.id_cultivo, c.nombre, c.tipo, u.fullname, c.fecha_registro, c.estado
+        FROM cultivos c
+        JOIN user u ON c.id_usuario = u.id
+    """
+    cur.execute(query)
+    cultivos = cur.fetchall()
+    cur.close()
+    return render_template('auth/cultivos.html', cultivos=cultivos)
+
+
+@app.route('/registrar_cultivo', methods=['GET', 'POST'])
+@login_required
+def registrar_cultivo():
+    if request.method == 'POST':
+        nombre = request.form['nombre']
+        tipo = request.form['tipo']
+        id_usuario = session['user_id']  # 👈 lo toma del logueado
+
+        cur = db.connection.cursor()
+        sql = """
+            INSERT INTO cultivos (nombre, tipo, id_usuario)
+            VALUES (%s, %s, %s)
+        """
+        cur.execute(sql, (nombre, tipo, id_usuario))
+        db.connection.commit()
+        cur.close()
+
+        flash("Cultivo registrado con éxito", "success")
+        return redirect(url_for('cultivos'))
+
+    return render_template('auth/registrar_cultivo.html')
+
+
+@app.route('/cambiar_estado_cultivo/<int:id>', methods=['POST'])
+@login_required
+def cambiar_estado_cultivo(id):
+    cur = db.connection.cursor()
+    cur.execute("SELECT estado FROM cultivos WHERE id_cultivo=%s", (id,))
+    estado = cur.fetchone()[0]
+
+    nuevo_estado = "Inhabilitado" if estado == "Habilitado" else "Habilitado"
+    cur.execute("UPDATE cultivos SET estado=%s WHERE id_cultivo=%s", (nuevo_estado, id))
+    db.connection.commit()
+    cur.close()
+
+    flash(f"Estado del cultivo cambiado a {nuevo_estado}", "success")
+    return redirect(url_for('cultivos'))
+
+    
+
 
 # ---------------------- ACTIVIDADES + EVIDENCIAS ----------------------
 

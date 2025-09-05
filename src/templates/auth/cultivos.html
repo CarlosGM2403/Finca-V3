@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Cultivos{% endblock %}
+
+{% block CustomCSS %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cultivos.css') }}">
+{% endblock %}
+
+{% block body %}
+<h1 class="titulo-principal">Lista de Cultivos</h1>
+
+<div class="cuadro-cultivos">
+  <div class="tabla-contenedor">
+    <table class="tabla-cultivos">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Tipo</th>
+          <th>Registrado por</th>
+          <th>Fecha Registro</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cultivo in cultivos %}
+        <tr>
+          <td>{{ cultivo[1] }}</td>
+          <td>{{ cultivo[2] }}</td>
+          <td>{{ cultivo[3] }}</td>
+          <td>{{ cultivo[4] }}</td>
+          <td>{{ cultivo[5] }}</td>
+          <td>
+            <form action="{{ url_for('cambiar_estado_cultivo', id=cultivo[0]) }}" method="post" style="display:inline;">
+              {% if cultivo[5] == "Habilitado" %}
+                <button type="submit" class="btn-danger">Inhabilitar</button>
+              {% else %}
+                <button type="submit" class="btn-success">Habilitar</button>
+              {% endif %}
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <a href="{{ url_for('registrar_cultivo') }}">
+    <button class="btn-normal">Registrar Cultivo</button>
+  </a>
+
+  <a href="{{ url_for('home') }}">Volver al inicio</a>
+</div>
+{% endblock %}

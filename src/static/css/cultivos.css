@@ -5,6 +5,7 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
+    height: 90vh;
 }
 
 /* Título */
@@ -16,7 +17,7 @@ body {
 }
 
 /* Cuadro de la tabla */
-.cuadro-usuarios {
+.cuadro-cultivos {
     background-color: rgba(30,30,30,0.9); /* fondo oscuro semi-transparente */
     margin: 0 auto 50px auto;
     padding: 20px;
@@ -47,20 +48,20 @@ a:hover {
 
 
 /* Tabla */
-.tabla-usuarios {
+.tabla-cultivos {
     width: 100%;
     border-collapse: collapse;
     margin-top: 15px;
 }
 
-.tabla-usuarios th, .tabla-usuarios td {
+.tabla-cultivos th, .tabla-cultivos td {
     border: 1px solid #fff; /* borde blanco */
     padding: 12px;
     text-align: center;
     color: #fff;
 }
 
-.tabla-usuarios th {
+.tabla-cultivos th {
     background-color: #222;
 }
 

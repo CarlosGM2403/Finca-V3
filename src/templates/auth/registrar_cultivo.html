@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrar Cultivo{% endblock %}
+
+{% block CustomCSS %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/registrar_cultivos.css') }}">
+{% endblock %}
+
+{% block body %}
+
+<div class="logo">
+    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+</div>
+
+<div class="container">
+    <!-- Título fuera del cuadro -->
+    <h1 class="page-title">Registro de Cultivo</h1>
+
+    <!-- Cuadro del formulario -->
+    <div class="form-box">
+        <form action="{{ url_for('registrar_cultivo') }}" method="POST">
+            
+            <!-- Nombre del cultivo -->
+            <label for="nombre">Nombre del Cultivo</label>
+            <input type="text" id="nombre" name="nombre" required>
+
+            <!-- Tipo de cultivo -->
+            <label for="tipo">Tipo de Cultivo</label>
+            <select id="tipo" name="tipo" required>
+                <option value="">Seleccione un tipo</option>
+                <option value="Siembra">Siembra</option>
+                <option value="Cosecha">Cosecha</option>
+            </select>
+
+            <div class="planta">
+                <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta">
+            </div>
+
+            <button type="submit">Registrar</button>
+        </form>
+
+        <!-- Botón de volver -->
+        <a href="{{ url_for('cultivos') }}">VOLVER A LISTA CULTIVOS</a>
+    </div>
+</div>
+
+{% endblock %}

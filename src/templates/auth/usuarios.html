@@ -11,39 +11,44 @@
 <h1 class="titulo-principal">Lista de Usuarios</h1>
 
 <div class="cuadro-usuarios">
-    
-
-    <table class="tabla-usuarios">
-        <thead>
-            <tr>
-                <th>Nombre</th>
-                <th>Rol</th>
-                <th>Estado</th>
-                <th>Fecha Registro</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for usuario in usuarios %}
-            <tr>
-                <td>{{ usuario[1] }}</td>
-                <td>{{ usuario[2] }}</td>
-                <td>{{ usuario[3] }}</td>
-                <td>{{ usuario[4] }}</td>
-                <td>
-                    <a href="{{ url_for('cambiar_estado', id=usuario[0]) }}">
-                        <button class="btn-normal">Cambiar Estado</button>
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <!-- Contenedor con scroll SOLO para la tabla -->
+    <div class="tabla-contenedor">
+        <table class="tabla-usuarios">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Fecha Registro</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for usuario in usuarios %}
+                <tr>
+                    <td>{{ usuario[1] }}</td>
+                    <td>{{ usuario[2] }}</td>
+                    <td>{{ usuario[3] }}</td>
+                    <td>{{ usuario[4] }}</td>
+                    <td>
+                        <a href="{{ url_for('cambiar_estado', id=usuario[0]) }}">
+                            <button class="btn-normal">Cambiar Estado</button>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
     <!-- Botón para registrar nuevo usuario -->
     <a href="{{ url_for('registrar_usuario') }}">
         <button class="btn-normal">Registrar Usuario</button>
     </a>
+
+    <a href="{{ url_for('home') }}">Volver al inicio</a>
+
 </div>
+
 
 {% endblock %}
