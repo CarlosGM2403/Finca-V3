@@ -7,6 +7,8 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
+    repeat: no-repeat;
+    background-size: cover;
 }
 
 /* logo MFG */

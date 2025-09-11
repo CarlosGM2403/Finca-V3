@@ -3,7 +3,9 @@ body {
   background-image: url(../img/fondo_forms.png);
   margin: 0;
   padding: 0;
-  color: #ffffff;
+  repeat: no-repeat;
+  background-size: cover;
+  color: white;
 }
 
 /* Logo */

@@ -3,6 +3,8 @@ body {
   background-image: url(../img/fondo_forms.png);
   margin: 0;
   padding: 0;
+  repeat: no-repeat;
+  background-size: cover;
 }
 
 /* logo MFG */
@@ -258,4 +260,15 @@ select:focus {
 .btn-fotos:hover {
   background: #0b5ed7;
   border-color: #0b5ed7;
+}
+
+.planta {
+  position: fixed;      
+  bottom: -4rem;                
+  right: 15rem;                  
+  max-width: 200px !important;          
+  height: auto !important;              
+  z-index: -1;
+  display: block;
+  pointer-events: none;
 }
