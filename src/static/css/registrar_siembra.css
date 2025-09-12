@@ -1,0 +1,154 @@
+body {
+  font-family: 'Poppins', sans-serif;
+  background-image: url(../img/fondo_forms.png);
+  margin: 0;
+  padding: 0;
+   repeat: no-repeat;
+  background-size:cover;
+}
+
+/* logo MFG */
+.logo {
+    position: absolute; 
+    top: 10px; 
+    left: 10px; 
+    width: 50px ; 
+    height: auto; 
+}
+
+/* Contenedor */
+.containerSiembra {
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 25px;
+  background: rgba(39, 39, 39, 0.518);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  text-align: left;
+}
+
+/* Titulo */
+.Titulo {
+  text-align: center;
+  font-size: 50px;
+  margin-top:50px;
+  color: #fff;
+  font-weight: bold;
+}
+
+/* Organización dentro del contenedor */
+label {
+  display: block;
+  margin: 12px 0 6px;
+  font-weight: 600;
+}
+
+select, input {
+  width: 50%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  margin-bottom: 15px;
+  font-size: 15px;
+  outline: none;
+}
+
+textarea {
+  resize: none;
+  width: 100%;
+}
+
+
+
+
+/* Inputs generales con fondo oscuro */
+textarea, 
+input,
+select {
+    background-color: #1e1e1e58;  
+    color: #ffffff;             
+    border: 1px solid #444444a1;     
+    border-radius: 6px;         
+    padding: 8px 12px;          
+    outline: none;              
+    transition: all 0.3s ease;  
+    border-color: white;
+    
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    border-color: #0d6efd;  
+    box-shadow: 0 0 6px rgba(13, 110, 253, 0.5);
+    background-color: #252525;
+}
+
+
+/* Customisar botones */
+.btn-guardar {
+  background: none;
+  color: white;
+  padding: 10px 25px;
+  border-radius: 8px;
+  border: 2px solid #198754;
+  cursor: pointer;
+  font-size: 16px;
+  transition: 0.3s;
+  width: 150px;
+}
+
+.btn-consultar {
+  background: none;
+  color: white;
+  padding: 10px 25px;
+  border-radius: 8px;
+  border: 2px solid #198754;
+  cursor: pointer;
+  font-size: 16px;
+  transition: 0.3s;
+  width: 150px;
+  display: flex-end;
+  margin-left: 345px;
+}
+
+.botones{
+  margin-top: 20px;
+}
+
+/* Imagen de la planta */
+.planta{
+  max-width: 250px ;
+  position: fixed;
+  bottom: -4rem;
+  right: 15rem;
+  height: 250px;
+  z-index: -1;
+  display: block;
+  pointer-events: none;
+}
+
+/* Botón volver */
+.logout-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+.logout-btn button {
+  background: #111;
+  color: white;
+  border: 2px solid #00ff88;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.logout-btn button:hover {
+  background: #00ff88;
+  color: black;
+}

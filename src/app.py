@@ -4,8 +4,8 @@ from flask_login import LoginManager, login_user, logout_user, login_required
 import os
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash, generate_password_hash
-
 from config import config
+
 
 # Modelos:
 from models.ModelUser import ModelUser
@@ -347,6 +347,40 @@ def ver_fotos():
     cursor.close()
 
     return render_template("ver_fotos.html", fotos=fotos, usuario=usuario)
+
+# ---------------------- REGISTRAR SIEMBRA ----------------------
+@app.route("/Registrar_siembra", methods=["GET", "POST"])
+@login_required
+def registrar_siembra():
+    cur = db.connection.cursor()
+    cur.execute("SELECT Id_cultivo, nombre FROM Cultivos WHERE estado = 'Habilitado'")
+    cultivos = cur.fetchall()
+
+    if request.method == "POST":
+        fecha = request.form["fecha"]
+        detalle = request.form["detalle"]
+        cod_cultivos = request.form["cultivo"]
+
+        cur.execute("""
+            INSERT INTO siembra (fecha_siembra, detalle, cod_cultivos)
+            VALUES (%s, %s, %s)
+        """, (fecha, detalle, cod_cultivos))
+        db.connection.commit()
+        return redirect(url_for("registrar_siembra"))
+
+    return render_template("registrar_siembra.html", cultivos=cultivos)
+
+# ---------------------- SIEMBRA REGISTRADA ----------------------
+@app.route("/Siembra_registrada")
+def siembra_registrada():
+    cur = db.connection.cursor()
+    cur.execute("""
+        SELECT s.fecha_siembra, s.detalle, c.nombre AS cultivo_nombre
+        FROM siembra s
+        JOIN Cultivos c ON s.cod_cultivos = c.Id_cultivo
+    """)
+    registros = cur.fetchall()
+    return render_template("siembra_registrada.html", registros=registros)
 
 
 # ---------------------- MAIN ----------------------
