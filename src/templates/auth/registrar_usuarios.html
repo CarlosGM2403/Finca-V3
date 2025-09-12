@@ -47,17 +47,18 @@
       </select>
 
       <!-- Imagen decorativa -->
-      <div class="planta">
-        <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta">
-      </div>
+      
 
       <!-- Botón Registrar -->
       <button type="submit">Registrar</button>
     </form>
-
+  <div class="planta">
+        <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta">
+      </div>
     <!-- Botón Volver -->
     <a href="{{ url_for('usuarios') }}" class="volver">Volver</a>
   </div>
+
 </div>
 
 <!-- SCRIPT mostrar/ocultar contraseña -->

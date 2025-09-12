@@ -1,4 +1,5 @@
 # ---------------------- LIBRERÍAS FLASK ----------------------
+from sqlite3 import Cursor
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_mysqldb import MySQL
 from flask_login import LoginManager, login_user, logout_user, login_required
@@ -8,6 +9,7 @@ from flask_mail import Mail, Message
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash, generate_password_hash
 import os
+from datetime import datetime
 
 # ---------------------- CONFIGURACIÓN ----------------------
 from config import config
@@ -383,6 +385,40 @@ def ver_fotos():
 
     return render_template("ver_fotos.html", fotos=fotos, usuario=usuario)
 
+# ---------------------- SOLICITUD INSUMOS ----------------------
+@app.route('/solicitud_insumos', methods=['GET', 'POST'])
+@login_required
+def solicitud_insumos():
+    cur = db.connection.cursor()
+
+    # Obtener tipos únicos de insumos sin filtrar por id
+    cur.execute("SELECT DISTINCT tipo_insumo FROM solicitudes_insumos")
+    tipos = [row[0] for row in cur.fetchall()]
+
+    if request.method == 'POST':
+        tipo_insumo = request.form.get('tipo_insumo')  # Cambiado a .get() para evitar errores
+        cantidad = request.form.get('cantidad')
+        observaciones = request.form.get('observaciones', '')
+
+        if not tipo_insumo or not cantidad:
+            flash("Por favor, complete los campos obligatorios", "error")
+            return redirect(url_for('solicitud_insumos'))
+
+        fecha = datetime.now()
+
+        # Insertar nueva solicitud
+        cur.execute("""
+            INSERT INTO solicitudes_insumos (fecha, tipo_insumo, cantidad, observaciones)
+            VALUES (%s, %s, %s, %s)
+        """, (fecha, tipo_insumo, cantidad, observaciones))
+        db.connection.commit()
+        cur.close()
+
+        flash("Solicitud de insumo registrada con éxito", "success")
+        return redirect(url_for('solicitud_insumos'))
+
+    cur.close()
+    return render_template('auth/solicitud_insumo.html', tipos=tipos)
 
 # ---------------------- MAIN ----------------------
 if __name__ == '__main__':

@@ -1,0 +1,227 @@
+body {
+  font-family: 'Poppins', sans-serif;
+  background-image: url(../img/fondo_forms.png);
+  margin: 0;
+  padding: 0;
+  repeat: no-repeat;
+  background-size: cover;
+}
+
+/* logo MFG */
+.logo {
+    position: absolute; 
+    top: 10px; 
+    left: 10px; 
+    width: 50px ; 
+    height: auto; 
+}
+
+/* Contenedor principal */
+.insumos-container {
+  max-width: 700px;
+  margin: 80px auto;
+  padding: 25px;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
+
+/* Título */
+.insumos-container h1 {
+  text-align: center;
+  font-size: 50px;
+  margin-bottom: 25px;
+  color: #fff;
+  font-weight: bold;
+}
+
+/* Etiquetas */
+label {
+  display: block;
+  margin: 12px 0 6px;
+  font-weight: 600;
+}
+
+/* Inputs generales */
+select, textarea, input[type="file"] {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  margin-bottom: 15px;
+  font-size: 15px;
+  outline: none;
+}
+
+textarea {
+  resize: none;
+}
+
+/* --- Distribución de los selects con la imagen --- */
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.form-row .form-inputs {
+  flex: 2;
+}
+
+.form-row  {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.form-image{
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+
+.form-row .form-image img {
+  max-width: 120px;
+  height: auto;
+}
+
+/* File input estilo caja */
+.file-input {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #ccc;
+  padding: 8px;
+  border-radius: 10px;
+  background-color: #111;
+  margin-bottom: 15px;
+}
+
+.file-input i {
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.delete-icon {
+  color: red;
+  margin-left: 10px;
+}
+
+/* Botón flotante arriba a la derecha */
+.btn-top-right {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.btn-home {
+  font-size: 20px;
+  background: #2d6a4f;
+  color: #fff;
+  text-decoration: none;
+  padding: 10px 14px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: 0.3s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.btn-home:hover {
+  background: #1b4332;
+}
+
+/* Botones abajo */
+.form-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.btn-solicitar {
+  background-color: #1e1e1e;  
+  color: white;
+  padding: 10px 25px;
+  border-radius: 20px;
+  border: 2px solid #198754;
+  cursor: pointer;
+  font-size: 24px;
+  transition: 0.3s;
+  width: 200px;
+  text-align: center;
+}
+
+.btn-solicitar:hover {
+  background: #14532d;
+  border-color: #14532d;
+}
+
+
+.btn-salir {
+  background: #dc3545;
+  color: white;
+  padding: 10px 25px;
+  border-radius: 15px;
+  border: 2px solid #dc3545;
+  text-decoration: none;
+  font-size: 16px;
+  transition: 0.3s;
+  align-items: right;
+  display: flex-end;
+  margin-left: 355px;
+}
+
+.btn-salir:hover {
+  background: #a71d2a;
+  border-color: #a71d2a;
+}
+
+/* Inputs generales con fondo oscuro */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+textarea,
+select {
+    background-color: #1e1e1e;  
+    color: #ffffff;             
+    border: 1px solid #444;     
+    border-radius: 6px;         
+    padding: 8px 12px;          
+    outline: none;              
+    transition: all 0.3s ease;  
+}
+
+
+.planta {
+  position: fixed;      
+  bottom: -4rem;                
+  right: 15rem;                  
+  max-width: 200px !important;          
+  height: auto !important;              
+  z-index: -1;
+  display: block;
+  pointer-events: none;
+}
+
+/* Textbox */
+.text-box{
+  background-color: #1e1e1e;  
+  color: #ffffff;             
+  border: 1px solid #444;     
+  border-radius: 6px;         
+  padding: 8px 12px;          
+  outline: none;              
+  transition: all 0.3s ease;
+  display: block;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  align-items: left;
+}
