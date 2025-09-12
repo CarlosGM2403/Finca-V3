@@ -8,22 +8,29 @@
 
 {% block body %}
 
+<!-- Logo -->
 <div class="logo">
-  <img src="{{ url_for('static', filename='img/Logo_icon.png') }}" alt="Logo">
+  <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
 </div>
 
+<!-- Formulario de edición -->
 <div class="form-container">
   <h2 class="titulo-editar-perfil">Editar Perfil</h2>
+
   <form method="POST">
+    <!-- Nombre -->
     <label for="fullname">Nombre Completo</label>
     <input type="text" id="fullname" name="fullname" value="{{ usuario[2] }}" required>
 
+    <!-- Rol -->
     <label for="rol">Rol</label>
     <input type="text" id="rol" name="rol" value="{{ usuario[3] }}" required>
 
+    <!-- Estado -->
     <label for="estado">Estado</label>
     <input type="text" id="estado" name="estado" value="{{ usuario[4] }}" required>
 
+    <!-- Botones -->
     <div class="form-buttons">
       <button type="submit" class="btn-edit">Guardar Cambios</button>
       <a href="{{ url_for('perfil') }}" class="btn-home">Cancelar</a>

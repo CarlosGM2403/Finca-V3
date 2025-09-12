@@ -7,6 +7,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: flex-end;
+    repeat: no-repeat;
+    background-size: cover;
 }
 
 .logout-btn {
@@ -241,7 +243,7 @@ body {
     border: 5px solid #4c9677;  /* Borde verde más claro */
     cursor: pointer;            /* Cambia cursor a mano */
     z-index: 2;                 /* Mantiene el botón por encima de animaciones */
-    padding-bottom: 100px;      /* Ajusta posición del texto hacia arriba */
+    padding-top: 40px;      /* Ajusta posición del texto hacia arriba */
     transition: background 0.5s ease; /* Transición suave en hover */
 }
 

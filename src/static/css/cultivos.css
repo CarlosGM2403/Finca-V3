@@ -6,6 +6,8 @@ body {
     margin: 0;
     padding: 0;
     height: 90vh;
+    repeat: no-repeat;
+    background-size: cover;
 }
 
 /* Título */

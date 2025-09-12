@@ -7,9 +7,14 @@
 {% endblock %}
 
 {% block body %}
+
+<!-- Título -->
 <h1 class="titulo-principal">Lista de Cultivos</h1>
 
+<!-- Contenedor principal -->
 <div class="cuadro-cultivos">
+
+  <!-- Tabla con scroll -->
   <div class="tabla-contenedor">
     <table class="tabla-cultivos">
       <thead>
@@ -45,10 +50,12 @@
     </table>
   </div>
 
+  <!-- Botones de acción -->
   <a href="{{ url_for('registrar_cultivo') }}">
     <button class="btn-normal">Registrar Cultivo</button>
   </a>
 
   <a href="{{ url_for('home') }}">Volver al inicio</a>
 </div>
+
 {% endblock %}

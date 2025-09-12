@@ -3,6 +3,8 @@ body {
     background: url("../img/fondo.png") no-repeat center center fixed;
     background-size: cover;
     font-family: Arial, sans-serif;
+    repeat: no-repeat;
+    background-size: cover;
 }
 
 /* logo MFG */

@@ -5,6 +5,8 @@ body {
   background-position: center;
   margin: 0;
   padding: 0;
+  repeat: no-repeat;
+  background-size: cover;
 }
 
 /* Logo arriba a la izquierda */
