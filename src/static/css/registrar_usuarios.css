@@ -7,7 +7,7 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    repeat: no-repeat;
+    height: 100vh;
     background-size: cover;
 }
 

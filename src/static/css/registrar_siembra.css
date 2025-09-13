@@ -3,7 +3,7 @@ body {
   background-image: url(../img/fondo_forms.png);
   margin: 0;
   padding: 0;
-   repeat: no-repeat;
+  height: 100vh;
   background-size:cover;
 }
 
@@ -151,4 +151,68 @@ select:focus {
 .logout-btn button:hover {
   background: #00ff88;
   color: black;
+}
+
+@media screen and (max-width: 768px) {
+  /* Ocultar logo */
+  .logo {
+    display: none;
+  }
+
+  /* Ajustar contenedor principal */
+  .containerSiembra {
+    width: 90%;
+    margin: 20px auto;
+    padding: 15px;
+  }
+
+  /* Titulo más pequeño */
+  .Titulo {
+    font-size: 28px;
+    margin-top: 20px;
+  }
+
+  /* Inputs y selects al 100% */
+  select, input {
+    width: 100%;
+    font-size: 14px;
+  }
+
+  textarea {
+    width: 100%;
+  }
+
+  /* Ajustar botones */
+  .btn-guardar,
+  .btn-consultar {
+    width: 100%;
+    margin: 10px 0;
+  }
+
+  .btn-consultar {
+    margin-left: 0; /* quitamos desplazamiento lateral */
+  }
+
+  .botones {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Planta más pequeña o escondida */
+  .planta {
+    display: none;
+  }
+
+  /* Botón salir más pequeño */
+  .logout-btn {
+    top: 10px;
+    right: 10px;
+  }
+
+  .logout-btn button {
+    width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
 }
