@@ -6,6 +6,7 @@ body {
   padding: 0;
   repeat: no-repeat;
   background-size: cover;
+  background-repeat: no-repeat;
 }
 
 /* Logo arriba */

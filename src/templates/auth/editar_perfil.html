@@ -17,18 +17,26 @@
 <div class="form-container">
   <h2 class="titulo-editar-perfil">Editar Perfil</h2>
 
-  <form method="POST">
-    <!-- Nombre -->
-    <label for="fullname">Nombre Completo</label>
-    <input type="text" id="fullname" name="fullname" value="{{ usuario[2] }}" required>
+<form method="POST">
+<!-- Nombre -->
+<label for="fullname">Nombre Completo</label>
+<input type="text" id="fullname" name="fullname" value="{{ usuario[2] }}" required>
 
-    <!-- Rol -->
-    <label for="rol">Rol</label>
-    <input type="text" id="rol" name="rol" value="{{ usuario[3] }}" required>
+<!-- Rol -->
+<label for="rol">Rol</label>
+<select name="rol" id="rol" required>
+  <option value="administrador" {% if usuario[3] == 'administrador' %}selected{% endif %}>Administrador</option>
+  <option value="supervisor" {% if usuario[3] == 'supervisor' %}selected{% endif %}>Supervisor</option>
+  <option value="cuidador" {% if usuario[3] == 'cuidador' %}selected{% endif %}>Cuidador</option>
+  <option value="empleado" {% if usuario[3] == 'empleado' %}selected{% endif %}>Empleado</option>
+</select>
 
-    <!-- Estado -->
-    <label for="estado">Estado</label>
-    <input type="text" id="estado" name="estado" value="{{ usuario[4] }}" required>
+<!-- Estado -->
+<label for="estado">Estado</label>
+<select name="estado" id="estado" required>
+  <option value="Habilitado" {% if usuario[4] == 'Habilitado' %}selected{% endif %}>Habilitado</option>
+  <option value="No habilitado" {% if usuario[4] == 'No habilitado' %}selected{% endif %}>Inhabilitado</option>
+</select>
 
     <!-- Botones -->
     <div class="form-buttons">

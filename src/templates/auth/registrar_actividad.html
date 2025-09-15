@@ -51,51 +51,71 @@
     <!-- Tomar evidencia + botones -->
     <label for="evidencia" align="left">Tomar evidencia</label>
     <div class="acciones-evidencia">
-      <!-- Botón cámara -->
       <div class="acciones-izquierda">
         <button type="button" id="cameraBtn" class="camera-btn">
           <i class="fas fa-camera"></i> Tomar foto
         </button>
-
-        <!-- Botón Ver Fotos debajo -->
         <a href="{{ url_for('ver_fotos') }}" class="btn-fotos">Ver Fotos</a>
       </div>
 
-      <!-- Bloque de botones a la derecha -->
       <div class="acciones-derecha">
         <button type="submit" class="btn-guardar">Guardar</button>
         <a href="{{ url_for('home') }}" class="btn-salir">Salir</a>
       </div>
     </div>
 
-    <!-- Input oculto -->
-    <input type="file" id="evidencia" name="evidencia"
-           accept="image/*" capture="environment" style="display: none;">
-
-    <!-- Vista previa de la imagen -->
+    <!-- Vista previa de la foto -->
     <div id="preview" class="preview"></div>
+
+    <!-- Input oculto para guardar la foto en base64 -->
+    <input type="hidden" id="evidencia" name="evidencia">
 
   </form>
 </div>
-    <div class="planta">
-        <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta">
-    </div>
 
+<div class="planta">
+  <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta">
+</div>
+
+<!-- Script para manejar cámara -->
 <script>
-  document.getElementById('cameraBtn').addEventListener('click', function() {
-    document.getElementById('evidencia').click();
-  });
+const cameraBtn = document.getElementById('cameraBtn');
+const evidenciaInput = document.getElementById('evidencia');
+const preview = document.getElementById('preview');
 
-  // Mostrar preview de la foto tomada
-  document.getElementById('evidencia').addEventListener('change', function(event) {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        document.getElementById('preview').innerHTML = `<img src="${e.target.result}" alt="Foto tomada">`;
-      };
-      reader.readAsDataURL(file);
+cameraBtn.addEventListener('click', async () => {
+  try {
+    // Verificar si hay dispositivos de video
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const cameras = devices.filter(d => d.kind === "videoinput");
+
+    if (cameras.length === 0) {
+      alert("Este dispositivo no tiene cámara disponible.");
+      return;
     }
-  });
+
+    // Usar la cámara por defecto
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    const track = stream.getVideoTracks()[0];
+    const imageCapture = new ImageCapture(track);
+
+    // Tomar la foto directamente
+    const photo = await imageCapture.takePhoto();
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+      evidenciaInput.value = reader.result; // Guardamos en base64
+      preview.innerHTML = `<img src="${reader.result}" alt="Foto tomada">`;
+    };
+
+    reader.readAsDataURL(photo);
+
+    // Liberar cámara después de tomar la foto
+    track.stop();
+
+  } catch (err) {
+    alert("Error al acceder a la cámara: " + err.message);
+  }
+});
 </script>
 {% endblock %}

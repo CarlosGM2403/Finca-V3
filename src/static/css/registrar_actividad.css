@@ -233,10 +233,6 @@ select:focus {
   gap: 10px;
 }
 
-/* ...tu CSS anterior... */
-
-/* ... tu CSS anterior ... */
-
 /* Asegurar que cámara y ver fotos se apilen */
 .acciones-izquierda {
   display: flex;

@@ -7,7 +7,7 @@ from flask_mail import Mail, Message
 # ---------------------- UTILIDADES ----------------------
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash, generate_password_hash
-
+import os
 from config import config
 
 
@@ -202,27 +202,25 @@ def usuarios():
     return render_template('auth/usuarios.html', usuarios=usuarios)
 
 
-@app.route('/cambiar_estado/<int:id>')
+@app.route('/cambiar_estado/<int:id>', methods=['GET', 'POST'])
 @login_required
 def cambiar_estado(id):
     cur = db.connection.cursor()
-    cur.execute("SELECT estado FROM user WHERE id=%s", (id,))
-    estado = cur.fetchone()[0]
-    nuevo_estado = "Inhabilitado" if estado == "Habilitado" else "Habilitado"
-    cur.execute("UPDATE user SET estado=%s WHERE id=%s", (nuevo_estado, id))
-    db.connection.commit()
+
+    if request.method == 'POST':
+        nuevo_estado = request.form['estado']
+        cur.execute("UPDATE user SET estado=%s WHERE id=%s", (nuevo_estado, id))
+        db.connection.commit()
+        cur.close()
+        flash(f"Estado del usuario cambiado a {nuevo_estado}", "success")
+        return redirect(url_for('usuarios'))
+
+    # Si es GET, mostrar el formulario con el estado actual
+    cur.execute("SELECT id, fullname, estado FROM user WHERE id=%s", (id,))
+    usuario = cur.fetchone()
     cur.close()
+    return render_template('auth/cambiar_estado.html', usuario=usuario)
 
-    flash(f"Estado del usuario cambiado a {nuevo_estado}", "success")
-    return redirect(url_for('usuarios'))
-
-
-@app.after_request
-def add_no_cache_headers(response):
-    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, private, max-age=0'
-    response.headers['Pragma'] = 'no-cache'
-    response.headers['Expires'] = '0'
-    return response
 
 
 @app.route('/perfil')
