@@ -1,39 +1,46 @@
 {% extends 'base.html' %}
 
-{% block title %}Cambiar Estado{% endblock %}
+{% block title %}Editar Usuario{% endblock %}
 
 {% block CustomCSS %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/cambiar_estado.css') }}">
 {% endblock %}
 
 {% block body %}
-
 <!-- Logo -->
 <div class="logo">
     <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
 </div>
 
 <div class="form-container">
-  <h2 class="titulo">Cambiar Estado de Usuario</h2>
+  <h2 class="titulo">Editar Usuario</h2>
 
   <form method="post" action="{{ url_for('cambiar_estado', id=usuario['id']) }}">
-    <!-- Nombre (solo lectura) -->
-    <label for="nombre">Nombre</label>
-    <input type="text" id="nombre" name="nombre" value="{{ usuario.fullname }}" readonly>
+    <!-- Nombre -->
+    <label for="fullname">Nombre Completo</label>
+    <input type="text" id="fullname" name="fullname" value="{{ usuario['fullname'] }}" required>
+
+    <!-- Rol -->
+    <label for="rol">Rol</label>
+    <select name="rol" id="rol" class="input-form" required>
+        <option value="administrador" {{ 'selected' if usuario['rol'] == 'administrador' else '' }}>Administrador</option>
+        <option value="supervisor" {{ 'selected' if usuario['rol'] == 'supervisor' else '' }}>Supervisor</option>
+        <option value="cuidador" {{ 'selected' if usuario['rol'] == 'cuidador' else '' }}>Cuidador</option>
+        <option value="empleado" {{ 'selected' if usuario['rol'] == 'empleado' else '' }}>Empleado</option>
+    </select>
 
     <!-- Estado -->
     <label for="estado">Estado</label>
-    <select id="estado" name="estado" class="input-form">
+    <select id="estado" name="estado" class="input-form" required>
         <option value="habilitado" {{ 'selected' if usuario['estado'] == 'habilitado' else '' }}>Habilitado</option>
         <option value="inhabilitado" {{ 'selected' if usuario['estado'] == 'inhabilitado' else '' }}>Inhabilitado</option>
     </select>
 
     <!-- Botones -->
     <div class="form-buttons">
-      <button type="submit" class="btn-guardar">Guardar</button>
+      <button type="submit" class="btn-guardar">Guardar Cambios</button>
       <a href="{{ url_for('usuarios') }}" class="btn-cancelar">Cancelar</a>
     </div>
   </form>
 </div>
-
 {% endblock %}

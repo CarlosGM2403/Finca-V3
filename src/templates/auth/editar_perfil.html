@@ -18,32 +18,23 @@
   <h2 class="titulo-editar-perfil">Editar Perfil</h2>
 
 <form method="post">
-<!-- Nombre -->
+<!-- Nombre (editable) -->
 <label for="fullname">Nombre Completo</label>
 <input type="text" id="fullname" name="fullname" value="{{ usuario[2] }}" required>
 
 <!-- Rol -->
-<label for="rol">Rol</label>
-<select name="rol" id="rol" required>
-  <option value="administrador" {% if usuario[3] == 'administrador' %}selected{% endif %}>Administrador</option>
-  <option value="supervisor" {% if usuario[3] == 'supervisor' %}selected{% endif %}>Supervisor</option>
-  <option value="cuidador" {% if usuario[3] == 'cuidador' %}selected{% endif %}>Cuidador</option>
-  <option value="empleado" {% if usuario[3] == 'empleado' %}selected{% endif %}>Empleado</option>
-</select>
+<label class="label-solo-lectura">Rol</label>
+<div class="campo-solo-lectura">{{ usuario[3] }}</div>
 
 <!-- Estado -->
-<label for="estado">Estado</label>
-<select name="estado" id="estado" required>
-  <option value="habilitado" {% if usuario[4] == 'habilitado' %}selected{% endif %}>Habilitado</option>
-  <option value="inhabilitado" {% if usuario[4] == 'inhabilitado' %}selected{% endif %}>Inhabilitado</option>
-</select>
+<label class="label-solo-lectura">Estado</label>
+<div class="campo-solo-lectura">{{ usuario[4] }}</div>
 
-    <!-- Botones -->
-    <div class="form-buttons">
-      <button type="submit" class="btn-edit">Guardar Cambios</button>
-      <a href="{{ url_for('perfil') }}" class="btn-home">Cancelar</a>
-    </div>
-  </form>
+
+<!-- Botones -->
+<div class="form-buttons">
+  <button type="submit" class="btn-edit">Guardar Cambios</button>
+  <a href="{{ url_for('perfil') }}" class="btn-home">Cancelar</a>
 </div>
 
 {% endblock %}

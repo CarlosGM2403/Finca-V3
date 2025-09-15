@@ -267,15 +267,14 @@ def editar_perfil():
     cursor = db.connection.cursor()
 
     if request.method == 'POST':
-        fullname = request.form['fullname']
-        rol = request.form['rol']
-        estado = request.form['estado']
+        fullname = request.form.get('fullname')  # Usamos .get() para evitar errores
 
+        # Solo actualizamos el nombre
         cursor.execute("""
             UPDATE user 
-            SET fullname = %s, rol = %s, estado = %s
+            SET fullname = %s
             WHERE id = %s
-        """, (fullname, rol, estado, session['user_id']))
+        """, (fullname, session['user_id']))
 
         db.connection.commit()
         cursor.close()
@@ -283,6 +282,7 @@ def editar_perfil():
         flash("Perfil actualizado con éxito", "success")
         return redirect(url_for('perfil'))
 
+    # Obtener datos actuales del usuario
     cursor.execute("SELECT id, username, fullname, rol, estado FROM user WHERE id = %s", (session['user_id'],))
     usuario = cursor.fetchone()
     cursor.close()
