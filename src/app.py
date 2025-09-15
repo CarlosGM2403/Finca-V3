@@ -213,24 +213,34 @@ def usuarios():
 
 
 @app.route('/cambiar_estado/<int:id>', methods=['GET', 'POST'])
-@login_required
 def cambiar_estado(id):
+    # --- Obtener datos del usuario ---
     cur = db.connection.cursor()
+    cur.execute("SELECT id, fullname, estado FROM user WHERE id=%s", (id,))
+    row = cur.fetchone()
+    cur.close()
 
-    if request.method == 'POST':
-        nuevo_estado = request.form['estado']
+    usuario = {
+        "id": row[0],
+        "fullname": row[1],
+        "estado": row[2].strip().lower() if row[2] else None
+    }
+
+    if request.method == "POST":
+        print("Datos recibidos desde el formulario:", request.form)
+        nuevo_estado = request.form.get('estado')
+        print(f"Valor que Flask recibió para estado: '{nuevo_estado}'")
+
+        # --- Actualizar estado ---
+        cur = db.connection.cursor()
         cur.execute("UPDATE user SET estado=%s WHERE id=%s", (nuevo_estado, id))
         db.connection.commit()
         cur.close()
-        flash(f"Estado del usuario cambiado a {nuevo_estado}", "success")
+
+        flash("Estado actualizado correctamente", "success")
         return redirect(url_for('usuarios'))
 
-    # Si es GET, mostrar el formulario con el estado actual
-    cur.execute("SELECT id, fullname, estado FROM user WHERE id=%s", (id,))
-    usuario = cur.fetchone()
-    cur.close()
     return render_template('auth/cambiar_estado.html', usuario=usuario)
-
 
 
 @app.route('/perfil')
@@ -355,21 +365,6 @@ def registrar_cultivo():
 
     return render_template('auth/registrar_cultivo.html')
 
-
-@app.route('/cambiar_estado_cultivo/<int:id>', methods=['POST'])
-@login_required
-def cambiar_estado_cultivo(id):
-    cur = db.connection.cursor()
-    cur.execute("SELECT estado FROM cultivos WHERE id_cultivo=%s", (id,))
-    estado = cur.fetchone()[0]
-
-    nuevo_estado = "Inhabilitado" if estado == "Habilitado" else "Habilitado"
-    cur.execute("UPDATE cultivos SET estado=%s WHERE id_cultivo=%s", (nuevo_estado, id))
-    db.connection.commit()
-    cur.close()
-
-    flash(f"Estado del cultivo cambiado a {nuevo_estado}", "success")
-    return redirect(url_for('cultivos'))
 
 
 # ---------------------- ACTIVIDADES + EVIDENCIAS ----------------------
