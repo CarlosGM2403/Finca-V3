@@ -102,3 +102,50 @@ a:hover {
     background-color: #f00;
     color: #fff;
 }
+
+/* 🔹 Responsive para pantallas pequeñas */
+@media screen and (max-width: 768px) {
+  body {
+    height: 100vh; /* Que no corte contenido */
+    padding: 10px;
+  }
+
+  /* Ajuste del título */
+  .titulo-principal {
+    font-size: 1.5rem;
+    margin: 20px 0 10px 0;
+  }
+
+  /* Cuadro de la tabla más compacto */
+  .cuadro-cultivos {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 30px;
+  }
+
+  /* Scroll horizontal en móviles si la tabla es grande */
+  .tabla-contenedor {
+    max-height: none;
+    overflow-x: auto;
+  }
+
+  /* Tabla más compacta */
+  .tabla-cultivos th,
+  .tabla-cultivos td {
+    padding: 8px;
+    font-size: 0.85rem;
+  }
+
+  /* Botones más pequeños */
+  .btn-normal {
+    padding: 8px 14px;
+    font-size: 0.9rem;
+    margin: 8px 3px 0 3px;
+  }
+
+  /* Enlaces más pequeños */
+  a {
+    font-size: 12px;
+    text-align: center;
+  }
+}

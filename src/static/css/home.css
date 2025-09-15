@@ -11,6 +11,24 @@ body {
     background-size: cover;
 }
 
+.profile-btn {
+  position: absolute;   /* o relative, según dónde lo quieras */
+  top: 10px;            /* ajusta la posición */
+  right: 100px;          /* mueve a la izquierda del logout */
+}
+
+.profile-btn .profile-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;   /* si quieres que sea circular */
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.profile-btn .profile-icon:hover {
+  transform: scale(1.1);  /* efecto al pasar el mouse */
+}
+
 .logout-btn {
     position: fixed;
     top: 15px;
@@ -279,6 +297,10 @@ body {
     animation-delay: 2.5s;     /* Empieza después del primero */
 }
 
+.menu-mobile {
+  display: none;
+}
+
 @keyframes pulse {
     0% {
         transform: scale(1.0);   /* mas pequeño cando comienza */
@@ -288,4 +310,43 @@ body {
     transform: scale(1.2);   /* Se expande hacia afuera */
     opacity: 0;              /* Se desvanece */
   }
+}
+
+/* --- Ocultar botones de abajo en móviles y dejar solo Cultivos --- */
+@media (max-width: 768px) {
+  .grupo-izquierda,
+  .grupo-derecha {
+    display: none; /* Oculta los grupos de botones */
+  }
+
+  .btn-wrapper {
+    display: flex;          /* El botón de cultivos sigue visible */
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+   .logo {
+    left: 10%;  /* Centrado horizontal */
+    transform: translate(-50%, -50%); /* Centrado perfecto */
+}
+
+.grupo-izquierda,
+  .grupo-derecha {
+    display: none; /* Esconde botones de abajo */
+  }
+
+  .menu-mobile {
+    display: block; /* Muestra botones dentro del menú */
+    margin-top: 10px;
+    border-top: 1px solid #ccc;
+    padding-top: 10px;
+  }
+
+  .menu-mobile a {
+    display: block;
+    margin: 8px 0;
+    text-decoration: none;
+    color: #333;
+  }
+
 }

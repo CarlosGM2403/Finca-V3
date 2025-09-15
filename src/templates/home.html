@@ -41,6 +41,18 @@
   <img src="{{ url_for('static', filename='img/Logo_principal.png') }}" alt="Logo">
 </div>
 
+
+<!-- BOTÓN PERFIL -->
+<div class="profile-btn">
+  <a href="{{ url_for('perfil') }}">
+    <img src="{{ url_for('static', filename='img/perfil.png') }}" 
+         alt="Perfil" 
+         class="profile-icon">
+  </a>
+</div>
+
+
+
 <!-- BOTÓN LOGOUT -->
 <div class="logout-btn">
   <button data-bs-toggle="modal" data-bs-target="#logoutModal">
@@ -77,10 +89,45 @@
 
 <!-- MENÚ LATERAL -->
 <div class="menu" id="menu">
-  <a href="{{ url_for('registrar_actividad') }}">Registrar Actividad</a>
+  {% if rol != 'administrador' %}
+    <a href="{{ url_for('registrar_actividad') }}">Registrar Actividad</a>
+  {% endif %}
   <a href="#">Problemas de cultivo</a>
   <a href="#">Solicitudes de Insumos</a>
-  <a href="{{ url_for('registrar_siembra') }}">Registro de Siembra</a>
+  {% if rol != 'administrador' %}
+    <a href="{{ url_for('registrar_siembra') }}">Registro de Siembra</a>
+  {% endif %}
+
+  <!-- Botones de abajo (solo visibles en móvil) -->
+  <div class="menu-mobile">
+    {# --- Usuarios / Registrar Actividad --- #}
+    {% if rol == 'administrador' %}
+      <a href="{{ url_for('usuarios') }}">Usuarios</a>
+    {% else %}
+      <a href="{{ url_for('registrar_actividad') }}">Registrar Actividad</a>
+    {% endif %}
+
+    {# --- Producción / Registro de Siembra --- #}
+    {% if rol == 'administrador' or rol == 'supervisor' %}
+      <a href="{{ url_for('en_construccion') }}">Producción</a>
+    {% else %}
+      <a href="{{ url_for('registrar_siembra') }}">Registro de Siembra</a>
+    {% endif %}
+
+    {# --- Ventas / Solicitud de Insumos --- #}
+    {% if rol == 'administrador' %}
+      <a href="{{ url_for('en_construccion') }}">Ventas</a>
+    {% else %}
+      <a href="{{ url_for('en_construccion') }}">Solicitar Insumos</a>
+    {% endif %}
+
+    {# --- Evidencias / Tratamientos --- #}
+    {% if rol == 'administrador' %}
+      <a href="{{ url_for('en_construccion') }}">Evidencias</a>
+    {% else %}
+      <a href="{{ url_for('en_construccion') }}">Tratamientos</a>
+    {% endif %}
+  </div>
 </div>
 
 <script>
@@ -101,8 +148,26 @@
 
 <!-- GRUPOS DE BOTONES -->
 <div class="grupo-izquierda">
-  <a href="{{ url_for('usuarios') }}"><button class="btn-normal">Usuarios</button></a>
-  <button class="btn-normal">Producción</button>
+  {# --- Botón Usuarios / Registrar Actividad --- #}
+  {% if rol == 'administrador' %}
+  <a href="{{ url_for('usuarios') }}">
+    <button class="btn-normal">Usuarios</button>
+  </a>
+  {% else %}
+  <a href="{{ url_for('registrar_actividad') }}">
+    <button class="btn-normal">Registra Actividad</button>
+  </a>
+  {% endif %}
+  {# --- Botón Producción / Registro de Siembra --- #}
+  {% if rol == 'administrador' or rol == 'supervisor' %}
+  <a href="{{ url_for('en_construccion') }}">
+    <button class="btn-normal">Producción</button>
+  </a>
+  {% else %}
+  <a href="{{ url_for('registrar_siembra') }}">
+    <button class="btn-normal">Registra Siembra</button>
+  </a>
+  {% endif %}
 </div>
 
 <div class="btn-wrapper">
@@ -112,7 +177,25 @@
 </div>
 
 <div class="grupo-derecha">
-  <button class="btn-normal">Ventas</button>
-  <button class="btn-normal">Evidencias</button>
+  {# --- Botón Ventas / Solicitud de Insumos --- #}
+{% if rol == 'administrador' %}
+  <a href="{{ url_for('en_construccion') }}">
+    <button class="btn-normal">Ventas</button>
+  </a>
+{% else %}
+  <a href="{{ url_for('en_construccion') }}">
+    <button class="btn-normal">Solicitar Insumos</button>
+  </a>
+{% endif %}
+  {# --- Botón Evidencias / Tratamientos Aplicados --- #}
+{% if rol == 'administrador' %}
+  <a href="{{ url_for('en_construccion') }}">
+    <button class="btn-normal">Evidencias</button>
+  </a>
+{% else %}
+  <a href="{{ url_for('en_construccion') }}">
+    <button class="btn-normal">Tratamientos</button>
+  </a>
+{% endif %}
 </div>
 {% endblock %}

@@ -3,6 +3,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_mysqldb import MySQL
 from flask_login import LoginManager, login_user, logout_user, login_required
 from flask_mail import Mail, Message
+import os
 
 # ---------------------- UTILIDADES ----------------------
 from werkzeug.utils import secure_filename
@@ -67,7 +68,7 @@ def login():
         password = request.form['password']
 
         cur = db.connection.cursor()
-        cur.execute("SELECT id, password, must_change_password FROM user WHERE username=%s", (username,))
+        cur.execute("SELECT id, password, must_change_password, rol FROM user WHERE username=%s", (username,))
         row = cur.fetchone()
         cur.close()
 
@@ -75,6 +76,7 @@ def login():
             user = ModelUser.get_by_id(db, row[0])
             login_user(user)
             session['user_id'] = row[0]
+            session['rol'] = row[3]
 
             if row[2] == 1:  
                 return redirect(url_for('cambiar_password'))
@@ -96,9 +98,10 @@ def logout():
 # ---------------------- HOME ----------------------
 @app.route('/home')
 def home():
+    rol = session.get("rol")
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    return render_template('home.html')
+    return render_template('home.html', rol=rol)
 
 
 # ---------------------- ERRORES ----------------------
@@ -157,36 +160,43 @@ def registrar_usuario():
         password_hashed = generate_password_hash(password_plain)
 
         cur = db.connection.cursor()
-        sql = """INSERT INTO user
-                 (username, password, fullname, must_change_password, rol, estado, fecha_registro) 
-                 VALUES (%s, %s, %s, %s, %s, %s, NOW())"""
-        values = (username, password_hashed, fullname, 1, rol, "Habilitado")
-        cur.execute(sql, values)
-        db.connection.commit()
-        cur.close()
-
-        # -------- Enviar correo con credenciales --------
         try:
-            msg = Message(" MFG - Cuenta creada en el sistema", recipients=[username])
-            msg.body = f"""
-            Hola {fullname}, somos el sistema de la finca guerrero.
+            sql = """INSERT INTO user
+                     (username, password, fullname, must_change_password, rol, estado, fecha_registro) 
+                     VALUES (%s, %s, %s, %s, %s, %s, NOW())"""
+            values = (username, password_hashed, fullname, 1, rol, "Habilitado")
+            cur.execute(sql, values)
+            db.connection.commit()
 
-            Tu cuenta ha sido creada exitosamente, inicia sesion con las siguientes credenciales.
+            # -------- Enviar correo con credenciales --------
+            try:
+                msg = Message(" MFG - Cuenta creada en el sistema", recipients=[username])
+                msg.body = f"""
+                Hola {fullname}, somos el sistema de la finca guerrero.
 
-            Usuario: {username}
-            Contraseña provisional: {password_plain}
+                Tu cuenta ha sido creada exitosamente, inicia sesión con las siguientes credenciales:
 
-            Recuerda que deberás cambiar la contraseña en tu primer acceso.
+                Usuario: {username}
+                Contraseña provisional: {password_plain}
 
-            Saludos.
-            No responda este mensaje
-            """
-            mail.send(msg)
-            flash("Usuario registrado y correo enviado con éxito", "success")
+                Recuerda que deberás cambiar la contraseña en tu primer acceso.
+
+                Saludos.
+                No responda este mensaje.
+                """
+                mail.send(msg)
+                flash("Usuario registrado y correo enviado con éxito", "success")
+            except Exception as e:
+                flash(f"Usuario registrado pero error al enviar el correo: {str(e)}", "warning")
+
         except Exception as e:
-            flash(f"Usuario registrado pero error al enviar el correo: {str(e)}", "warning")
+            # Aquí atrapamos el error si ya existe
+            db.connection.rollback()
+            flash("El usuario ya existe, no se puede registrar de nuevo.", "danger")
 
-        flash("Usuario registrado con éxito")
+        finally:
+            cur.close()
+
         return redirect(url_for('registrar_usuario'))
 
     return render_template('auth/Registrar_usuarios.html')
@@ -270,6 +280,36 @@ def editar_perfil():
     return render_template('auth/editar_perfil.html', usuario=usuario)
 
 
+
+@app.route('/cambiar_contraseña', methods=['GET','POST'])
+def cambiar_contraseña():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        nueva = request.form['nueva']
+        confirmar = request.form['confirmar']
+
+        if nueva == confirmar:
+            hashed = generate_password_hash(nueva)
+
+            cur = db.connection.cursor()
+            cur.execute("""
+                UPDATE user 
+                SET password=%s, must_change_password=0 
+                WHERE id=%s
+            """, (hashed, session['user_id']))
+            db.connection.commit()
+            cur.close()
+
+            session.clear()
+            flash("Contraseña actualizada con éxito. Vuelve a iniciar sesion", "success")
+            return redirect(url_for('login'))
+        
+        flash("Las contraseñas no coinciden", "error")
+
+    return render_template("auth/cambiar_contraseña.html")
+
 # ---------------------- CULTIVOS ----------------------
 @app.route('/cultivos')
 @login_required
@@ -292,19 +332,26 @@ def registrar_cultivo():
     if request.method == 'POST':
         nombre = request.form['nombre']
         tipo = request.form['tipo']
-        id_usuario = session['user_id']  
+        id_usuario = session['user_id']
 
         cur = db.connection.cursor()
-        sql = """
-            INSERT INTO cultivos (nombre, tipo, id_usuario)
-            VALUES (%s, %s, %s)
-        """
-        cur.execute(sql, (nombre, tipo, id_usuario))
+        # Verificar si ya existe un cultivo con ese nombre
+        cur.execute("SELECT id_cultivo FROM cultivos WHERE nombre=%s", (nombre,))
+        existe = cur.fetchone()
+
+        if existe:
+            flash("Ya existe un cultivo con ese nombre.", "danger")
+            cur.close()
+            return redirect(url_for('registrar_cultivo'))
+
+        cur.execute(
+            "INSERT INTO cultivos (nombre, tipo, id_usuario) VALUES (%s, %s, %s)",
+            (nombre, tipo, id_usuario)
+        )
         db.connection.commit()
         cur.close()
-
-        flash("Cultivo registrado con éxito", "success")
-        return redirect(url_for('cultivos'))
+        flash("Cultivo registrado con éxito.", "success")
+        return redirect(url_for('registrar_cultivo'))
 
     return render_template('auth/registrar_cultivo.html')
 
@@ -413,6 +460,11 @@ def siembra_registrada():
     """)
     registros = cur.fetchall()
     return render_template("siembra_registrada.html", registros=registros)
+
+
+@app.route('/en_construccion')
+def en_construccion():
+    return "<h1>🚧 Esta sección está en construcción 🚧</h1>"
 
 
 # ---------------------- MAIN ----------------------
