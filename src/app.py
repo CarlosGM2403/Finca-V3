@@ -509,52 +509,43 @@ def siembra_registrada():
     return render_template("siembra_registrada.html", registros=registros)
 
 
-@app.route('/en_construccion')
-def en_construccion():
-    return "<h1>🚧 Esta sección está en construcción 🚧</h1>"
-
 # ---------------------- SOLICITUD DE INSUMO ----------------------
 
 @app.route('/solicitar_insumo', methods=['GET', 'POST'])
+@login_required
 def solicitar_insumo():
-    if 'id' not in session:
-        flash("Debes iniciar sesión para acceder a esta sección", "danger")
+    if 'user_id' not in session:
         return redirect(url_for('login'))
-
-    if session['rol'] != 'empleado':
-        flash("Solo los empleados pueden registrar solicitudes de insumos", "danger")
-        return redirect(url_for('home'))
 
     if request.method == 'POST':
         tipo_insumo = request.form.get('tipo_insumo')
         cantidad = request.form.get('cantidad')
         observaciones = request.form.get('observaciones')
-        evidencia_file = request.files.get('evidencia')
 
-        # Validaciones
-        if not tipo_insumo or not cantidad or not observaciones:
-            flash("Todos los campos son obligatorios", "danger")
+        try:
+            cur = db.connection.cursor()
+            cur.execute("""
+                INSERT INTO solicitud_insumo (usuario_id, tipo_insumo, cantidad, observaciones, fecha_solicitud)
+                VALUES (%s, %s, %s, %s, NOW())
+            """, (session['user_id'], tipo_insumo, cantidad, observaciones))
+            db.connection.commit()
+            cur.close()
+
+            flash("Solicitud de insumo registrada con éxito", "success")
             return redirect(url_for('solicitar_insumo'))
 
-        # Guardar evidencia si existe
-        evidencia_path = None
-        if evidencia_file and evidencia_file.filename != '':
-            filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{evidencia_file.filename}"
-            evidencia_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            evidencia_file.save(evidencia_path)
-
-        # Guardar en la base de datos
-        cur = mysql.connection.cursor()
-        cur.execute("""
-            INSERT INTO solicitud_insumo (user_id, tipo_insumo, cantidad, observaciones, evidencia, fecha_solicitud)
-            VALUES (%s, %s, %s, %s, %s, NOW())
-        """, (session['id'], tipo_insumo, cantidad, observaciones, evidencia_path))
-        mysql.connection.commit()
-
-        flash("Solicitud de insumo registrada correctamente", "success")
-        return redirect(url_for('home'))
+        except Exception as e:
+            db.connection.rollback()
+            flash(f"Error al registrar la solicitud: {str(e)}", "danger")
 
     return render_template('solicitud_insumo.html')
+
+@app.route('/en_construccion')
+def en_construccion():
+    return "<h1>🚧 Esta sección está en construcción 🚧</h1>"
+
+
+
 
 # ---------------------- MAIN ----------------------
 if __name__ == '__main__':
