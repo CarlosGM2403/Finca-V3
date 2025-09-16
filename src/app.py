@@ -30,6 +30,7 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = 'estebangallego757@gmail.com'   
 app.config['MAIL_PASSWORD'] = 'wsmc lowl twbu ovci'   # Contraseña de aplicación
 app.config['MAIL_DEFAULT_SENDER'] = ('Soporte', 'estebangallego757@gmail.com')
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
 mail = Mail(app)
 
@@ -512,6 +513,48 @@ def siembra_registrada():
 def en_construccion():
     return "<h1>🚧 Esta sección está en construcción 🚧</h1>"
 
+# ---------------------- SOLICITUD DE INSUMO ----------------------
+
+@app.route('/solicitar_insumo', methods=['GET', 'POST'])
+def solicitar_insumo():
+    if 'id' not in session:
+        flash("Debes iniciar sesión para acceder a esta sección", "danger")
+        return redirect(url_for('login'))
+
+    if session['rol'] != 'empleado':
+        flash("Solo los empleados pueden registrar solicitudes de insumos", "danger")
+        return redirect(url_for('home'))
+
+    if request.method == 'POST':
+        tipo_insumo = request.form.get('tipo_insumo')
+        cantidad = request.form.get('cantidad')
+        observaciones = request.form.get('observaciones')
+        evidencia_file = request.files.get('evidencia')
+
+        # Validaciones
+        if not tipo_insumo or not cantidad or not observaciones:
+            flash("Todos los campos son obligatorios", "danger")
+            return redirect(url_for('solicitar_insumo'))
+
+        # Guardar evidencia si existe
+        evidencia_path = None
+        if evidencia_file and evidencia_file.filename != '':
+            filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{evidencia_file.filename}"
+            evidencia_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            evidencia_file.save(evidencia_path)
+
+        # Guardar en la base de datos
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            INSERT INTO solicitud_insumo (user_id, tipo_insumo, cantidad, observaciones, evidencia, fecha_solicitud)
+            VALUES (%s, %s, %s, %s, %s, NOW())
+        """, (session['id'], tipo_insumo, cantidad, observaciones, evidencia_path))
+        mysql.connection.commit()
+
+        flash("Solicitud de insumo registrada correctamente", "success")
+        return redirect(url_for('home'))
+
+    return render_template('solicitud_insumo.html')
 
 # ---------------------- MAIN ----------------------
 if __name__ == '__main__':

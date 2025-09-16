@@ -94,7 +94,7 @@
     <a href="{{ url_for('registrar_actividad') }}">Registrar Actividad</a>
   {% endif %}
   <a href="#">Problemas de cultivo</a>
-  <a href="#">Solicitudes de Insumos</a>
+  <a href="{{ url_for('solicitar_insumo') }}">Solicitudes de Insumos</a>
   {% if rol != 'administrador' %}
     <a href="{{ url_for('registrar_siembra') }}">Registro de Siembra</a>
   {% endif %}
@@ -119,7 +119,7 @@
     {% if rol == 'administrador' %}
       <a href="{{ url_for('en_construccion') }}">Ventas</a>
     {% else %}
-      <a href="{{ url_for('en_construccion') }}">Solicitar Insumos</a>
+      <a href="{{ url_for('solicitar_insumo') }}">Solicitar Insumos</a>
     {% endif %}
 
     {# --- Evidencias / Tratamientos --- #}
@@ -184,7 +184,7 @@
     <button class="btn-normal">Ventas</button>
   </a>
 {% else %}
-  <a href="{{ url_for('en_construccion') }}">
+  <a href="{{ url_for('solicitar_insumo') }}">
     <button class="btn-normal">Solicitar Insumos</button>
   </a>
 {% endif %}
