@@ -40,17 +40,6 @@ body {
             margin-bottom: 20px;
         }
 
-        a {
-            display: block;
-            margin-top: 15px;
-            font-size: 13px;
-            color: #7cc58e;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
 
         input {
             background-color: rgba(49, 49, 49, 0.603);

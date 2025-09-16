@@ -422,6 +422,57 @@ def ver_fotos():
 
     return render_template("ver_fotos.html", fotos=fotos, usuario=usuario)
 
+
+
+
+@app.route("/registrar_ventas", methods=["GET", "POST"])
+def registrar_ventas():
+    cur = db.connection.cursor()
+
+    # Traer cultivos para el selector
+    cur.execute("SELECT Id_cultivo, nombre FROM Cultivos")
+    cultivos = cur.fetchall()
+
+    if request.method == "POST":
+        cod_cultivo = request.form["cultivo"]
+        fecha = request.form["fecha"]
+        cantidad_bultos = request.form["cantidad_bultos"]
+        precio = request.form["precio"]
+        descripcion = request.form["descripcion"]
+
+        # Insertar en la tabla ventas
+        cur.execute("""
+            INSERT INTO ventas (cod_cultivo, fecha_venta, cantidad_bultos, precio, descripcion)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (cod_cultivo, fecha, cantidad_bultos, precio, descripcion))
+        
+        db.connection.commit()
+        return redirect(url_for("ventas_registradas"))
+
+    return render_template("auth/registrar_ventas.html", cultivos=cultivos)
+
+
+@app.route("/ventas_registradas")
+def ventas_registradas():
+    cur = db.connection.cursor()
+    cur.execute("""
+        SELECT v.id_venta, c.nombre AS cultivo, v.fecha_venta, 
+               v.cantidad_bultos, v.precio, v.descripcion
+        FROM ventas v
+        JOIN cultivos c ON v.cod_cultivo = c.id_cultivo
+        ORDER BY v.fecha_venta DESC
+    """)
+    ventas = cur.fetchall()
+    return render_template("auth/ventas_registradas.html", ventas=ventas)
+
+
+@app.route("/eliminar_venta/<int:id>")
+def eliminar_venta(id):
+    cur = db.connection.cursor()
+    cur.execute("DELETE FROM ventas WHERE id_venta = %s", (id,))
+    db.connection.commit()
+    return redirect(url_for("ventas_registradas"))
+
 # ---------------------- REGISTRAR SIEMBRA ----------------------
 @app.route("/Registrar_siembra", methods=["GET", "POST"])
 @login_required
