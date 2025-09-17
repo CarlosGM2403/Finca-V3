@@ -461,11 +461,12 @@ def registrar_actividad():
                 return redirect(url_for("registrar_actividad"))
 
         try:
+            print(f"Actividad recibida: '{actividad}'")
             cursor = db.connection.cursor()
             cursor.execute("""
                 INSERT INTO actividades (id_usuario, actividad, insumos, observaciones, evidencia, fecha)
                 VALUES (%s, %s, %s, %s, %s, NOW())
-            """, (session['user_id'], actividad, insumos, observaciones, filename))  # 👈 Aquí usas session
+            """, (session['user_id'], actividad, insumos, observaciones, filename))
             db.connection.commit()
             cursor.close()
 
@@ -483,39 +484,48 @@ def registrar_actividad():
 
 
 
-@app.route('/ver_fotos')
+@app.route("/ver_fotos")
 @login_required
 def ver_fotos():
     cursor = db.connection.cursor()
+
+    # Consulta actualizada según tus tablas
     query = """
-        SELECT a.evidencia, a.fecha, u.fullname
+        SELECT a.evidencia, a.fecha, u.fullname, a.actividad, a.insumos, a.observaciones
         FROM actividades a
         JOIN user u ON a.id_usuario = u.id
         WHERE u.id = %s
     """
     cursor.execute(query, (session['user_id'],))
-    resultados = cursor.fetchall()
+    rows = cursor.fetchall()
 
     fotos = []
-    for row in resultados:
-        if row[0]:  # si hay evidencia
-            # Construir la ruta
-            ruta = url_for("static", filename="uploads/" + row[0])
+    usuario = None  # Evitar el error de variable no definida
 
-            # 👀 Imprimir la ruta para depuración
-            print("Ruta generada:", ruta)
+    for row in rows:
+        if usuario is None:
+            usuario = row[2]  # Capturamos el nombre completo solo una vez
+        fotos.append({
+            'ruta': url_for('static', filename='uploads/' + row[0]),
+            'fecha': row[1],
+            'usuario': row[2],
+            'actividad': row[3],
+            'insumos': row[4],
+            'observaciones': row[5]
+        })
 
-            # Agregar al arreglo
-            fotos.append({
-                "ruta": ruta,
-                "fecha": row[1],
-                "usuario": row[2]
-            })
-
-    usuario = fotos[0]["usuario"] if fotos else "Sin evidencias"
     cursor.close()
 
+    # Si no hay fotos, aún obtenemos el nombre del usuario
+    if usuario is None:
+        cursor = db.connection.cursor()
+        cursor.execute("SELECT fullname FROM user WHERE id = %s", (session['user_id'],))
+        result = cursor.fetchone()
+        usuario = result[0] if result else "Usuario desconocido"
+        cursor.close()
+
     return render_template("ver_fotos.html", fotos=fotos, usuario=usuario)
+
 
 
 

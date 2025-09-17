@@ -92,7 +92,7 @@
   <a href="#">Problemas de cultivo</a>
   <a href="{{ url_for('solicitar_insumo') }}">Solicitar Insumos</a>
   {% if rol == 'administrador' %}
-    <a href="{{ url_for('ver_fotos') }}">Ver Evidencias</a>
+    <a href="{{ url_for('ver_solicitudes') }}">Ver Solicitudes</a>
   {% endif %}
   {% if rol == 'administrador' %}
     <a href="{{ url_for('registrar_siembra') }}">Registro de Siembra</a>

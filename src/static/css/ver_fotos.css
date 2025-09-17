@@ -89,7 +89,7 @@ body {
 
 /* --- Card individual --- */
 .card {
-    background: #ffffff; /* Fondo blanco para la foto */
+    background: rgba(0, 0, 0, 0.4); /* Fondo blanco para la foto */
     border-radius: 15px; /* Bordes redondeados */
     overflow: hidden; /* Evita que la imagen sobresalga */
     width: 230px;
@@ -117,6 +117,7 @@ body {
     font-size: 0.95rem;
     color: #333;
     font-weight: 500;
+    color: white;
 }
 /* Botón volver */
 .logout-btn {

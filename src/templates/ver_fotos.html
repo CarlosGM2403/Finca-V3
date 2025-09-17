@@ -29,8 +29,12 @@
         {% for foto in fotos %}
         <div class="card">
             <img src="{{ foto.ruta }}" alt="Evidencia">
-            <p>Fecha subida: {{ foto.fecha }}</p>
-        </div>
+              <p><strong>Actividad:</strong> {{ foto.actividad }}</p>
+              <p><strong>Insumos:</strong> {{ foto.insumos }}</p>
+              <p><strong>Observaciones:</strong> {{ foto.observaciones }}</p>
+              <p><strong>Fecha subida:</strong> {{ foto.fecha }}</p>
+          </div>
+
         {% endfor %}
     {% else %}
         <p style="color: white; text-align: center; font-size: 18px;">
