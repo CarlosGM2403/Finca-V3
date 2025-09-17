@@ -1,40 +1,45 @@
 {% extends 'base.html' %}
 
-{% block title %}Evidencias{% endblock %}
+{% block title %}Ver Fotos{% endblock %}
 
 {% block CustomCSS %}
-  <!-- Estilos propios -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/ver_fotos.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ver_fotos.css') }}">
 {% endblock %}
 
+
 {% block body %}
-  <!-- LOGO -->
-  <div class="logo">
+
+<div class="logo">
     <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
-  </div>
+</div>
 
-  <!-- BOTÓN VOLVER -->
-  <div class="btn-top-right">
-    <a href="{{ url_for('registrar_actividad') }}" class="btn-volver">
-      ← Volver
-    </a>
-  </div>
+<h1 class="titulo">Evidencias Registradas - {{ usuario }}</h1>
+<!-- Botón volver al inicio -->
+<div class="logout-btn">
+  <a href="{{ url_for('registrar_actividad') }}">
+    <button title="Volver al inicio">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+  </a>
+</div>
 
-  <!-- GALERÍA DE EVIDENCIAS -->
-  <div class="galeria">
-    <h1>Evidencias Registradas - {{ usuario }}</h1>
-
+<div class="fotos-container">
     {% if fotos %}
-      <div class="grid-fotos">
         {% for foto in fotos %}
-          <div class="foto-item">
-            <img src="{{ url_for('static', filename='uploads/' ~ foto.nombre_archivo) }}" alt="Evidencia">
-            <p class="fecha-foto">Fecha Subida {{ foto.fecha }}</p>
+        <div class="card">
+            <img src="{{ foto.ruta }}" alt="Evidencia">
+              <p><strong>Actividad:</strong> {{ foto.actividad }}</p>
+              <p><strong>Insumos:</strong> {{ foto.insumos }}</p>
+              <p><strong>Observaciones:</strong> {{ foto.observaciones }}</p>
+              <p><strong>Fecha subida:</strong> {{ foto.fecha }}</p>
           </div>
+
         {% endfor %}
-      </div>
     {% else %}
-      <p class="sin-evidencias">No hay evidencias registradas.</p>
+        <p style="color: white; text-align: center; font-size: 18px;">
+            No hay evidencias registradas aún.
+        </p>
     {% endif %}
-  </div>
+</div>
 {% endblock %}

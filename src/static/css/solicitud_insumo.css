@@ -3,8 +3,12 @@ body {
   background-image: url(../img/fondo_forms.png);
   margin: 0;
   padding: 0;
+<<<<<<< HEAD
   repeat: no-repeat;
   background-size: cover;
+=======
+  background-repeat: no-repeat;
+>>>>>>> 2131ab7f486646a29baa73218ca8f9a225c66c6c
 }
 
 /* logo MFG */

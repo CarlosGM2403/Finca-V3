@@ -14,9 +14,13 @@
 <!-- Contenedor principal -->
 <div class="cuadro-cultivos">
 
+    <div class="buscador-contenedor">
+    <input type="text" id="buscador-cultivos" placeholder="Buscar cultivos...">
+  </div>
+
   <!-- Tabla con scroll -->
   <div class="tabla-contenedor">
-    <table class="tabla-cultivos">
+    <table class="tabla-cultivos" id="tabla-cultivos">
       <thead>
         <tr>
           <th>Nombre</th>
@@ -24,7 +28,9 @@
           <th>Registrado por</th>
           <th>Fecha Registro</th>
           <th>Estado</th>
-          <th>Acciones</th>
+          {% if rol == 'administrador' %}
+            <th>Acciones</th>
+          {% endif %}
         </tr>
       </thead>
       <tbody>
@@ -35,8 +41,9 @@
           <td>{{ cultivo[3] }}</td>
           <td>{{ cultivo[4] }}</td>
           <td>{{ cultivo[5] }}</td>
+        {% if rol == 'administrador' %}
           <td>
-            <form action="{{ url_for('cambiar_estado_cultivo', id=cultivo[0]) }}" method="post" style="display:inline;">
+            <form action="{{ url_for('cambiar_estado', id=cultivo[0]) }}" method="post" style="display:inline;">
               {% if cultivo[5] == "Habilitado" %}
                 <button type="submit" class="btn-danger">Inhabilitar</button>
               {% else %}
@@ -44,6 +51,7 @@
               {% endif %}
             </form>
           </td>
+        {% endif %}
         </tr>
         {% endfor %}
       </tbody>
@@ -51,11 +59,48 @@
   </div>
 
   <!-- Botones de acción -->
-  <a href="{{ url_for('registrar_cultivo') }}">
-    <button class="btn-normal">Registrar Cultivo</button>
-  </a>
+  {% if rol == 'administrador' %}
+    <a href="{{ url_for('registrar_cultivo') }}">
+      <button class="btn-normal">Registrar Cultivo</button>
+    </a>
+  {% endif %}
 
   <a href="{{ url_for('home') }}">Volver al inicio</a>
 </div>
 
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const buscador = document.getElementById('buscador-cultivos');
+    const tabla = document.getElementById('tabla-cultivos').getElementsByTagName('tbody')[0];
+    const filas = tabla.getElementsByTagName('tr');
+    const noResult = document.getElementById('no-result-cultivos');
+
+    buscador.addEventListener('input', function() {
+        const filtro = this.value.toLowerCase().trim();
+        let coincidencias = 0;
+
+        for (let i = 0; i < filas.length; i++) {
+            if (filas[i].id === 'no-result-cultivos') continue;
+
+            const celdas = filas[i].getElementsByTagName('td');
+            let textoFila = '';
+            for (let j = 0; j < celdas.length - 1; j++) { // Excluye columna de Acciones
+                textoFila += celdas[j].textContent.toLowerCase() + ' ';
+            }
+
+            if (textoFila.includes(filtro)) {
+                filas[i].style.display = '';
+                coincidencias++;
+            } else {
+                filas[i].style.display = 'none';
+            }
+        }
+
+        noResult.style.display = (coincidencias === 0) ? '' : 'none';
+    });
+});
+</script>
 {% endblock %}

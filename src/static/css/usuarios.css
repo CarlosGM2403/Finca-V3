@@ -5,7 +5,7 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    repeat: no-repeat;
+    height: 85vh;
     background-size: cover;
 }
 
@@ -100,4 +100,83 @@ a:hover {
 .btn-estado:hover {
     background-color: #f00;
     color: #fff;
+}
+
+.buscador-contenedor {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#buscador {
+    width: 80%;
+    max-width: 400px;
+    padding: 10px 40px 10px 15px; /* espacio para el ícono */
+    border-radius: 25px;
+    border: 2px solid #4db856;
+    background-color: rgba(49, 49, 49, 0.8);
+    color: #fff;
+    font-size: 16px;
+    outline: none;
+    transition: all 0.3s ease;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 20px;
+}
+
+#buscador::placeholder {
+    color: #ccc;
+}
+
+#buscador:focus {
+    border-color: #54c55a;
+    box-shadow: 0 0 10px rgba(82, 175, 82, 0.5);
+    background-color: rgba(49, 49, 49, 0.95);
+}
+
+
+/* 🔹 Responsive para pantallas pequeñas */
+@media screen and (max-width: 768px) {
+  body {
+    height: auto; /* Evita que corte contenido */
+    padding: 10px;
+  }
+
+  /* Ajuste del título */
+  .titulo-principal {
+    font-size: 1.5rem;
+    margin: 20px 0 10px 0;
+  }
+
+  /* Cuadro de la tabla más compacto */
+  .cuadro-usuarios {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 30px;
+  }
+
+  /* Contenedor con scroll horizontal en móviles */
+  .tabla-contenedor {
+    max-height: none; /* sin límite fijo */
+    overflow-x: auto; /* scroll horizontal si se necesita */
+  }
+
+  /* Tabla compacta */
+  .tabla-usuarios th, .tabla-usuarios td {
+    padding: 8px;
+    font-size: 0.85rem;
+  }
+
+  /* Botones más pequeños */
+  .btn-normal {
+    padding: 8px 14px;
+    font-size: 0.9rem;
+    margin: 8px 3px 0 3px;
+  }
+
+  /* Enlaces más pequeños */
+  a {
+    font-size: 12px;
+    text-align: center;
+  }
 }

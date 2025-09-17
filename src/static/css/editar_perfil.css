@@ -1,12 +1,12 @@
 body {
-  font-family: 'Poppins', sans-serif;
   background-image: url("../img/fondo_forms.png");
-  background-size: cover;
-  background-position: center;
+  color: #fff;
+  font-family: 'Poppins', sans-serif;
   margin: 0;
   padding: 0;
   repeat: no-repeat;
   background-size: cover;
+  background-repeat: no-repeat;
 }
 
 /* Logo arriba a la izquierda */
@@ -18,6 +18,29 @@ body {
 .logo img {
   width: 180px;
 }
+
+/* Contenedor de los campos de solo lectura */
+.campo-solo-lectura {
+  background-color: #2a2a2a;
+  color: #ffffff;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 500;
+  border: 1px solid #3a3a3a;
+}
+
+/* Etiquetas de Rol y Estado */
+.label-solo-lectura {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 6px;
+  color: #ffffff;
+  text-align: center;
+}
+
 
 /* Contenedor del formulario */
 .form-container {
@@ -99,4 +122,42 @@ input[type="text"]:focus {
 
 .btn-home:hover {
   background: #c0392b;
+}
+
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.form-row .form-inputs {
+  flex: 2;
+}
+
+.form-row  {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.form-row {
+  max-width: 120px;
+  height: auto;
+}
+select {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 18px;
+  border: 1px solid #ccc;
+  color: #000000;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.3s;
+  font-size: 15px;
+  background-color: #fff;
+}
+
+select:focus {
+  border-color: #ffffff;
 }

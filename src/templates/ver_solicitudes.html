@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Solicitudes Realizadas{% endblock %}
+
+{% block CustomCSS %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ver_solicitudes.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="logo">
+    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+</div>
+
+<div class="container">
+    <h1>Solicitudes Realizadas</h1>
+    <table class="tabla-solicitudes">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Usuario</th>
+                <th>Tipo de Insumo</th>
+                <th>Cantidad</th>
+                <th>Observaciones</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for solicitud in solicitudes %}
+            <tr>
+                <td>{{ solicitud[0] }}</td> <!-- id -->
+                <td>{{ solicitud[1] }}</td> <!-- fullname -->
+                <td>{{ solicitud[2] }}</td> <!-- tipo_insumo -->
+                <td>{{ solicitud[3] }}</td> <!-- cantidad -->
+                <td>{{ solicitud[4] }}</td> <!-- observaciones -->
+                <td>{{ solicitud[5] }}</td> <!-- fecha_solicitud -->
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" style="text-align:center; color: gray;">
+                    No hay solicitudes registradas
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="acciones">
+        <a href="{{ url_for('home') }}" class="btn-volver">Volver</a>
+    </div>
+</div>
+{% endblock %}

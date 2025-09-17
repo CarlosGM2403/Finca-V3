@@ -1,0 +1,164 @@
+body {
+  font-family: 'Poppins', sans-serif;
+  background-image: url(../img/fondo_forms.png);
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  background-size: cover;
+}
+
+/* Logo */
+.logo {
+  position: absolute; 
+  top: 10px; 
+  left: 10px; 
+  width: 50px; 
+  height: auto; 
+}
+
+/* Contenedor */
+.containerSiembra {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 25px;
+  background: rgba(39, 39, 39, 0.7);
+  border-radius: 16px;
+  color: white;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  text-align: center;
+}
+
+/* Titulo */
+.Titulo {
+  text-align: center;
+  font-size: 40px;
+  margin-top: 50px;
+  color: #fff;
+  font-weight: bold;
+}
+
+/* Tabla */
+.tabla-contenedor {
+  max-height: 450px;
+  overflow-y: auto;
+  margin: 20px 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  color: white;
+}
+
+th, td {
+  padding: 12px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+th {
+  background: rgba(0,0,0,0.5);
+  font-weight: bold;
+}
+
+/* Botones */
+.btn-guardar {
+  background: none;
+  color: white;
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 2px solid #198754;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.3s;
+}
+
+.btn-guardar:hover {
+  background: #198754;
+  color: black;
+}
+
+.botones {
+  margin-top: 20px;
+}
+
+/* Imagen de la planta */
+.planta {
+  max-width: 250px;
+  position: fixed;
+  bottom: -4rem;
+  right: 15rem;
+  height: 250px;
+  z-index: -1;
+  display: block;
+  pointer-events: none;
+}
+
+/* Botón volver */
+.logout-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+
+.logout-btn button {
+  background: #111;
+  color: white;
+  border: 2px solid #00ff88;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.logout-btn button:hover {
+  background: #00ff88;
+  color: black;
+}
+
+.buscador-contenedor {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#buscador-tratamientos {
+    width: 80%;
+    max-width: 400px;
+    padding: 10px 40px 10px 15px; /* espacio para ícono */
+    border-radius: 25px;
+    border: 2px solid #4db856;
+    background-color: rgba(49, 49, 49, 0.8);
+    color: #fff;
+    font-size: 16px;
+    outline: none;
+    transition: all 0.3s ease;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 20px;
+}
+
+#buscador-tratamientos::placeholder {
+    color: #ccc;
+}
+
+#buscador-tratamientos:focus {
+    border-color: #54c55a;
+    box-shadow: 0 0 10px rgba(82, 175, 82, 0.5);
+    background-color: rgba(49, 49, 49, 0.95);
+}
+
+
+/* Responsive */
+@media screen and (max-width: 768px) {
+  .logo { display: none; }
+  .containerSiembra { width: 90%; padding: 15px; }
+  .Titulo { font-size: 28px; }
+  table { font-size: 14px; }
+  .btn-guardar { width: 100%; margin: 5px 0; }
+  .planta { display: none; }
+}

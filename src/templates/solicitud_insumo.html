@@ -28,7 +28,7 @@
           <option value="Fertilizantes">Fertilizantes</option>
           <option value="Abonos">Abonos</option>
         </select>
-          <label for="cantidad">Cantidad</label>
+          <label for="cantidad" align="left">Cantidad</label>
           <textarea name="cantidad" id="cantidad" rows="1" required></textarea>
 
       </div>
@@ -49,14 +49,6 @@
         <a href="{{ url_for('home') }}" class="btn-salir">Salir</a>
       </div>
     </div>
-
-    <!-- Input oculto -->
-    <input type="file" id="evidencia" name="evidencia"
-           accept="image/*" capture="environment" style="display: none;">
-
-    <!-- Vista previa de la imagen -->
-    <div id="preview" class="preview"></div>
-
   </form>
 </div>
     <div class="planta">

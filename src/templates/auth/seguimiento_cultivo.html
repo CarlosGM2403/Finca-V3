@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Solicitud Insumo{% endblock %}
+
+{% block CustomCSS %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/seguimiento_cultivo.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="logo">
+    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+</div>
+
+<div class="title_h1">
+<h1>Seguimiento de cultivos y <br> tratamientos</h1>
+</div>
+
+<div class="logout-btn">
+  <a href="{{ url_for('home') }}">
+    <button title="Volver al inicio">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+  </a>
+</div>
+
+<div class="insumos-container">
+
+  <form method="POST" enctype="multipart/form-data">
+
+    <!-- Fila de selects + imagen -->
+    <div class="form-row">
+      <div class="form-inputs">
+
+    <label for="cultivo">Selector de Cultivo</label>
+    <select name="cultivo" required>
+        <option value="" disabled selected>Seleccione un Cultivo</option>
+        {% for c in cultivos %}
+            <option value="{{ c[0] }}">{{ c[1] }}</option>
+        {% endfor %}
+    </select>
+
+
+    <!-- Tratamiento -->
+    <label for="tratamiento">Tratamiento Aplicado</label>
+    <select name="tratamiento" required>
+        <option value="" disabled selected>Seleccione un tratamiento</option>
+        <option value="fungicida">Fungicida</option>
+        <option value="insecticida">Insecticida</option>
+        <option value="herbicida">Herbicida</option>
+        <option value="fertilizante">Fertilizante químico</option>
+        <option value="abono_organico">Abono orgánico</option>
+        <option value="bioestimulante">Bioestimulante</option>
+        <option value="control_biologico">Control biológico</option>
+        <option value="riego_especial">Riego especializado</option>
+        <option value="poda_sanitaria">Poda sanitaria</option>
+        <option value="enmienda_suelo">Enmienda de suelo</option>
+    </select>
+
+    <!-- Problema -->
+    <label for="problema">Problema Identificado</label>
+    <select name="problema" required>
+        <option value="" disabled selected>Seleccione un problema</option>
+        <option value="plagas">Plagas</option>
+        <option value="hongos">Hongos</option>
+        <option value="malezas">Malezas</option>
+        <option value="deficiencia_nutrientes">Deficiencia de nutrientes</option>
+    </select>
+
+    <!-- Prioridad -->
+    <label for="prioridad">Tipo de Prioridad</label>
+    <select name="prioridad" required>
+        <option value="" disabled selected>Seleccione una prioridad</option>
+        <option value="alta">Alta</option>
+        <option value="media">Media</option>
+        <option value="baja">Baja</option>
+    </select>
+
+    <!-- Insumos -->
+    <label for="insumos">Insumos Aplicados</label>
+    <select name="insumos" required>
+        <option value="" disabled selected>Seleccione un insumo</option>
+
+    <optgroup label="Fertilizantes">
+        <option value="abono_organico">Abono orgánico</option>
+        <option value="fertilizante_quimico">Fertilizante químico</option>
+        <option value="cal">Cal agrícola</option>
+    </optgroup>
+
+    <optgroup label="Control de Plagas">
+        <option value="insecticida">Insecticida</option>
+        <option value="aceite_neem">Aceite de neem</option>
+    </optgroup>
+
+    <optgroup label="Control de Hongos">
+        <option value="fungicida">Fungicida</option>
+        <option value="trichoderma">Trichoderma</option>
+    </optgroup>
+
+    <optgroup label="Mejoradores de Suelo">
+        <option value="compost">Compost</option>
+        <option value="estiércol">Estiércol</option>
+    </optgroup>
+    </select>
+      </div>
+
+      <!-- Imagen a la derecha -->
+      <div class="form-image">
+        <img src="{{ url_for('static', filename='img/hojas.png') }}" alt="Actividad">
+      </div>
+    </div>
+
+        <!------- Botones ------------>
+    <div class="botones">
+        <button type="submit" class="btn-guardar">Guardar Registro</button>
+        <a href="{{ url_for('tratamientos_registrados') }}">
+        <button type="button" class="btn-consultar">Consultar Registros</button></a>    
+        </form>
+    </div>
+</div>
+
+    <div class="planta">
+        <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta">
+    </div>
+{% endblock %}
