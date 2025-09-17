@@ -21,16 +21,27 @@
   </div>
 
   <!-- GALERÍA DE EVIDENCIAS -->
-  <div class="galeria">
-    <h1>Evidencias Registradas - {{ usuario }}</h1>
+  <div class="container">
+    <h2 class="text-center text-white">Evidencias Registradas - {{ usuario }}</h2>
 
     {% if fotos %}
-      <div class="grid-fotos">
+      <div class="row mt-4">
         {% for foto in fotos %}
-          <div class="foto-item">
-            <img src="{{ url_for('static', filename='uploads/' ~ foto.nombre_archivo) }}" alt="Evidencia">
-            <p class="fecha-foto">Fecha Subida {{ foto.fecha }}</p>
+        <div class="col-md-3 mb-4">
+          <div class="card bg-dark text-white shadow">
+            <img src="{{ url_for('static', filename='evidencias/' ~ foto.nombre_archivo) }}" 
+                 class="card-img-top" alt="Evidencia">
+
+            <div class="card-body">
+              <p class="card-text">
+                <i class="bi bi-calendar"></i> {{ foto.fecha.strftime('%d-%m-%Y %H:%M') }}
+              </p>
+              <p class="card-text">
+                <i class="bi bi-person"></i> {{ foto.usuario }}
+              </p>
+            </div>
           </div>
+        </div>
         {% endfor %}
       </div>
     {% else %}

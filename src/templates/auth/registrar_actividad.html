@@ -11,65 +11,66 @@
     <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
 </div>
 
-<h1>¡Registrar Mi Actividad!</h1>
-
 <div class="actividad-container">
+  <h1>¡Registrar Mi Actividad!</h1>
 
   <form method="POST" enctype="multipart/form-data">
 
     <!-- Fila de selects + imagen -->
     <div class="form-row">
       <div class="form-inputs">
+
         <!-- Tipo de actividad -->
         <label for="actividad" align="left">Tipo de actividad</label>
         <select name="actividad" id="actividad" required>
-          <option value="cafe">Cosecha de Café</option>
-          <option value="limon">Cosecha de Limón</option>
-          <option value="mani">Cosecha de Maní</option>
+          <option value="cosecha_cafe">Cosecha de café</option>
+          <option value="cosecha_limon">Cosecha de limón</option>
+          <option value="cosecha_mani">Cosecha de maní</option>
           <option value="fumigacion">Fumigación</option>
         </select>
 
         <!-- Insumos -->
         <label for="insumos" align="left">Insumos utilizados</label>
         <select name="insumos" id="insumos" required>
-          <option value="ninguno">Ninguno</option>
-          <option value="fertilizante">Fertilizante</option>
-          <option value="herbicida">Herbicida</option>
-          <option value="semillas">Semillas</option>
+          <option value="Ninguno">Ninguno</option>
+          <option value="Insecticidas">Insecticidas</option>
+          <option value="Fertilizantes">Fertilizantes</option>
+          <option value="Abonos">Abonos</option>
         </select>
+
+        <!-- Observaciones -->
+        <label for="observaciones" align="left">Observaciones</label>
+        <textarea name="observaciones" id="observaciones" rows="4" required></textarea>
       </div>
 
-      <!-- Imagen a la derecha -->
+      <!-- Imagen/ícono a la derecha -->
       <div class="form-image">
         <img src="{{ url_for('static', filename='img/agricultor.png') }}" alt="Actividad">
       </div>
     </div>
 
-    <!-- Observaciones -->
-    <label for="observaciones" align="left">Observaciones</label>
-    <textarea name="observaciones" id="observaciones" rows="4" required></textarea>
+    <!-- Cámara / Evidencia -->
+<div class="camera-box">
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas" style="display:none;"></canvas>
+  <img id="preview" class="preview" style="display:none;">
 
-    <!-- Tomar evidencia + botones -->
-    <label for="evidencia" align="left">Tomar evidencia</label>
-    <div class="acciones-evidencia">
-      <div class="acciones-izquierda">
-        <button type="button" id="cameraBtn" class="camera-btn">
-          <i class="fas fa-camera"></i> Tomar foto
-        </button>
-        <a href="{{ url_for('ver_fotos') }}" class="btn-fotos">Ver Fotos</a>
-      </div>
+  <!-- Botones cámara -->
+  <div class="camera-buttons">
+    <button type="button" id="tomarFoto" class="btn-cam"> Tomar Foto</button>
+    <button type="button" id="borrarFoto" class="btn-delete"> Borrar</button>
+    <a href="{{ url_for('ver_fotos') }}" class="btn-fotos"> Ver Fotos</a>
+  </div>
 
-      <div class="acciones-derecha">
-        <button type="submit" class="btn-guardar">Guardar</button>
-        <a href="{{ url_for('home') }}" class="btn-salir">Salir</a>
-      </div>
+  <!-- input oculto que viaja a Flask -->
+  <input type="hidden" id="evidenciaInput" name="evidencia">
+</div>
+
+    <!-- Botones -->
+    <div class="acciones-derecha">
+      <button type="submit" class="btn-guardar">Guardar</button>
+      <a href="{{ url_for('home') }}" class="btn-salir">Salir</a>
     </div>
-
-    <!-- Vista previa de la foto -->
-    <div id="preview" class="preview"></div>
-
-    <!-- Input oculto para guardar la foto en base64 -->
-    <input type="hidden" id="evidencia" name="evidencia">
 
   </form>
 </div>
@@ -78,45 +79,65 @@
   <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta">
 </div>
 
-<!-- Script para manejar cámara -->
+<!-- Script cámara -->
 <script>
-const cameraBtn = document.getElementById('cameraBtn');
-const evidenciaInput = document.getElementById('evidencia');
-const preview = document.getElementById('preview');
+document.addEventListener("DOMContentLoaded", () => {
+  const video = document.getElementById("video");
+  const canvas = document.getElementById("canvas");
+  const preview = document.getElementById("preview");
+  const tomarFoto = document.getElementById("tomarFoto");
+  const borrarFoto = document.getElementById("borrarFoto");
+  const evidenciaInput = document.getElementById("evidenciaInput");
 
-cameraBtn.addEventListener('click', async () => {
-  try {
-    // Verificar si hay dispositivos de video
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const cameras = devices.filter(d => d.kind === "videoinput");
+  // Iniciar cámara
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => {
+      video.srcObject = stream;
+    })
+    .catch(err => console.error("Error al acceder a la cámara:", err));
 
-    if (cameras.length === 0) {
-      alert("Este dispositivo no tiene cámara disponible.");
+  // Tomar foto
+  tomarFoto.addEventListener("click", () => {
+    if (!video.videoWidth || !video.videoHeight) {
+      alert("La cámara aún no está lista, intenta de nuevo.");
       return;
     }
 
-    // Usar la cámara por defecto
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    const track = stream.getVideoTracks()[0];
-    const imageCapture = new ImageCapture(track);
+    const maxSize = 800;
+    const ctx = canvas.getContext("2d");
 
-    // Tomar la foto directamente
-    const photo = await imageCapture.takePhoto();
-    const reader = new FileReader();
+    let w = video.videoWidth;
+    let h = video.videoHeight;
 
-    reader.onloadend = () => {
-      evidenciaInput.value = reader.result; // Guardamos en base64
-      preview.innerHTML = `<img src="${reader.result}" alt="Foto tomada">`;
-    };
+    if (w > h && w > maxSize) {
+      h = Math.round((h * maxSize) / w);
+      w = maxSize;
+    } else if (h >= w && h > maxSize) {
+      w = Math.round((w * maxSize) / h);
+      h = maxSize;
+    }
 
-    reader.readAsDataURL(photo);
+    canvas.width = w;
+    canvas.height = h;
+    ctx.drawImage(video, 0, 0, w, h);
 
-    // Liberar cámara después de tomar la foto
-    track.stop();
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
 
-  } catch (err) {
-    alert("Error al acceder a la cámara: " + err.message);
-  }
+    preview.src = dataUrl;
+    preview.style.display = "block";
+    video.style.display = "none";
+
+    evidenciaInput.value = dataUrl;
+  });
+
+  // Borrar foto
+  borrarFoto.addEventListener("click", () => {
+    preview.src = "";
+    preview.style.display = "none";
+    video.style.display = "block";
+    evidenciaInput.value = "";
+  });
 });
 </script>
+
 {% endblock %}
