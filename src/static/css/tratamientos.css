@@ -18,7 +18,7 @@ body {
 
 /* Contenedor */
 .containerSiembra {
-  max-width: 900px;
+  max-width: 1000px;
   margin: 40px auto;
   padding: 25px;
   background: rgba(39, 39, 39, 0.7);
@@ -39,7 +39,7 @@ body {
 
 /* Tabla */
 .tabla-contenedor {
-  max-height: 400px;
+  max-height: 450px;
   overflow-y: auto;
   margin: 20px 0;
 }
@@ -125,7 +125,7 @@ th {
     text-align: center;
 }
 
-#buscador-ventas {
+#buscador-tratamientos {
     width: 80%;
     max-width: 400px;
     padding: 10px 40px 10px 15px; /* espacio para ícono */
@@ -142,11 +142,11 @@ th {
     background-size: 20px;
 }
 
-#buscador-ventas::placeholder {
+#buscador-tratamientos::placeholder {
     color: #ccc;
 }
 
-#buscador-ventas:focus {
+#buscador-tratamientos:focus {
     border-color: #54c55a;
     box-shadow: 0 0 10px rgba(82, 175, 82, 0.5);
     background-color: rgba(49, 49, 49, 0.95);

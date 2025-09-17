@@ -1,21 +1,21 @@
 {% extends 'base.html' %}
 
-{% block title %}Ventas Registradas{% endblock %}
+{% block title %}Tratamientos Registrados{% endblock %}
 
 {% block CustomCSS %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/ventas.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tratamientos.css') }}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 {% endblock %}
 
 {% block body %}
 
-<!------- Logo ------------>
+<!-- Logo -->
 <div class="logo">
     <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
 </div>
 
-<!------- Titulo ------------>
-<h1 class="Titulo">Ventas Registradas</h1>
+<!-- Título -->
+<h1 class="Titulo">Tratamientos Registrados</h1>
 
 <!-- Botón volver al inicio -->
 <div class="logout-btn">
@@ -29,32 +29,35 @@
 <!-- Contenedor principal -->
 <div class="containerSiembra">
 
+  <!-- Buscador -->
   <div class="buscador-contenedor">
-    <input type="text" id="buscador-ventas" placeholder="Buscar ventas...">
+    <input type="text" id="buscador-tratamientos" placeholder="Buscar tratamientos...">
   </div>
 
   <div class="tabla-contenedor">
-    <table class="tabla-ventas" id="tabla-ventas">
+    <table class="tabla-tratamientos" id="tabla-tratamientos">
       <thead>
         <tr>
           <th>Cultivo</th>
-          <th>Fecha</th>
-          <th>Cantidad</th>
-          <th>Precio</th>
-          <th>Descripción</th>
+          <th>Tratamiento</th>
+          <th>Problema</th>
+          <th>Prioridad</th>
+          <th>Insumos</th>
+          <th>Fecha Registro</th>
           <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
-        {% for venta in ventas %}
+        {% for t in tratamientos %}
         <tr>
-          <td>{{ venta[1] }}</td> <!-- nombre del cultivo -->
-          <td>{{ venta[2] }}</td> <!-- fecha -->
-          <td>{{ venta[3] }}</td> <!-- cantidad -->
-          <td>${{ venta[4] }}</td> <!-- precio -->
-          <td>{{ venta[5] }}</td> <!-- descripcion -->
+          <td>{{ t[1] }}</td> <!-- cultivo -->
+          <td>{{ t[2] }}</td> <!-- tratamiento -->
+          <td>{{ t[3] }}</td> <!-- problema -->
+          <td>{{ t[4] }}</td> <!-- prioridad -->
+          <td>{{ t[5] }}</td> <!-- insumos -->
+          <td>{{ t[6] }}</td> <!-- fecha -->
           <td>
-            <a href="{{ url_for('eliminar_venta', id=venta[0]) }}">
+            <a href="{{ url_for('eliminar_tratamiento', id=t[0]) }}">
               <button class="btn-guardar">Eliminar</button>
             </a>
           </td>
@@ -64,16 +67,16 @@
     </table>
   </div>
 
-  <!-- Botones inferiores -->
+  <!-- Botón inferior -->
   <div class="botones">
-    <a href="{{ url_for('registrar_ventas') }}">
-      <button class="btn-guardar">Registrar Nueva Venta</button>
+    <a href="{{ url_for('seguimiento_cultivo') }}">
+      <button class="btn-guardar">Registrar Nuevo Tratamiento</button>
     </a>
   </div>
 
 </div>
 
-<!------- Imagen planta ------------>
+<!-- Imagen decorativa -->
 <img src="{{ url_for('static', filename='img/plantaa.png') }}" class="planta" alt="Planta decorativa">
 
 {% endblock %}
@@ -81,21 +84,21 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const buscador = document.getElementById('buscador-ventas');
-    const tabla = document.getElementById('tabla-ventas').getElementsByTagName('tbody')[0];
+    const buscador = document.getElementById('buscador-tratamientos');
+    const tabla = document.getElementById('tabla-tratamientos').getElementsByTagName('tbody')[0];
     const filas = tabla.getElementsByTagName('tr');
-    const noResult = document.getElementById('no-result-ventas');
+    const noResult = document.getElementById('no-result-tratamientos');
 
     buscador.addEventListener('input', function() {
         const filtro = this.value.toLowerCase().trim();
         let coincidencias = 0;
 
         for (let i = 0; i < filas.length; i++) {
-            if (filas[i].id === 'no-result-ventas') continue;
+            if (filas[i].id === 'no-result-tratamientos') continue;
 
             const celdas = filas[i].getElementsByTagName('td');
             let textoFila = '';
-            for (let j = 0; j < celdas.length - 1; j++) { // Excluye columna de Acciones
+            for (let j = 0; j < celdas.length - 1; j++) { // Excluye columna Acciones
                 textoFila += celdas[j].textContent.toLowerCase() + ' ';
             }
 

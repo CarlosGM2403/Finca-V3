@@ -7,6 +7,7 @@ import os
 
 # ---------------------- UTILIDADES ----------------------
 from werkzeug.utils import secure_filename
+from itsdangerous import URLSafeTimedSerializer
 from werkzeug.security import check_password_hash, generate_password_hash
 import os
 from config import config
@@ -22,6 +23,8 @@ from models.entities.User import User
 app = Flask(__name__)
 app.config.from_object(config['development'])
 app.secret_key = "cambia_esta_clave"
+# Crea el serializador usando tu SECRET_KEY
+s = URLSafeTimedSerializer(app.secret_key)
 
 # ---------------------- CONFIGURAR CORREO ----------------------
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -114,9 +117,51 @@ def status_404(error):
 
 
 # ---------------------- FUNCIONALIDADES EXTRA ----------------------
-@app.route('/forgot_password')
+# Paso 1: Usuario pide reset
+@app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
+    if request.method == 'POST':
+        email = request.form['email']
+        cur = db.connection.cursor()
+        cur.execute("SELECT id FROM user WHERE username=%s", (email,))
+        user = cur.fetchone()
+
+        if user:
+            token = s.dumps(email, salt='password-reset-salt')
+            link = url_for('reset_password', token=token, _external=True)
+
+            msg = Message('Restablecer contraseña',
+                          sender='tucorreo@gmail.com',
+                          recipients=[email])
+            msg.body = f"Para restablecer tu contraseña haz clic en el siguiente enlace:\n{link}"
+            mail.send(msg)
+
+            flash('Se ha enviado un enlace a tu correo.', 'success')
+        else:
+            flash('El correo no está registrado.', 'danger')
+
     return render_template('auth/forgot_password.html')
+
+# Paso 2: Usuario abre el enlace
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    try:
+        email = s.loads(token, salt='password-reset-salt', max_age=3600) # 1 hora
+    except:
+        flash('El enlace ha expirado o no es válido.', 'danger')
+        return redirect(url_for('forgot_password'))
+
+    if request.method == 'POST':
+        new_password = request.form['password']
+        hashed_pw = generate_password_hash(new_password)
+
+        cur = db.connection.cursor()
+        cur.execute("UPDATE user SET password=%s WHERE username=%s", (hashed_pw, email))
+        db.connection.commit()
+        flash('Tu contraseña se actualizó con éxito.', 'success')
+        return redirect(url_for('login'))
+
+    return render_template('auth/reset_password.html', token=token)
 
 
 @app.route('/cambiar_password', methods=['GET','POST'])
@@ -544,7 +589,83 @@ def solicitar_insumo():
 def en_construccion():
     return "<h1>🚧 Esta sección está en construcción 🚧</h1>"
 
+@app.route('/seguimiento_cultivo', methods=['GET', 'POST'])
+@login_required
+def seguimiento_cultivo():
+    cur = db.connection.cursor()
+    cur.execute("SELECT Id_cultivo, nombre FROM Cultivos WHERE estado = 'Habilitado'")
+    cultivos = cur.fetchall()
 
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        cultivo_id = request.form.get('cultivo')  # 👈 coincide con el HTML
+        tratamiento = request.form.get('tratamiento')
+        problema = request.form.get('problema')
+        prioridad = request.form.get('prioridad')
+        insumos = request.form.get('insumos')
+
+        try:
+            # Traer el nombre del cultivo a partir del Id_cultivo
+            cur.execute("SELECT nombre FROM Cultivos WHERE Id_cultivo = %s", (cultivo_id,))
+            cultivo_nombre = cur.fetchone()
+
+            if cultivo_nombre:
+                cultivo_nombre = cultivo_nombre[0]  # Tomamos el valor del nombre
+
+                # Insertar en la tabla tratamientos
+                cur.execute("""
+                    INSERT INTO tratamientos (cultivo, tratamiento, problema, prioridad, insumos, fecha_registro)
+                    VALUES (%s, %s, %s, %s, %s, NOW())
+                """, (cultivo_nombre, tratamiento, problema, prioridad, insumos))
+                db.connection.commit()
+
+                flash("Seguimiento registrado con éxito", "success")
+                return redirect(url_for('seguimiento_cultivo'))
+            else:
+                flash("El cultivo seleccionado no existe.", "danger")
+
+        except Exception as e:
+            db.connection.rollback()
+            flash(f"Error al registrar el seguimiento: {str(e)}", "danger")
+
+    cur.close()
+    return render_template('auth/seguimiento_cultivo.html', cultivos=cultivos)
+
+
+@app.route('/tratamientos_registrados')
+@login_required
+def tratamientos_registrados():
+    try:
+        cur = db.connection.cursor()
+        cur.execute("""
+            SELECT id_tratamiento, cultivo, tratamiento, problema, prioridad, insumos, fecha_registro
+            FROM tratamientos
+            ORDER BY fecha_registro DESC
+        """)
+        tratamientos = cur.fetchall()
+        cur.close()
+        return render_template('auth/tratamientos_registrados.html', tratamientos=tratamientos)
+
+    except Exception as e:
+        flash(f"Error al cargar los tratamientos: {str(e)}", "danger")
+        return redirect(url_for('home'))
+
+@app.route('/eliminar_tratamiento/<int:id>', methods=['GET'])
+@login_required
+def eliminar_tratamiento(id):
+    try:
+        cur = db.connection.cursor()
+        cur.execute("DELETE FROM tratamientos WHERE id_tratamiento = %s", (id,))
+        db.connection.commit()
+        cur.close()
+        flash("Tratamiento eliminado correctamente", "success")
+    except Exception as e:
+        db.connection.rollback()
+        flash(f"Error al eliminar el tratamiento: {str(e)}", "danger")
+
+    return redirect(url_for('tratamientos_registrados'))
 
 
 # ---------------------- MAIN ----------------------
