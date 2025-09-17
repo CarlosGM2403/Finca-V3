@@ -5,7 +5,6 @@
 <!-- Iconos FontAwesome -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
-
 <!-- Estilos propios -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
 {% endblock %}
@@ -42,7 +41,6 @@
   <img src="{{ url_for('static', filename='img/Logo_principal.png') }}" alt="Logo">
 </div>
 
-
 <!-- BOTÓN PERFIL -->
 <div class="profile-btn">
   <a href="{{ url_for('perfil') }}">
@@ -51,8 +49,6 @@
          class="profile-icon">
   </a>
 </div>
-
-
 
 <!-- BOTÓN LOGOUT -->
 <div class="logout-btn">
@@ -94,9 +90,9 @@
     <a href="{{ url_for('registrar_actividad') }}">Registrar Actividad</a>
   {% endif %}
   <a href="#">Problemas de cultivo</a>
-  <a href="{{ url_for('solicitar_insumo') }}">Solicitar de Insumos</a>
+  <a href="{{ url_for('solicitar_insumo') }}">Solicitar Insumos</a>
   {% if rol == 'administrador' %}
-  <a href="{{ url_for('ver_solicitudes') }}">Solicitudes Realizadas</a>
+    <a href="{{ url_for('ver_fotos') }}">Ver Evidencias</a>
   {% endif %}
   {% if rol == 'administrador' %}
     <a href="{{ url_for('registrar_siembra') }}">Registro de Siembra</a>
@@ -104,30 +100,26 @@
 
   <!-- Botones de abajo (solo visibles en móvil) -->
   <div class="menu-mobile">
-    {# --- Usuarios / Registrar Actividad --- #}
     {% if rol == 'administrador' %}
       <a href="{{ url_for('usuarios') }}">Usuarios</a>
     {% else %}
       <a href="{{ url_for('registrar_actividad') }}">Registrar Actividad</a>
     {% endif %}
 
-    {# --- Producción / Registro de Siembra --- #}
     {% if rol == 'administrador' or rol == 'supervisor' %}
       <a href="{{ url_for('en_construccion') }}">Producción</a>
     {% else %}
       <a href="{{ url_for('registrar_siembra') }}">Registro de Siembra</a>
     {% endif %}
 
-    {# --- Ventas / Solicitud de Insumos --- #}
     {% if rol == 'administrador' %}
       <a href="{{ url_for('en_construccion') }}">Ventas</a>
     {% else %}
       <a href="{{ url_for('solicitar_insumo') }}">Solicitar Insumos</a>
     {% endif %}
 
-    {# --- Evidencias / Tratamientos --- #}
     {% if rol == 'administrador' %}
-      <a href="{{ url_for('en_construccion') }}">Evidencias</a>
+      <a href="{{ url_for('ver_fotos') }}">Evidencias</a>
     {% else %}
       <a href="{{ url_for('en_construccion') }}">Tratamientos</a>
     {% endif %}
@@ -148,11 +140,10 @@
       menu.classList.remove("show");
     }
   });
-  </script>
+</script>
 
 <!-- GRUPOS DE BOTONES -->
 <div class="grupo-izquierda">
-  {# --- Botón Usuarios / Registrar Actividad --- #}
   {% if rol == 'administrador' %}
   <a href="{{ url_for('usuarios') }}">
     <button class="btn-normal">Usuarios</button>
@@ -162,7 +153,7 @@
     <button class="btn-normal">Registra Actividad</button>
   </a>
   {% endif %}
-  {# --- Botón Producción / Registro de Siembra --- #}
+
   {% if rol == 'administrador' or rol == 'supervisor' %}
   <a href="{{ url_for('en_construccion') }}">
     <button class="btn-normal">Producción</button>
@@ -181,7 +172,6 @@
 </div>
 
 <div class="grupo-derecha">
-  {# --- Botón Ventas / Solicitud de Insumos --- #}
 {% if rol == 'administrador' %}
   <a href="{{ url_for('registrar_ventas') }}">
     <button class="btn-normal">Ventas</button>
@@ -191,9 +181,9 @@
     <button class="btn-normal">Solicitar Insumos</button>
   </a>
 {% endif %}
-  {# --- Botón Evidencias / Tratamientos Aplicados --- #}
+
 {% if rol == 'administrador' %}
-  <a href="{{ url_for('en_construccion') }}">
+  <a href="{{ url_for('ver_fotos') }}">
     <button class="btn-normal">Evidencias</button>
   </a>
 {% else %}

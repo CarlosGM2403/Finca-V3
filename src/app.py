@@ -1,18 +1,20 @@
 # ---------------------- LIBRERÍAS FLASK ----------------------
-from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, session
 from flask_mysqldb import MySQL
 from flask_login import LoginManager, login_user, logout_user, login_required
 from flask_mail import Mail, Message
-
+from flask_login import current_user
 import os
 import base64
-import datetime
+import uuid
 
 # ---------------------- UTILIDADES ----------------------
 from werkzeug.utils import secure_filename
 from itsdangerous import URLSafeTimedSerializer
 from werkzeug.security import check_password_hash, generate_password_hash
+import os
 from config import config
+
 
 # ---------------------- MODELOS ----------------------
 from models.ModelUser import ModelUser
@@ -31,26 +33,27 @@ s = URLSafeTimedSerializer(app.secret_key)
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'estebangallego757@gmail.com'
-app.config['MAIL_PASSWORD'] = 'wsmc lowl twbu ovci'
+app.config['MAIL_USERNAME'] = 'estebangallego757@gmail.com'   
+app.config['MAIL_PASSWORD'] = 'wsmc lowl twbu ovci'   # Contraseña de aplicación
 app.config['MAIL_DEFAULT_SENDER'] = ('Soporte', 'estebangallego757@gmail.com')
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
 mail = Mail(app)
 
 # ---------------------- CONFIGURAR UPLOADS ----------------------
-# Usaremos static/evidencias para las fotos de actividades
+# Carpeta para subir imágenes (ruta absoluta)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-EVIDENCIAS_FOLDER = os.path.join(BASE_DIR, "static", "evidencias")
-app.config["EVIDENCIAS_FOLDER"] = EVIDENCIAS_FOLDER
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
+app.config['UPLOAD_FOLDER'] = os.path.join("static", "uploads")
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5 MB límite
 
-# Crear carpeta si no existe
-os.makedirs(EVIDENCIAS_FOLDER, exist_ok=True)
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
-# Limitar tamaño máximo de request (ej. 16 MB) — ajústalo si quieres
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Debug: imprime la ruta absoluta
-print("EVIDENCIAS_FOLDER configurado en:", EVIDENCIAS_FOLDER)
+print("UPLOAD_FOLDER configurado en:", UPLOAD_FOLDER)
 
 # ---------------------- BASE DE DATOS ----------------------
 db = MySQL(app)
@@ -64,9 +67,11 @@ def load_user(id):
     return ModelUser.get_by_id(db, id)
 
 # ---------------------- RUTAS PRINCIPALES ----------------------
+
 @app.route('/')
 def index():
     return redirect(url_for('login'))
+
 
 # ---------------------- AUTENTICACIÓN ----------------------
 @app.route('/login', methods=['GET','POST'])
@@ -95,11 +100,13 @@ def login():
             flash("Usuario o contraseña incorrectos", "error")
     return render_template("auth/login.html")
 
+
 @app.route('/logout')
 def logout():
     logout_user()
     session.clear()
     return redirect(url_for('login'))
+
 
 # ---------------------- HOME ----------------------
 @app.route('/home')
@@ -109,12 +116,14 @@ def home():
         return redirect(url_for('login'))
     return render_template('home.html', rol=rol)
 
+
 # ---------------------- ERRORES ----------------------
 def status_401(error):
     return redirect(url_for('login'))
 
 def status_404(error):
     return "<h1>Página no encontrada</h1>", 404
+
 
 # ---------------------- FUNCIONALIDADES EXTRA ----------------------
 # Paso 1: Usuario pide reset
@@ -163,6 +172,7 @@ def reset_password(token):
 
     return render_template('auth/reset_password.html', token=token)
 
+
 @app.route('/cambiar_password', methods=['GET','POST'])
 def cambiar_password():
     if 'user_id' not in session:
@@ -187,10 +197,11 @@ def cambiar_password():
             session.clear()
             flash("Contraseña actualizada con éxito. Vuelve a iniciar sesión.", "success")
             return redirect(url_for('login'))
-        
+
         flash("Las contraseñas no coinciden", "error")
 
     return render_template("cambiar_password.html")
+
 
 # ---------------------- USUARIOS ----------------------
 @app.route('/Registrar_usuarios', methods=['GET', 'POST'])
@@ -245,6 +256,7 @@ def registrar_usuario():
 
     return render_template('auth/Registrar_usuarios.html')
 
+
 @app.route('/usuarios')
 @login_required
 def usuarios():
@@ -253,6 +265,7 @@ def usuarios():
     usuarios = cur.fetchall()
     cur.close()
     return render_template('auth/usuarios.html', usuarios=usuarios)
+
 
 @app.route('/cambiar_estado/<int:id>', methods=['GET', 'POST'])
 def cambiar_estado(id):
@@ -284,6 +297,7 @@ def cambiar_estado(id):
 
     return render_template('auth/cambiar_estado.html', usuario=usuario)
 
+
 @app.route('/perfil')
 def perfil():
     if 'user_id' not in session:
@@ -298,6 +312,7 @@ def perfil():
     cur.close()
 
     return render_template('auth/perfil.html', usuario=usuario)
+
 
 @app.route('/editar_perfil', methods=['GET', 'POST'])
 def editar_perfil():
@@ -329,6 +344,8 @@ def editar_perfil():
 
     return render_template('auth/editar_perfil.html', usuario=usuario)
 
+
+
 @app.route('/cambiar_contraseña', methods=['GET','POST'])
 def cambiar_contraseña():
     if 'user_id' not in session:
@@ -353,7 +370,7 @@ def cambiar_contraseña():
             session.clear()
             flash("Contraseña actualizada con éxito. Vuelve a iniciar sesion", "success")
             return redirect(url_for('login'))
-        
+
         flash("Las contraseñas no coinciden", "error")
 
     return render_template("auth/cambiar_contraseña.html")
@@ -372,6 +389,7 @@ def cultivos():
     cultivos = cur.fetchall()
     cur.close()
     return render_template('auth/cultivos.html', cultivos=cultivos)
+
 
 @app.route('/registrar_cultivo', methods=['GET', 'POST'])
 @login_required
@@ -402,66 +420,68 @@ def registrar_cultivo():
 
     return render_template('auth/registrar_cultivo.html')
 
+
+
 # ---------------------- ACTIVIDADES + EVIDENCIAS ----------------------
+
+
+
 @app.route('/registrar_actividad', methods=['GET', 'POST'])
 @login_required
 def registrar_actividad():
     if request.method == 'POST':
-        # Validaciones mínimas
-        actividad = request.form.get('actividad')
-        insumos = request.form.get('insumos')
-        observaciones = request.form.get('observaciones')
-        nombre_foto_usuario = request.form.get('nombreFoto', None)  # opcional nombre proporcionado por usuario
-        evidencia_b64 = request.form.get('evidencia')
+        actividad = request.form['actividad']
+        insumos = request.form['insumos']
+        observaciones = request.form['observaciones']
+        evidencia_base64 = request.form['evidencia']
 
-        # Validar campos obligatorios
-        if not actividad or not insumos:
-            flash("Actividad e Insumos son obligatorios.", "danger")
-            return redirect(url_for('registrar_actividad'))
+        print("DEBUG - Datos recibidos:")
+        print("Actividad:", actividad)
+        print("Insumos:", insumos)
+        print("Observaciones:", observaciones)
+        print("Evidencia:", len(evidencia_base64) if evidencia_base64 else "No llegó")
 
-        evidencia_filename = None
-        if evidencia_b64:
+        filename = None
+
+        if evidencia_base64:
             try:
-                # Separar encabezado (data:image/jpeg;base64,... o data:image/png;base64,...)
-                if "," in evidencia_b64:
-                    header, encoded = evidencia_b64.split(',', 1)
-                else:
-                    encoded = evidencia_b64
+                if "," in evidencia_base64:
+                    evidencia_base64 = evidencia_base64.split(",")[1]
 
-                data = base64.b64decode(encoded)
+                image_data = base64.b64decode(evidencia_base64)
+                filename = f"{uuid.uuid4().hex}.jpg"
+                filepath = os.path.join(UPLOAD_FOLDER, filename)  # 👈 Ruta absoluta
 
-                # Generar nombre único: usar el nombre del usuario si lo dio, sino timestamp
-                ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-                if nombre_foto_usuario:
-                    base = secure_filename(nombre_foto_usuario)
-                    filename = f"{base}_{ts}.jpg"
-                else:
-                    filename = f"actividad_{ts}.jpg"
+                with open(filepath, "wb") as f:
+                    f.write(image_data)
 
-                file_path = os.path.join(app.config['EVIDENCIAS_FOLDER'], filename)
-
-                # Guardar archivo
-                with open(file_path, "wb") as f:
-                    f.write(data)
-
-                evidencia_filename = filename
             except Exception as e:
-                flash(f"Error al guardar la foto: {e}", "danger")
-                evidencia_filename = None
+                print("Error al guardar imagen:", e)
+                flash(f"Error al guardar la imagen: {str(e)}", "danger")
+                return redirect(url_for("registrar_actividad"))
 
-        # Insertar registro en BD (guardamos solo el nombre del archivo en 'evidencia')
-        cur = db.connection.cursor()
-        cur.execute("""
-            INSERT INTO actividades (id_usuario, actividad, insumos, observaciones, evidencia, fecha)
-            VALUES (%s, %s, %s, %s, %s, NOW())
-        """, (session['user_id'], actividad, insumos, observaciones, evidencia_filename))
-        db.connection.commit()
-        cur.close()
+        try:
+            cursor = db.connection.cursor()
+            cursor.execute("""
+                INSERT INTO actividades (id_usuario, actividad, insumos, observaciones, evidencia, fecha)
+                VALUES (%s, %s, %s, %s, %s, NOW())
+            """, (session['user_id'], actividad, insumos, observaciones, filename))  # 👈 Aquí usas session
+            db.connection.commit()
+            cursor.close()
 
-        flash("Actividad registrada con éxito ", "success")
-        return redirect(url_for('registrar_actividad'))
+            flash("Actividad registrada correctamente", "success")
+            return redirect(url_for('ver_fotos'))
 
-    return render_template("auth/registrar_actividad.html")
+        except Exception as e:
+            db.connection.rollback()
+            print("Error al guardar en la BD:", e)
+            import traceback
+            traceback.print_exc()
+            flash(f"Error al registrar actividad: {str(e)}", "danger")
+
+    return render_template("registrar_actividad.html")
+
+
 
 @app.route('/ver_fotos')
 @login_required
@@ -472,21 +492,258 @@ def ver_fotos():
         FROM actividades a
         JOIN user u ON a.id_usuario = u.id
         WHERE u.id = %s
-        ORDER BY a.fecha DESC
     """
     cursor.execute(query, (session['user_id'],))
     resultados = cursor.fetchall()
 
-    fotos = [
-        {"nombre_archivo": row[0], "fecha": row[1], "usuario": row[2]}
-        for row in resultados if row[0]
-    ]
+    fotos = []
+    for row in resultados:
+        if row[0]:  # si hay evidencia
+            # Construir la ruta
+            ruta = url_for("static", filename="uploads/" + row[0])
+
+            # 👀 Imprimir la ruta para depuración
+            print("Ruta generada:", ruta)
+
+            # Agregar al arreglo
+            fotos.append({
+                "ruta": ruta,
+                "fecha": row[1],
+                "usuario": row[2]
+            })
 
     usuario = fotos[0]["usuario"] if fotos else "Sin evidencias"
     cursor.close()
 
     return render_template("ver_fotos.html", fotos=fotos, usuario=usuario)
 
+
+
+
+
+@app.route("/registrar_ventas", methods=["GET", "POST"])
+def registrar_ventas():
+    cur = db.connection.cursor()
+
+    # Traer cultivos para el selector
+    cur.execute("SELECT Id_cultivo, nombre FROM Cultivos")
+    cultivos = cur.fetchall()
+
+    if request.method == "POST":
+        cod_cultivo = request.form["cultivo"]
+        fecha = request.form["fecha"]
+        cantidad_bultos = request.form["cantidad_bultos"]
+        precio = request.form["precio"]
+        descripcion = request.form["descripcion"]
+
+        # Insertar en la tabla ventas
+        cur.execute("""
+            INSERT INTO ventas (cod_cultivo, fecha_venta, cantidad_bultos, precio, descripcion)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (cod_cultivo, fecha, cantidad_bultos, precio, descripcion))
+
+        db.connection.commit()
+        return redirect(url_for("ventas_registradas"))
+
+    return render_template("auth/registrar_ventas.html", cultivos=cultivos)
+
+
+@app.route("/ventas_registradas")
+def ventas_registradas():
+    cur = db.connection.cursor()
+    cur.execute("""
+        SELECT v.id_venta, c.nombre AS cultivo, v.fecha_venta, 
+               v.cantidad_bultos, v.precio, v.descripcion
+        FROM ventas v
+        JOIN cultivos c ON v.cod_cultivo = c.id_cultivo
+        ORDER BY v.fecha_venta DESC
+    """)
+    ventas = cur.fetchall()
+    return render_template("auth/ventas_registradas.html", ventas=ventas)
+
+
+@app.route("/eliminar_venta/<int:id>")
+def eliminar_venta(id):
+    cur = db.connection.cursor()
+    cur.execute("DELETE FROM ventas WHERE id_venta = %s", (id,))
+    db.connection.commit()
+    return redirect(url_for("ventas_registradas"))
+
+# ---------------------- REGISTRAR SIEMBRA ----------------------
+@app.route("/Registrar_siembra", methods=["GET", "POST"])
+@login_required
+def registrar_siembra():
+    cur = db.connection.cursor()
+    cur.execute("SELECT Id_cultivo, nombre FROM Cultivos WHERE estado = 'Habilitado'")
+    cultivos = cur.fetchall()
+
+    if request.method == "POST":
+        fecha = request.form["fecha"]
+        detalle = request.form["detalle"]
+        cod_cultivos = request.form["cultivo"]
+
+        cur.execute("""
+            INSERT INTO siembra (fecha_siembra, detalle, cod_cultivos)
+            VALUES (%s, %s, %s)
+        """, (fecha, detalle, cod_cultivos))
+        db.connection.commit()
+        return redirect(url_for("registrar_siembra"))
+
+    return render_template("registrar_siembra.html", cultivos=cultivos)
+
+# ---------------------- SIEMBRA REGISTRADA ----------------------
+@app.route("/Siembra_registrada")
+def siembra_registrada():
+    cur = db.connection.cursor()
+    cur.execute("""
+        SELECT s.fecha_siembra, s.detalle, c.nombre AS cultivo_nombre
+        FROM siembra s
+        JOIN Cultivos c ON s.cod_cultivos = c.Id_cultivo
+    """)
+    registros = cur.fetchall()
+    return render_template("siembra_registrada.html", registros=registros)
+
+
+# ---------------------- SOLICITUD DE INSUMO ----------------------
+
+@app.route('/solicitar_insumo', methods=['GET', 'POST'])
+@login_required
+def solicitar_insumo():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        tipo_insumo = request.form.get('tipo_insumo')
+        cantidad = request.form.get('cantidad')
+        observaciones = request.form.get('observaciones')
+
+        try:
+            cur = db.connection.cursor()
+            cur.execute("""
+                INSERT INTO solicitud_insumo (usuario_id, tipo_insumo, cantidad, observaciones, fecha_solicitud)
+                VALUES (%s, %s, %s, %s, NOW())
+            """, (session['user_id'], tipo_insumo, cantidad, observaciones))
+            db.connection.commit()
+            cur.close()
+
+            flash("Solicitud de insumo registrada con éxito", "success")
+            return redirect(url_for('solicitar_insumo'))
+
+        except Exception as e:
+            db.connection.rollback()
+            flash(f"Error al registrar la solicitud: {str(e)}", "danger")
+
+    return render_template('solicitud_insumo.html')
+
+# ---------------------- SOLICITUDES REALIZADAS ----------------------
+
+@app.route('/solicitudes', methods=['GET'])
+def ver_solicitudes():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    cur = db.connection.cursor()
+    cur.execute("""
+        SELECT s.id, u.fullname, s.tipo_insumo, s.cantidad, s.observaciones, s.fecha_solicitud
+        FROM solicitud_insumo s
+        JOIN user u ON s.usuario_id = u.id
+        ORDER BY s.fecha_solicitud
+    """)
+    solicitudes = cur.fetchall()
+    cur.close()
+
+    print(solicitudes)  
+    return render_template('ver_solicitudes.html', solicitudes=solicitudes)
+
+
+# ---------------------- EN CONSTRUCCIÓN ----------------------
+
+@app.route('/en_construccion')
+def en_construccion():
+    return "<h1>🚧 Esta sección está en construcción 🚧</h1>"
+
+# ---------------------- SEGUIMIENTO DE CULTIVO ----------------------
+
+@app.route('/seguimiento_cultivo', methods=['GET', 'POST'])
+@login_required
+def seguimiento_cultivo():
+    cur = db.connection.cursor()
+    cur.execute("SELECT Id_cultivo, nombre FROM Cultivos WHERE estado = 'Habilitado'")
+    cultivos = cur.fetchall()
+
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        cultivo_id = request.form.get('cultivo')  # 👈 coincide con el HTML
+        tratamiento = request.form.get('tratamiento')
+        problema = request.form.get('problema')
+        prioridad = request.form.get('prioridad')
+        insumos = request.form.get('insumos')
+
+        try:
+            # Traer el nombre del cultivo a partir del Id_cultivo
+            cur.execute("SELECT nombre FROM Cultivos WHERE Id_cultivo = %s", (cultivo_id,))
+            cultivo_nombre = cur.fetchone()
+
+            if cultivo_nombre:
+                cultivo_nombre = cultivo_nombre[0]  # Tomamos el valor del nombre
+
+                # Insertar en la tabla tratamientos
+                cur.execute("""
+                    INSERT INTO tratamientos (cultivo, tratamiento, problema, prioridad, insumos, fecha_registro)
+                    VALUES (%s, %s, %s, %s, %s, NOW())
+                """, (cultivo_nombre, tratamiento, problema, prioridad, insumos))
+                db.connection.commit()
+
+                flash("Seguimiento registrado con éxito", "success")
+                return redirect(url_for('seguimiento_cultivo'))
+            else:
+                flash("El cultivo seleccionado no existe.", "danger")
+
+        except Exception as e:
+            db.connection.rollback()
+            flash(f"Error al registrar el seguimiento: {str(e)}", "danger")
+
+    cur.close()
+    return render_template('auth/seguimiento_cultivo.html', cultivos=cultivos)
+
+# ---------------------- TRATAMIENTOS REGISTRADOS ----------------------
+
+@app.route('/tratamientos_registrados')
+@login_required
+def tratamientos_registrados():
+    try:
+        cur = db.connection.cursor()
+        cur.execute("""
+            SELECT id_tratamiento, cultivo, tratamiento, problema, prioridad, insumos, fecha_registro
+            FROM tratamientos
+            ORDER BY fecha_registro DESC
+        """)
+        tratamientos = cur.fetchall()
+        cur.close()
+        return render_template('auth/tratamientos_registrados.html', tratamientos=tratamientos)
+
+    except Exception as e:
+        flash(f"Error al cargar los tratamientos: {str(e)}", "danger")
+        return redirect(url_for('home'))
+
+# ---------------------- ELIMINAR TRATAMIENTO ----------------------
+
+@app.route('/eliminar_tratamiento/<int:id>', methods=['GET'])
+@login_required
+def eliminar_tratamiento(id):
+    try:
+        cur = db.connection.cursor()
+        cur.execute("DELETE FROM tratamientos WHERE id_tratamiento = %s", (id,))
+        db.connection.commit()
+        cur.close()
+        flash("Tratamiento eliminado correctamente", "success")
+    except Exception as e:
+        db.connection.rollback()
+        flash(f"Error al eliminar el tratamiento: {str(e)}", "danger")
+
+    return redirect(url_for('tratamientos_registrados'))
 
 
 # ---------------------- MAIN ----------------------
