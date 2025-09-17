@@ -585,9 +585,34 @@ def solicitar_insumo():
 
     return render_template('solicitud_insumo.html')
 
+# ---------------------- SOLICITUDES REALIZADAS ----------------------
+
+@app.route('/solicitudes', methods=['GET'])
+def ver_solicitudes():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    cur = db.connection.cursor()
+    cur.execute("""
+        SELECT s.id, u.fullname, s.tipo_insumo, s.cantidad, s.observaciones, s.fecha_solicitud
+        FROM solicitud_insumo s
+        JOIN user u ON s.usuario_id = u.id
+        ORDER BY s.fecha_solicitud
+    """)
+    solicitudes = cur.fetchall()
+    cur.close()
+
+    print(solicitudes)  
+    return render_template('ver_solicitudes.html', solicitudes=solicitudes)
+
+
+# ---------------------- EN CONSTRUCCIÓN ----------------------
+
 @app.route('/en_construccion')
 def en_construccion():
     return "<h1>🚧 Esta sección está en construcción 🚧</h1>"
+
+# ---------------------- SEGUIMIENTO DE CULTIVO ----------------------
 
 @app.route('/seguimiento_cultivo', methods=['GET', 'POST'])
 @login_required
@@ -633,6 +658,7 @@ def seguimiento_cultivo():
     cur.close()
     return render_template('auth/seguimiento_cultivo.html', cultivos=cultivos)
 
+# ---------------------- TRATAMIENTOS REGISTRADOS ----------------------
 
 @app.route('/tratamientos_registrados')
 @login_required
@@ -651,6 +677,8 @@ def tratamientos_registrados():
     except Exception as e:
         flash(f"Error al cargar los tratamientos: {str(e)}", "danger")
         return redirect(url_for('home'))
+
+# ---------------------- ELIMINAR TRATAMIENTO ----------------------
 
 @app.route('/eliminar_tratamiento/<int:id>', methods=['GET'])
 @login_required

@@ -90,12 +90,15 @@
 
 <!-- MENÚ LATERAL -->
 <div class="menu" id="menu">
-  {% if rol != 'administrador' %}
+  {% if rol == 'administrador' %}
     <a href="{{ url_for('registrar_actividad') }}">Registrar Actividad</a>
   {% endif %}
   <a href="#">Problemas de cultivo</a>
-  <a href="{{ url_for('solicitar_insumo') }}">Solicitudes de Insumos</a>
-  {% if rol != 'administrador' %}
+  <a href="{{ url_for('solicitar_insumo') }}">Solicitar de Insumos</a>
+  {% if rol == 'administrador' %}
+  <a href="{{ url_for('ver_solicitudes') }}">Solicitudes Realizadas</a>
+  {% endif %}
+  {% if rol == 'administrador' %}
     <a href="{{ url_for('registrar_siembra') }}">Registro de Siembra</a>
   {% endif %}
 
