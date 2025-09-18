@@ -87,3 +87,86 @@ table, th, td {
 .btn-volver:hover {
   background: #45a049;
 }
+/* Contenedor de botones */
+.acciones-botones {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* Botón Aceptar */
+.btn-aceptar {
+    background-color: #4CAF50; /* Verde */
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.btn-aceptar:hover {
+    background-color: #45a049;
+}
+/* Botón volver */
+.logout-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+.logout-btn button {
+  background: #111;
+  color: white;
+  border: 2px solid #00ff88;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.logout-btn button:hover {
+  background: #00ff88;
+  color: black;
+}
+/* Botón Rechazar */
+.btn-rechazar {
+    background-color: #f44336; /* Rojo */
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.btn-rechazar:hover {
+    background-color: #d32f2f;
+}
+
+/* Mensajes de estado */
+.flash-success {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 10px;
+    border: 1px solid #c3e6cb;
+    border-radius: 5px;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.flash-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 10px;
+    border: 1px solid #f5c6cb;
+    border-radius: 5px;
+    margin-top: 15px;
+    text-align: center;
+}

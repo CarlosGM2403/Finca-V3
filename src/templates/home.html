@@ -123,7 +123,7 @@
     {% endif %}
 
     {% if rol == 'administrador' %}
-      <a href="{{ url_for('ver_fotos') }}">Evidencias</a>
+      <a href="{{ url_for('ver_evidencias') }}">Evidencias</a>
     {% else %}
       <a href="{{ url_for('en_construccion') }}">Tratamientos</a>
     {% endif %}
@@ -187,7 +187,7 @@
 {% endif %}
 
 {% if rol == 'administrador' %}
-  <a href="{{ url_for('ver_fotos') }}">
+  <a href="{{ url_for('ver_evidencias') }}">
     <button class="btn-normal">Evidencias</button>
   </a>
 {% else %}

@@ -690,23 +690,99 @@ def solicitar_insumo():
 # ---------------------- SOLICITUDES REALIZADAS ----------------------
 
 @app.route('/solicitudes', methods=['GET'])
+@login_required
 def ver_solicitudes():
     if 'user_id' not in session:
         return redirect(url_for('login'))
 
     cur = db.connection.cursor()
+    # Solicitudes pendientes
     cur.execute("""
-        SELECT s.id, u.fullname, s.tipo_insumo, s.cantidad, s.observaciones, s.fecha_solicitud
+        SELECT s.id, u.fullname, s.tipo_insumo, s.cantidad, s.observaciones, s.fecha_solicitud, s.estado
         FROM solicitud_insumo s
         JOIN user u ON s.usuario_id = u.id
+        WHERE s.estado = 'Pendiente'
         ORDER BY s.fecha_solicitud
     """)
-    solicitudes = cur.fetchall()
+    solicitudes_pendientes = cur.fetchall()
+
+    # Solicitudes procesadas (aceptadas o rechazadas)
+    cur.execute("""
+        SELECT s.id, u.fullname, s.tipo_insumo, s.cantidad, s.observaciones, s.fecha_solicitud, s.estado
+        FROM solicitud_insumo s
+        JOIN user u ON s.usuario_id = u.id
+        WHERE s.estado IN ('Aceptada', 'Rechazada')
+        ORDER BY s.fecha_solicitud 
+    """)
+    solicitudes_procesadas = cur.fetchall()
     cur.close()
 
-    print(solicitudes)  
-    return render_template('ver_solicitudes.html', solicitudes=solicitudes)
+    return render_template(
+        'ver_solicitudes.html',
+        solicitudes_pendientes=solicitudes_pendientes,
+        solicitudes_procesadas=solicitudes_procesadas
+    )
 
+# ---------------------- ACTUALIZAR SOLICITUD ----------------------
+@app.route('/actualizar_solicitud/<int:id>/<string:accion>', methods=['POST'])
+@login_required
+def actualizar_solicitud(id, accion):
+    """
+    Actualiza el estado de la solicitud: 'Aceptada' o 'Rechazada'
+    """
+    nuevo_estado = None
+    if accion == 'aceptar':
+        nuevo_estado = 'Aceptada'
+    elif accion == 'rechazar':
+        nuevo_estado = 'Rechazada'
+
+    if nuevo_estado:
+        try:
+            cur = db.connection.cursor()
+            cur.execute("""
+                UPDATE solicitud_insumo
+                SET estado = %s
+                WHERE id = %s
+            """, (nuevo_estado, id))
+            db.connection.commit()
+            cur.close()
+            flash(f"Solicitud {nuevo_estado.lower()} correctamente", "success")
+        except Exception as e:
+            db.connection.rollback()
+            flash(f"Error al actualizar la solicitud: {str(e)}", "danger")
+
+    return redirect(url_for('ver_solicitudes'))
+
+# ---------------------- EVIDENCIAS ----------------------
+
+@app.route("/ver_evidencias")
+@login_required
+def ver_evidencias():
+    cursor = db.connection.cursor()
+
+    # Consulta para traer TODAS las evidencias con nombre de usuario
+    query = """
+        SELECT a.evidencia, a.fecha, u.fullname, a.actividad, a.insumos, a.observaciones
+        FROM actividades a
+        JOIN user u ON a.id_usuario = u.id
+        ORDER BY a.fecha 
+    """
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    cursor.close()
+
+    evidencias = []
+    for row in rows:
+        evidencias.append({
+            'ruta': url_for('static', filename='uploads/' + row[0]) if row[0] else None,
+            'fecha': row[1],
+            'usuario': row[2],  # 👈 Aquí ya tienes el nombre de la persona
+            'actividad': row[3],
+            'insumos': row[4],
+            'observaciones': row[5]
+        })
+
+    return render_template("ver_evidencias.html", evidencias=evidencias)
 
 # ---------------------- EN CONSTRUCCIÓN ----------------------
 
