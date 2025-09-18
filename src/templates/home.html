@@ -89,7 +89,7 @@
   {% if  rol == 'empleado' or rol == 'cuidador'%}
     <a href="{{ url_for('registrar_actividad') }}">Registrar Actividad</a>
   {% endif %}
-  <a href="#">Problemas de cultivo</a>
+  <a href="{{ url_for('registrar_problema') }}">Problemas de cultivo</a>
   {% if rol == 'supervisor' or rol == 'empleado' or rol == 'cuidador'%}
   <a href="{{url_for('solicitar_insumo') }}">Solicitudes de Insumos</a>
   {% endif %}

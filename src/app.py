@@ -537,7 +537,7 @@ def ver_fotos():
         if usuario is None:
             usuario = row[2]  # Capturamos el nombre completo solo una vez
         fotos.append({
-            'ruta': url_for('static', filename='uploads/' + row[0]),
+            'ruta': url_for('static', filename='uploads/'+ row[0]),
             'fecha': row[1],
             'usuario': row[2],
             'actividad': row[3],
@@ -896,6 +896,91 @@ def eliminar_tratamiento(id):
 
     return redirect(url_for('tratamientos_registrados'))
 
+# ---------------------- MAIN ----------------------
+@app.route('/registrar_problema', methods=['GET', 'POST'])
+@login_required
+def registrar_problema():
+    tipos = ["Plaga", "Enfermedad", "Deficiencia nutricional", "Estrés hídrico", "Otro"]
+
+    if request.method == 'POST':
+        tipo = request.form['tipo']
+        descripcion = request.form['descripcion']
+        evidencia_base64 = request.form['evidencia']
+
+        print("DEBUG - Datos recibidos:")
+        print("Tipo:", tipo)
+        print("Descripción:", descripcion)
+        print("Evidencia:", len(evidencia_base64) if evidencia_base64 else "No llegó")
+
+        filename = None
+
+        if evidencia_base64:
+            try:
+                if "," in evidencia_base64:
+                    evidencia_base64 = evidencia_base64.split(",")[1]
+
+                image_data = base64.b64decode(evidencia_base64)
+                filename = f"{uuid.uuid4().hex}.jpg"
+                filepath = os.path.join(UPLOAD_FOLDER, filename)
+
+                with open(filepath, "wb") as f:
+                    f.write(image_data)
+
+            except Exception as e:
+                print("Error al guardar imagen:", e)
+                flash(f"Error al guardar la imagen: {str(e)}", "danger")
+                return redirect(url_for("registrar_problema"))
+
+        try:
+            cursor = db.connection.cursor()
+            cursor.execute("""
+                INSERT INTO problemas_cultivo (id_usuario, tipo_problema, descripcion, evidencia, fecha_registro)
+                VALUES (%s, %s, %s, %s, NOW())
+            """, (session['user_id'], tipo, descripcion, filename))
+            db.connection.commit()
+            cursor.close()
+
+            flash("Problema registrado correctamente", "success")
+            return redirect(url_for('ver_problemas'))
+
+        except Exception as e:
+            db.connection.rollback()
+            print("Error al guardar en la BD:", e)
+            import traceback
+            traceback.print_exc()
+            flash(f"Error al registrar problema: {str(e)}", "danger")
+
+    return render_template("/registrar_problema.html", tipos=tipos)
+
+# ---------------------- PROBLEMAS REGISTRADOS ----------------------
+@app.route('/problemas_registrados')
+@login_required
+def problemas_registrados():
+    cursor = db.connection.cursor()
+    query = """
+        SELECT p.evidencia, p.fecha_registro, u.fullname, p.tipo_problema, p.descripcion
+        FROM problemas_cultivo p
+        JOIN user u ON p.id_usuario = u.id
+        WHERE u.id = %s
+    """
+    cursor.execute(query, (session['user_id'],))
+    resultados = cursor.fetchall()
+
+    problemas = []
+    for row in resultados:
+        ruta = url_for("static", filename="uploads/" + row[0]) if row[0] else None
+        problemas.append({
+            "ruta": ruta,
+            "fecha": row[1],
+            "usuario": row[2],
+            "tipo": row[3],
+            "descripcion": row[4]
+        })
+
+    usuario = problemas[0]["usuario"] if problemas else "Sin registros"
+    cursor.close()
+
+    return render_template("problemas_registrados.html", problemas=problemas, usuario=usuario)
 
 # ---------------------- MAIN ----------------------
 if __name__ == '__main__':
