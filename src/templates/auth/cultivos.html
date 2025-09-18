@@ -43,7 +43,7 @@
           <td>{{ cultivo[5] }}</td>
         {% if rol == 'administrador' %}
           <td>
-            <form action="{{ url_for('cambiar_estado', id=cultivo[0]) }}" method="post" style="display:inline;">
+            <form action="{{ url_for('cambiar_estado_cultivo', id=cultivo[0]) }}" method="post" style="display:inline;">
               {% if cultivo[5] == "Habilitado" %}
                 <button type="submit" class="btn-danger">Inhabilitar</button>
               {% else %}
