@@ -321,6 +321,8 @@ def perfil():
     return render_template('auth/perfil.html', usuario=usuario)
 
 
+
+
 @app.route('/editar_perfil', methods=['GET', 'POST'])
 def editar_perfil():
     if 'user_id' not in session:
@@ -397,6 +399,27 @@ def cultivos():
     cultivos = cur.fetchall()
     cur.close()
     return render_template('auth/cultivos.html', cultivos=cultivos, rol=rol)
+
+@app.route('/cambiar_estado_cultivo/<int:id>', methods=['POST'])
+def cambiar_estado_cultivo(id):
+    cur = db.connection.cursor()
+    cur.execute("SELECT estado FROM cultivos WHERE id_cultivo=%s", (id,))
+    row = cur.fetchone()
+
+    if row is None:
+        flash("El cultivo no existe", "error")
+        cur.close()
+        return redirect(url_for('cultivos'))
+
+    estado_actual = row[0]
+    nuevo_estado = "Inhabilitado" if estado_actual == "Habilitado" else "Habilitado"
+
+    cur.execute("UPDATE cultivos SET estado=%s WHERE id_cultivo=%s", (nuevo_estado, id))
+    db.connection.commit()
+    cur.close()
+
+    flash(f"El cultivo fue {nuevo_estado}", "success")
+    return redirect(url_for('cultivos'))
 
 
 @app.route('/registrar_cultivo', methods=['GET', 'POST'])
