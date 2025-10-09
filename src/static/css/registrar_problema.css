@@ -3,8 +3,9 @@ body {
   background-image: url(../img/fondo_forms.png);
   margin: 0;
   padding: 0;
-  height: 85vh;
+  height: 210vh;
   background-size: cover;
+  background-repeat: no-repeat;
 }
 
 /* logo MFG */
@@ -80,7 +81,6 @@ h1 {
     color: white;
 }
 
-
 /* Botón volver */
 .logout-btn {
   position: absolute;
@@ -104,3 +104,4 @@ h1 {
   background: #00ff88;
   color: black;
 }
+

@@ -111,7 +111,7 @@
     {% endif %}
 
     {% if rol == 'administrador' or rol == 'supervisor' %}
-      <a href="{{ url_for('en_construccion') }}">Producción</a>
+      <a href="{{ url_for('registrar_produccion') }}">Producción</a>
     {% else %}
       <a href="{{ url_for('registrar_siembra') }}">Registro de Siembra</a>
     {% endif %}
@@ -159,7 +159,7 @@
   {% endif %}
 
   {% if rol == 'administrador' or rol == 'supervisor' %}
-  <a href="{{ url_for('en_construccion') }}">
+  <a href="{{ url_for('registrar_produccion') }}">
     <button class="btn-normal">Producción</button>
   </a>
   {% else %}

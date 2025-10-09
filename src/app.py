@@ -900,7 +900,7 @@ def eliminar_tratamiento(id):
 @app.route('/registrar_problema', methods=['GET', 'POST'])
 @login_required
 def registrar_problema():
-    tipos = ["Plaga", "Enfermedad", "Deficiencia nutricional", "Estrés hídrico", "Otro"]
+    tipos = ["Plagas", "Hongos", "Malezas", "Deficiencia de nutrientes"]
 
     if request.method == 'POST':
         tipo = request.form['tipo']
@@ -981,6 +981,49 @@ def problemas_registrados():
     cursor.close()
 
     return render_template("problemas_registrados.html", problemas=problemas, usuario=usuario)
+
+# ---------------------- PRODUCCIÓN ----------------------
+@app.route('/registrar_produccion', methods=['GET', 'POST'])
+@login_required
+def registrar_produccion():
+    cursor = db.connection.cursor()
+    cursor.execute("SELECT Id_cultivo, nombre FROM Cultivos WHERE estado = 'Habilitado'")
+    cultivos = cursor.fetchall()
+
+    if request.method == 'POST':
+        id_cultivo = request.form['cultivo']
+        fecha = request.form['fecha']
+        cantidad = request.form['cantidad']
+
+        try:
+            cursor.execute("""
+                INSERT INTO produccion (id_usuario, id_cultivo, fecha, cantidad_bultos)
+                VALUES (%s, %s, %s, %s)
+            """, (session['user_id'], id_cultivo, fecha, cantidad))
+            db.connection.commit()
+            flash("Producción registrada correctamente", "success")
+            return redirect(url_for('produccion_registrada'))
+        except Exception as e:
+            db.connection.rollback()
+            flash(f"Error al registrar producción: {str(e)}", "danger")
+
+    return render_template("registrar_produccion.html", cultivos=cultivos)
+
+# ---------------------- VER PRODUCCIÓN ----------------------
+@app.route('/produccion_registrada')
+@login_required
+def produccion_registrada():
+    cursor = db.connection.cursor()
+    cursor.execute("""
+        SELECT p.fecha, p.cantidad_bultos, c.nombre, u.fullname
+        FROM produccion p
+        JOIN Cultivos c ON p.id_cultivo = c.Id_cultivo
+        JOIN user u ON p.id_usuario = u.id
+        WHERE u.id = %s
+    """, (session['user_id'],))
+    registros = cursor.fetchall()
+    cursor.close()
+    return render_template("produccion_registrada.html", registros=registros)
 
 # ---------------------- MAIN ----------------------
 if __name__ == '__main__':
