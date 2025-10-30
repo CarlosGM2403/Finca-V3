@@ -10,6 +10,46 @@
 {% endblock %}
 
 {% block scripts %}
+
+<!--DESPLEGABLE BOTON USUARIO-->
+
+<script>
+const usuariosBtn = document.getElementById('usuarios-btn');
+const usuariosDropdown = document.getElementById('usuarios-dropdown');
+
+usuariosBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    usuariosDropdown.classList.toggle('show');
+});
+
+// Cierra si haces clic fuera del botón o sub-botones
+window.addEventListener('click', function(e) {
+    if (!e.target.closest('.btn-wrapper-usuarios')) {
+        usuariosDropdown.classList.remove('show');
+    }
+});
+</script>
+
+
+
+<!--DESPLEGABLE BOTON CULTIVOS-->
+
+<script>
+document.getElementById('dropdown-btn').addEventListener('click', function() {
+  const dropdown = document.getElementById('dropdown-content');
+  dropdown.classList.toggle('show');
+});
+
+// Cierra si haces clic fuera del botón o los sub-botones
+window.addEventListener('click', function(e) {
+  if (!e.target.closest('.btn-wrapper')) {
+    document.getElementById('dropdown-content').classList.remove('show');
+  }
+});
+</script>
+
+<!--BOTON DE LOGOUT-->
+
 <script>
   function toggleMenu() {
     document.getElementById("menu").classList.toggle("show");
@@ -33,6 +73,26 @@
     }
   }
 </script>
+
+<!--MENU HAMBURGUESA-->
+
+<script>
+const toggleBtn = document.getElementById('menu-toggle');
+const menu = document.getElementById('menu');
+
+toggleBtn.addEventListener('click', (e) => {
+  e.stopPropagation(); // evita cerrar inmediatamente al hacer clic
+  menu.classList.toggle('show');
+});
+
+// Cerrar menú si haces clic fuera de él
+window.addEventListener('click', (e) => {
+  if (!e.target.closest('#menu') && !e.target.closest('#menu-toggle')) {
+    menu.classList.remove('show');
+  }
+});
+</script>
+
 {% endblock %}
 
 {% block body %}
@@ -89,17 +149,8 @@
   {% if  rol == 'empleado' or rol == 'cuidador'%}
     <a href="{{ url_for('registrar_actividad') }}">Registrar Actividad</a>
   {% endif %}
-  <a href="{{ url_for('registrar_problema') }}">Problemas de cultivo</a>
   {% if rol == 'supervisor' or rol == 'empleado' or rol == 'cuidador'%}
   <a href="{{url_for('solicitar_insumo') }}">Solicitudes de Insumos</a>
-  {% endif %}
-  {% if rol == 'administrador' %}
-    <a href="{{ url_for('ver_solicitudes') }}">Ver Solicitudes</a>
-  {% endif %}
-
-
-  {% if rol == 'administrador' %}
-    <a href="{{ url_for('registrar_siembra') }}">Registro de Siembra</a>
   {% endif %}
 
   <!-- Botones de abajo (solo visibles en móvil) -->
@@ -111,7 +162,7 @@
     {% endif %}
 
     {% if rol == 'administrador' or rol == 'supervisor' %}
-      <a href="{{ url_for('registrar_produccion') }}">Producción</a>
+      <a href="{{ url_for('ver_solicitudes') }}">Solicitudes</a>
     {% else %}
       <a href="{{ url_for('registrar_siembra') }}">Registro de Siembra</a>
     {% endif %}
@@ -130,28 +181,24 @@
   </div>
 </div>
 
-<script>
-  function toggleMenu() {
-    document.getElementById("menu").classList.toggle("show");
-  }
 
-  //cerrar si se hace clic fuera del menú
-  document.addEventListener("click", function(event) {
-    const menu = document.getElementById("menu");
-    const btn = document.querySelector(".menu-btn");
-
-    if (!menu.contains(event.target) && !btn.contains(event.target)) {
-      menu.classList.remove("show");
-    }
-  });
-</script>
 
 <!-- GRUPOS DE BOTONES -->
 <div class="grupo-izquierda">
   {% if rol == 'administrador' %}
-  <a href="{{ url_for('usuarios') }}">
-    <button class="btn-normal">Usuarios</button>
-  </a>
+ <div class="btn-wrapper-usuarios">
+  <button class="btn-normal" id="usuarios-btn">Usuarios</button>
+
+  <!-- Contenedor desplegable -->
+  <div class="dropdown-content" id="usuarios-dropdown">
+    <a href="{{ url_for('usuarios') }}">
+      <button class="usuarios-drop-btn">Ver usuarios</button>
+    </a>
+    <a href="{{ url_for('registrar_usuario') }}">
+      <button class="usuarios-drop-btn">Registrar usuarios</button>
+    </a>
+  </div>
+</div>
   {% else %}
   <a href="{{ url_for('registrar_actividad') }}">
     <button class="btn-normal">Registra Actividad</button>
@@ -159,8 +206,8 @@
   {% endif %}
 
   {% if rol == 'administrador' or rol == 'supervisor' %}
-  <a href="{{ url_for('registrar_produccion') }}">
-    <button class="btn-normal">Producción</button>
+  <a href="{{ url_for('ver_solicitudes') }}">
+    <button class="btn-normal">Solicitudes</button>
   </a>
   {% else %}
   <a href="{{ url_for('registrar_siembra') }}">
@@ -172,7 +219,12 @@
 <div class="btn-wrapper">
   <div class="circle circle1"></div>
   <div class="circle circle2"></div>
-    <a href="{{ url_for('cultivos') }}" class="btn">Cultivos</a>
+    <a href="#" class="btn" id="dropdown-btn">Cultivos</a>
+    <div class="dropdown-content" id="dropdown-content">
+    <a href="{{ url_for('problemas_registrados') }}" class="drop-btn">Problemas registrados</a>
+    <a href="{{ url_for('produccion_registrada') }}" class="drop-btn">Produccion de cultivo</a>
+    <a href="{{ url_for('siembra_registrada') }}" class="drop-btn">Siembras</a>
+  </div>
 </div>
 
 <div class="grupo-derecha">
