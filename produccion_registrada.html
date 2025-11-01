@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Producción Registrada{% endblock %}
+
+{% block CustomCSS %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/produccion_registrada.css') }}">
+{% endblock %}
+
+{% block body %}
+<h1 class="titulo-principal">Producción registrada por {{ registros[0][3] if registros else 'usuario' }}</h1>
+
+<div class="logout-btn">
+  <a href="{{ url_for('home') }}">
+    <button title="Volver al inicio">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+  </a>
+</div>
+
+<div class="contenedor-Pregistrada">
+  <table class="tabla-produccion">
+    <thead class="table-dark">
+      <tr>
+        <th>Fecha</th>
+        <th>Cultivo</th>
+        <th>Cantidad de Bultos</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in registros %}
+      <tr>
+        <td>{{ r[0] }}</td>
+        <td>{{ r[2] }}</td>
+        <td>{{ r[1] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}
