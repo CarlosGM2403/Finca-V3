@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Evidencias Registradas{% endblock %}
+
+{% block CustomCSS %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ver_evidencias.css') }}">
+{% endblock %}
+
+{% block body %}
+
+<div class="logo">
+  <img src="{{ url_for('static', filename='img/Logo_principal.png') }}" alt="Logo">
+</div>
+
+<div class="logout-btn">
+  <a href="{{ url_for('home') }}">
+    <button title="Volver al inicio">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+  </a>
+</div>
+
+<div class="container">
+        <h1 class="titulo">Evidencias Registradas</h1>
+
+        <div class="fotos-container">
+            {% for evidencia in evidencias %}
+            <div class="card">
+                <!-- Imagen -->
+                {% if evidencia.ruta %}
+                    <img src="{{ evidencia.ruta }}" alt="Evidencia">
+                {% else %}
+                    <div class="no-image">Sin imagen</div>
+                {% endif %}
+
+                <!-- Información -->
+                <h3>{{ evidencia.usuario }}</h3>
+                <p><strong>Actividad:</strong> {{ evidencia.actividad }}</p>
+                <p><strong>Insumos:</strong> {{ evidencia.insumos }}</p>
+                <p><strong>Observaciones:</strong> {{ evidencia.observaciones }}</p>
+                <p class="fecha"><strong>Fecha:</strong> {{ evidencia.fecha }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if evidencias|length == 0 %}
+        <p class="sin-evidencias">No hay evidencias registradas</p>
+        {% endif %}
+    </div>
+{% endblock %}
