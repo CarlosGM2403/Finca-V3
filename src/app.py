@@ -121,7 +121,6 @@ def logout():
 
 # ---------------------- HOME ----------------------
 @app.route('/home')
-login_required
 def home():
     rol = session.get("rol")
     if 'user_id' not in session:
