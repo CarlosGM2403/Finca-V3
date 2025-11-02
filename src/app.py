@@ -1,6 +1,6 @@
 # ---------------------- LIBRERÍAS FLASK ----------------------
 from sqlite3 import Cursor
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, make_response
 from flask_mysqldb import MySQL
 from flask_login import LoginManager, login_user, logout_user, login_required
 from flask_mail import Mail, Message
@@ -8,6 +8,7 @@ from flask_login import current_user
 import os
 import base64
 import uuid
+import re
 
 # ---------------------- UTILIDADES ----------------------
 from werkzeug.utils import secure_filename
@@ -107,9 +108,12 @@ def login():
             flash("Usuario o contraseña incorrectos", "error")
     return render_template("auth/login.html")
 
+#---------------- CERRAR SESIÓN --------------------
 
 @app.route('/logout')
 def logout():
+    print("Cerrando sesión...")
+
     logout_user()
     session.clear()
     return redirect(url_for('login'))
@@ -117,11 +121,17 @@ def logout():
 
 # ---------------------- HOME ----------------------
 @app.route('/home')
+login_required
 def home():
     rol = session.get("rol")
     if 'user_id' not in session:
         return redirect(url_for('login'))
     return render_template('home.html', rol=rol)
+    response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '-1'
+    return response
+
 
 
 # ---------------------- ERRORES ----------------------
@@ -218,6 +228,12 @@ def registrar_usuario():
         password_plain = request.form['password']
         fullname = request.form['fullname']
         rol = request.form['rol']
+
+        # Validar que el nombre completo solo contenga letras y espacios
+        if not re.fullmatch(r"[a-zA-Z\s]+", fullname):
+            flash("El nombre no puede contener caracteres especiales", "danger")
+            return redirect(url_for('registrar_usuario'))
+
 
         password_hashed = generate_password_hash(password_plain)
 
