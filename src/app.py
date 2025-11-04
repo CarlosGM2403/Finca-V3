@@ -102,10 +102,14 @@ def login():
                 return redirect(url_for('cambiar_password'))
 
             next_page = request.args.get('next')
+            flash("Bienvenido!", "success")
             return redirect(next_page or url_for('home'))
         else:
             flash("Usuario o contraseña incorrectos", "error")
+            return redirect(url_for('login')) 
+
     return render_template("auth/login.html")
+
 
 
 @app.route('/logout')
@@ -202,6 +206,7 @@ def cambiar_password():
             cur.close()
 
             session.clear()
+            session['passwordChanged'] = True
             flash("Contraseña actualizada con éxito. Vuelve a iniciar sesión.", "success")
             return redirect(url_for('login'))
 
@@ -258,7 +263,7 @@ def registrar_usuario():
 
         finally:
             cur.close()
-
+        flash("Registro exitoso", "success")
         return redirect(url_for('registrar_usuario'))
 
     return render_template('auth/Registrar_usuarios.html')
@@ -403,23 +408,22 @@ def cultivos():
 @app.route('/cambiar_estado_cultivo/<int:id>', methods=['POST'])
 def cambiar_estado_cultivo(id):
     cur = db.connection.cursor()
-    cur.execute("SELECT estado FROM cultivos WHERE id_cultivo=%s", (id,))
+    cur.execute("SELECT nombre, estado FROM cultivos WHERE id_cultivo=%s", (id,))
     row = cur.fetchone()
-
     if row is None:
         flash("El cultivo no existe", "error")
         cur.close()
         return redirect(url_for('cultivos'))
-
-    estado_actual = row[0]
+    nombre = row[0]
+    estado_actual = row[1]
     nuevo_estado = "Inhabilitado" if estado_actual == "Habilitado" else "Habilitado"
-
     cur.execute("UPDATE cultivos SET estado=%s WHERE id_cultivo=%s", (nuevo_estado, id))
     db.connection.commit()
     cur.close()
-
-    flash(f"El cultivo fue {nuevo_estado}", "success")
+    flash(f"El cultivo '{nombre}' fue {nuevo_estado}", "success")
     return redirect(url_for('cultivos'))
+
+
 
 
 @app.route('/registrar_cultivo', methods=['GET', 'POST'])
@@ -481,7 +485,7 @@ def registrar_actividad():
 
                 image_data = base64.b64decode(evidencia_base64)
                 filename = f"{uuid.uuid4().hex}.jpg"
-                filepath = os.path.join(UPLOAD_FOLDER, filename)  # 👈 Ruta absoluta
+                filepath = os.path.join(UPLOAD_FOLDER, filename) 
 
                 with open(filepath, "wb") as f:
                     f.write(image_data)
@@ -502,7 +506,7 @@ def registrar_actividad():
             cursor.close()
 
             flash("Actividad registrada correctamente", "success")
-            return redirect(url_for('ver_fotos'))
+            return render_template("registrar_actividad.html")
 
         except Exception as e:
             db.connection.rollback()
@@ -510,10 +514,9 @@ def registrar_actividad():
             import traceback
             traceback.print_exc()
             flash(f"Error al registrar actividad: {str(e)}", "danger")
+            return render_template("registrar_actividad.html")
 
     return render_template("registrar_actividad.html")
-
-
 
 @app.route("/ver_fotos")
 @login_required
@@ -618,6 +621,7 @@ def registrar_ventas():
         """, (cod_cultivo, fecha, cantidad_bultos, precio, descripcion))
 
         db.connection.commit()
+        flash("Venta registrada con éxito", "success")
         return redirect(url_for("ventas_registradas"))
 
     return render_template("auth/registrar_ventas.html", cultivos=cultivos)
@@ -662,8 +666,8 @@ def registrar_siembra():
             VALUES (%s, %s, %s)
         """, (fecha, detalle, cod_cultivos))
         db.connection.commit()
+        flash("Registro exitoso", "success") 
         return redirect(url_for("registrar_siembra"))
-
     return render_template("registrar_siembra.html", cultivos=cultivos)
 
 # ---------------------- SIEMBRA REGISTRADA ----------------------
@@ -799,7 +803,7 @@ def ver_evidencias():
         evidencias.append({
             'ruta': url_for('static', filename='uploads/' + row[0]) if row[0] else None,
             'fecha': row[1],
-            'usuario': row[2],  # 👈 Aquí ya tienes el nombre de la persona
+            'usuario': row[2],  
             'actividad': row[3],
             'insumos': row[4],
             'observaciones': row[5]
@@ -826,7 +830,7 @@ def seguimiento_cultivo():
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        cultivo_id = request.form.get('cultivo')  # 👈 coincide con el HTML
+        cultivo_id = request.form.get('cultivo')  
         tratamiento = request.form.get('tratamiento')
         problema = request.form.get('problema')
         prioridad = request.form.get('prioridad')
@@ -849,6 +853,7 @@ def seguimiento_cultivo():
 
                 flash("Seguimiento registrado con éxito", "success")
                 return redirect(url_for('seguimiento_cultivo'))
+
             else:
                 flash("El cultivo seleccionado no existe.", "danger")
 

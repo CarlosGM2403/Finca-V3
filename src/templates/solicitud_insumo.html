@@ -54,4 +54,16 @@
     <div class="planta">
         <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta">
     </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/alertas_registros.js') }}"></script>
+
 {% endblock %}

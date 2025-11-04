@@ -9,33 +9,20 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
 {% endblock %}
 
-{% block scripts %}
-<script>
-  function toggleMenu() {
-    document.getElementById("menu").classList.toggle("show");
-  }
-
-  // Cierra el menú si se hace clic fuera
-  document.addEventListener("click", function(event) {
-    const menu = document.getElementById("menu");
-    const menuBtn = document.querySelector(".menu-btn");
-
-    if (menu.classList.contains("show") && 
-        !menu.contains(event.target) && 
-        !menuBtn.contains(event.target)) {
-      menu.classList.remove("show");
-    }
-  });
-
-  function confirmLogout() {
-    if (confirm("¿Seguro que quieres cerrar sesión?")) {
-      window.location.href = "{{ url_for('logout') }}";  
-    }
-  }
-</script>
-{% endblock %}
-
 {% block body %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+    {% for category, message in messages %}
+    <div id="flash-data"
+         data-icon="{{ category }}"
+         data-message="{{ message }}">
+    </div>
+    {% endfor %}
+{% endif %}
+{% endwith %}
+
+
 <!-- LOGO -->
 <div class="logo">
   <img src="{{ url_for('static', filename='img/Logo_principal.png') }}" alt="Logo">
@@ -44,9 +31,7 @@
 <!-- BOTÓN PERFIL -->
 <div class="profile-btn">
   <a href="{{ url_for('perfil') }}">
-    <img src="{{ url_for('static', filename='img/perfil.png') }}" 
-         alt="Perfil" 
-         class="profile-icon">
+    <img src="{{ url_for('static', filename='img/perfil.png') }}" alt="Perfil" class="profile-icon">
   </a>
 </div>
 
@@ -58,7 +43,7 @@
   </button>
 </div>
 
-<!-- LOGOUT -->
+<!-- MODAL LOGOUT -->
 <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content rounded-3 shadow-lg">
@@ -86,23 +71,19 @@
 
 <!-- MENÚ LATERAL -->
 <div class="menu" id="menu">
-  {% if  rol == 'empleado' or rol == 'cuidador'%}
+  {% if rol == 'empleado' or rol == 'cuidador' %}
     <a href="{{ url_for('registrar_actividad') }}">Registrar Actividad</a>
   {% endif %}
   <a href="{{ url_for('registrar_problema') }}">Problemas de cultivo</a>
-  {% if rol == 'supervisor' or rol == 'empleado' or rol == 'cuidador'%}
-  <a href="{{url_for('solicitar_insumo') }}">Solicitudes de Insumos</a>
+  {% if rol == 'supervisor' or rol == 'empleado' or rol == 'cuidador' %}
+    <a href="{{ url_for('solicitar_insumo') }}">Solicitudes de Insumos</a>
   {% endif %}
   {% if rol == 'administrador' %}
     <a href="{{ url_for('ver_solicitudes') }}">Ver Solicitudes</a>
-  {% endif %}
-
-
-  {% if rol == 'administrador' %}
     <a href="{{ url_for('registrar_siembra') }}">Registro de Siembra</a>
   {% endif %}
 
-  <!-- Botones de abajo (solo visibles en móvil) -->
+  <!-- Botones móviles -->
   <div class="menu-mobile">
     {% if rol == 'administrador' %}
       <a href="{{ url_for('usuarios') }}">Usuarios</a>
@@ -130,70 +111,50 @@
   </div>
 </div>
 
-<script>
-  function toggleMenu() {
-    document.getElementById("menu").classList.toggle("show");
-  }
-
-  //cerrar si se hace clic fuera del menú
-  document.addEventListener("click", function(event) {
-    const menu = document.getElementById("menu");
-    const btn = document.querySelector(".menu-btn");
-
-    if (!menu.contains(event.target) && !btn.contains(event.target)) {
-      menu.classList.remove("show");
-    }
-  });
-</script>
-
 <!-- GRUPOS DE BOTONES -->
 <div class="grupo-izquierda">
   {% if rol == 'administrador' %}
-  <a href="{{ url_for('usuarios') }}">
-    <button class="btn-normal">Usuarios</button>
-  </a>
+    <a href="{{ url_for('usuarios') }}"><button class="btn-normal">Usuarios</button></a>
   {% else %}
-  <a href="{{ url_for('registrar_actividad') }}">
-    <button class="btn-normal">Registra Actividad</button>
-  </a>
+    <a href="{{ url_for('registrar_actividad') }}"><button class="btn-normal">Registra Actividad</button></a>
   {% endif %}
 
   {% if rol == 'administrador' or rol == 'supervisor' %}
-  <a href="{{ url_for('en_construccion') }}">
-    <button class="btn-normal">Producción</button>
-  </a>
+    <a href="{{ url_for('en_construccion') }}"><button class="btn-normal">Producción</button></a>
   {% else %}
-  <a href="{{ url_for('registrar_siembra') }}">
-    <button class="btn-normal">Registra Siembra</button>
-  </a>
+    <a href="{{ url_for('registrar_siembra') }}"><button class="btn-normal">Registra Siembra</button></a>
   {% endif %}
 </div>
 
 <div class="btn-wrapper">
   <div class="circle circle1"></div>
   <div class="circle circle2"></div>
-    <a href="{{ url_for('cultivos') }}" class="btn">Cultivos</a>
+  <a href="{{ url_for('cultivos') }}" class="btn">Cultivos</a>
 </div>
 
 <div class="grupo-derecha">
-{% if rol == 'administrador' %}
-  <a href="{{ url_for('registrar_ventas') }}">
-    <button class="btn-normal">Ventas</button>
-  </a>
-{% else %}
-  <a href="{{ url_for('solicitar_insumo') }}">
-    <button class="btn-normal">Solicitar Insumos</button>
-  </a>
-{% endif %}
+  {% if rol == 'administrador' %}
+    <a href="{{ url_for('registrar_ventas') }}"><button class="btn-normal">Ventas</button></a>
+  {% else %}
+    <a href="{{ url_for('solicitar_insumo') }}"><button class="btn-normal">Solicitar Insumos</button></a>
+  {% endif %}
 
-{% if rol == 'administrador' %}
-  <a href="{{ url_for('ver_evidencias') }}">
-    <button class="btn-normal">Evidencias</button>
-  </a>
-{% else %}
-  <a href="{{ url_for('seguimiento_cultivo') }}">
-    <button class="btn-normal">Tratamientos</button>
-  </a>
-{% endif %}
+  {% if rol == 'administrador' %}
+    <a href="{{ url_for('ver_evidencias') }}"><button class="btn-normal">Evidencias</button></a>
+  {% else %}
+    <a href="{{ url_for('seguimiento_cultivo') }}"><button class="btn-normal">Tratamientos</button></a>
+  {% endif %}
 </div>
+
+{% endblock %}
+
+{% block scripts %}
+<!-- SweetAlert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- Script de alertas -->
+<script src="{{ url_for('static', filename='js/alertas_registros.js') }}"></script>
+
+
+<script src="{{ url_for('static', filename='js/home.js') }}"></script>
 {% endblock %}

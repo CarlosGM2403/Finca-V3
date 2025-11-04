@@ -76,39 +76,18 @@
 <!------- Imagen planta ------------>
 <img src="{{ url_for('static', filename='img/plantaa.png') }}" class="planta" alt="Planta decorativa">
 
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<!-- Conexión con JS -->
+<script src="{{ url_for('static', filename='js/alertas_registros.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/ventas_registradas.js') }}"></script>
+
 {% endblock %}
 
-{% block scripts %}
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const buscador = document.getElementById('buscador-ventas');
-    const tabla = document.getElementById('tabla-ventas').getElementsByTagName('tbody')[0];
-    const filas = tabla.getElementsByTagName('tr');
-    const noResult = document.getElementById('no-result-ventas');
-
-    buscador.addEventListener('input', function() {
-        const filtro = this.value.toLowerCase().trim();
-        let coincidencias = 0;
-
-        for (let i = 0; i < filas.length; i++) {
-            if (filas[i].id === 'no-result-ventas') continue;
-
-            const celdas = filas[i].getElementsByTagName('td');
-            let textoFila = '';
-            for (let j = 0; j < celdas.length - 1; j++) { // Excluye columna de Acciones
-                textoFila += celdas[j].textContent.toLowerCase() + ' ';
-            }
-
-            if (textoFila.includes(filtro)) {
-                filas[i].style.display = '';
-                coincidencias++;
-            } else {
-                filas[i].style.display = 'none';
-            }
-        }
-
-        noResult.style.display = (coincidencias === 0) ? '' : 'none';
-    });
-});
-</script>
-{% endblock %}
