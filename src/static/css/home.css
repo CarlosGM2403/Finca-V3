@@ -11,28 +11,54 @@ body {
     background-size: cover;
 }
 
+/* ========== BOTONES SUPERIORES CON MÁS SEPARACIÓN ========== */
 .profile-btn {
-  position: absolute;   /* o relative, según dónde lo quieras */
-  top: 10px;            /* ajusta la posición */
-  right: 100px;          /* mueve a la izquierda del logout */
+    position: fixed;
+    top: 20px;          
+    right: 140px;       /* AUMENTADO: más a la izquierda para separar del logout */
+    z-index: 1000;
 }
 
-.profile-btn .profile-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;   /* si quieres que sea circular */
-  cursor: pointer;
-  transition: transform 0.2s ease;
+.profile-btn .profile-icon.foto-perfil-circular {
+    width: 70px;        
+    height: 70px;       
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #4c9677;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.profile-btn .profile-icon:hover {
-  transform: scale(1.1);  /* efecto al pasar el mouse */
+.profile-btn .profile-icon.foto-perfil-circular:hover {
+    border-color: #c9c9c9;
+    transform: scale(1.12);
+    box-shadow: 0 6px 20px rgba(76, 150, 119, 0.5);
+}
+
+/* Tooltip para perfil */
+.profile-btn:hover::after {
+    content: "Mi Perfil";
+    position: absolute;
+    top: 100%;
+    right: 50%;
+    transform: translateX(50%);
+    background: #333333e6;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    white-space: nowrap;
+    margin-top: 10px;
+    z-index: 1001;
+    border: 1px solid #4c9677;
 }
 
 .logout-btn {
     position: fixed;
-    top: 15px;
-    right: 15px;
+    top: 32px;          
+    right: 30px;        /* AUMENTADO: más a la derecha para separar del perfil */
     z-index: 1000;
 }
 
@@ -41,11 +67,37 @@ body {
     border: none;
     color: white;
     cursor: pointer;
-    font-size: 25px;
+    font-size: 32px;    
     display: flex;
     align-items: center;
-    gap: 5px;
-    transition: background 0.3s;
+    gap: 8px;
+    transition: all 0.3s ease;
+    padding: 8px 12px;
+    border-radius: 8px;
+}
+
+.logout-btn button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.1);
+    color: #ff6b6b;
+}
+
+/* Tooltip para logout */
+.logout-btn:hover::after {
+    content: "Cerrar Sesión";
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: #333333e6;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    white-space: nowrap;
+    margin-top: 10px;
+    z-index: 1001;
+    border: 1px solid #ff6b6b;
 }
 
 /* Estilos personalizados para el modal */
@@ -53,43 +105,100 @@ body {
     background: #3a3a3ada;              
     color: #f1f1f1;                 
     border-radius: 3rem;                
-    border: none;                       
+    border: none;                     
     box-shadow: 0 8px 25px rgba(0,0,0,0.5);     
     font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
 
-#logoutModal .modal-header {
-    border-bottom: none;            
-    padding: 1.2rem;
+#logoutModal .modal-footer {
+    border-top: none;
+    justify-content: center;
+    gap: 1rem;
+    padding-bottom: 2rem;
+    display: flex;
+    align-items: center;
 }
 
-#logoutModal .modal-title {
-  font-size: 2rem;
-  font-weight: 600;
-  color: #56c45f;                
+#logoutModal .btn-danger {
+    background: #46a346;
+    border: none;
+    border-radius: 30px;
+    padding: 0.5rem 2rem;
+    font-weight: 600;
+    transition: 0.3s;
+    min-width: 120px; /* Ancho mínimo para consistencia */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto; /* Centrado horizontal */
 }
 
-#logoutModal .btn-close {
-  filter: invert(1);                
-  opacity: 0.8;
+#logoutModal .btn-secondary {
+    background-color: #4d4d4d;
+    border: none;
+    border-radius: 30px;
+    padding: 0.5rem 2rem;
+    transition: 0.3s;
+    min-width: 120px; /* Mismo ancho que el otro botón */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto; /* Centrado horizontal */
 }
-#logoutModal .btn-close:hover {
-  opacity: 1;
+
+/* Asegurar que los botones estén alineados horizontalmente */
+#logoutModal .modal-footer .btn {
+    flex: 0 1 auto; /* No crece pero puede encogerse */
+    text-align: center;
+}
+
+/* Para pantallas muy pequeñas */
+@media (max-width: 576px) {
+    #logoutModal .modal-footer {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    #logoutModal .btn-danger,
+    #logoutModal .btn-secondary {
+        width: 100%;
+        max-width: 200px;
+    }
+}
+
+/* Opcional: Mejorar la apariencia del modal completo */
+#logoutModal .modal-content {
+    background: #3a3a3ada;
+    color: #f1f1f1;
+    border-radius: 2rem;
+    border: none;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    overflow: hidden;
 }
 
 #logoutModal .modal-body {
-  font-size: 1.5rem;
-  padding: 1.5rem;
-  text-align: center;               
+    font-size: 1.5rem;
+    padding: 2rem 1.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
-#logoutModal .modal-footer {
+#logoutModal .modal-header {
+    border-bottom: none;
+    padding: 1.5rem 1.5rem 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}#logoutModal .modal-footer {
   border-top: none;                 
   justify-content: center;          
   gap: 1rem;                        
   padding-bottom: 2rem;
 }
-
 
 #logoutModal .btn-secondary {
   background-color: #4d4d4d;
@@ -105,16 +214,17 @@ body {
 #logoutModal .btn-danger {
   background: #46a346;
   border: none;
+  text-align: center;
   border-radius: 30px;
-  padding: 5.5rem 1rem;
+  padding: 0.5rem 1rem;
   font-weight: 600;
   transition: 0.3s;
 }
 #logoutModal .btn-danger:hover {
   background: #3f8638;
+    text-align: center;
   transform: scale(1.05);
 }
-
 
 .modal.fade .modal-dialog {
   transform: translateY(-20%);
@@ -170,8 +280,7 @@ body {
   }
 }
 
-
-    /* Botón hamburguesa */
+/* Botón hamburguesa */
 .menu-btn {
     position: fixed;
     top: 20px;
@@ -229,7 +338,6 @@ body {
     display: flex;
 }
 
-
 .logo {
     position: absolute; /* La imagen se posiciona de forma absoluta*/
     top: 50%; /* Centra verticalmente */
@@ -239,8 +347,6 @@ body {
     height: auto; /* Mantiene proporciones */
     pointer-events: none; /* Evita que bloquee clics en el botón */
 }
-
-
 
 /*botones izquierda*/
 .grupo-izquierda {
@@ -291,7 +397,6 @@ body {
     font-weight: bold;       /* Texto más grueso */
     cursor: pointer;         /* Cambia cursor al pasar encima */
 }
-
 
 .btn-wrapper {
     position: fixed;            /* Mantiene el contenedor fijo en pantalla */
@@ -353,8 +458,7 @@ body {
     animation-delay: 2.5s;     /* Empieza después del primero */
 }
 
-/*DESPLEGABLKE HACIA ARRIBA DE BOTON CULTIVO*/
-
+/*DESPLEGABLE HACIA ARRIBA DE BOTON CULTIVO*/
 .dropdown-content {
     position: absolute;
     bottom: 250px; /* Se despliega hacia arriba */
@@ -402,7 +506,6 @@ body {
 }
 
 /*DESPLEGABLE BOTON USUARIO*/
-
 /* Contenedor del botón */
 .btn-wrapper-usuarios {
   position: relative;
@@ -444,7 +547,6 @@ body {
     border: none;
 }
 
-
 .usuarios-drop-btn:hover {
     background: #699276;
     transform: scale(1.05);
@@ -461,9 +563,6 @@ body {
     from { opacity: 0; transform: translate(-50%, 20px); }
     to { opacity: 1; transform: translate(-50%, 0); }
 }
-
-
-
 
 @keyframes pulse {
     0% {
@@ -494,11 +593,6 @@ body {
     transform: translate(-50%, -50%); /* Centrado perfecto */
 }
 
-.grupo-izquierda,
-  .grupo-derecha {
-    display: none; /* Esconde botones de abajo */
-  }
-
   .menu-mobile {
     display: block; /* Muestra botones dentro del menú */
     margin-top: 10px;
@@ -513,6 +607,25 @@ body {
     color: #333;
   }
 
+  /* Ajustes responsive para botones superiores */
+  .profile-btn {
+    top: 15px;
+    right: 100px;  /* Ajustado para móviles */
+  }
+
+  .profile-btn .profile-icon.foto-perfil-circular {
+    width: 60px;
+    height: 60px;
+  }
+
+  .logout-btn {
+    top: 28px;
+    right: 20px;   /* Ajustado para móviles */
+  }
+
+  .logout-btn button {
+    font-size: 28px;
+  }
 }
 
 .menu-btn,
@@ -532,7 +645,7 @@ body {
     display: none; /* Esconde botones de abajo */
   }
 
-    .menu-mobile {
+  .menu-mobile {
     display: block; /* Muestra botones dentro del menú */
     margin-top: 10px;
     border-top: 1px solid #ccc;
@@ -546,16 +659,15 @@ body {
     color: #c9c9c9;
   }
 
-    .menu-btn {
+  .menu-btn {
     display: block !important;
   }
 
   .menu {
-    display: none !important; /* 🚨 IMPORTANTE: oculto hasta que JS agregue .show */
+    display: none !important; 
   }
 
   .menu.show {
-    display: flex !important; /* ✅ se muestra solo con .show */
+    display: flex !important; 
   }
 }
-

@@ -163,9 +163,25 @@ def home():
     print("Accediendo a /home con sesión activa")
     rol = session.get("rol")
     nombre = session.get("fullname")
+    
     if "user_id" not in session:
         return redirect(url_for("login"))
-    return render_template("home.html", rol=rol, nombre=nombre)
+    
+    # Obtener foto de perfil del usuario
+    cur = db.connection.cursor()
+    cur.execute("SELECT foto_perfil FROM user WHERE id=%s", (session['user_id'],))
+    resultado = cur.fetchone()
+    cur.close()
+    
+    # Construir URL de la foto de perfil
+    if resultado and resultado[0]:  # Si tiene foto en la base de datos
+        foto_perfil_url = url_for('static', filename='uploads/' + resultado[0])
+    else:  # Si no tiene foto, usar la por defecto
+        foto_perfil_url = url_for('static', filename='img/perfil.png')
+    
+    print(f"Foto de perfil URL: {foto_perfil_url}")
+    
+    return render_template("home.html", rol=rol, nombre=nombre, foto_perfil_url=foto_perfil_url)
 
 
 # ---------------------- ERRORES ----------------------
@@ -405,7 +421,7 @@ def perfil():
     cur = db.connection.cursor()
     cur.execute(
         """ 
-        SELECT id, username, fullname, rol, estado, fecha_registro
+        SELECT id, username, fullname, rol, estado, fecha_registro, foto_perfil
         FROM user WHERE id=%s
     """,
         (session["user_id"],),
@@ -413,7 +429,10 @@ def perfil():
     usuario = cur.fetchone()
     cur.close()
 
-    return render_template("auth/perfil.html", usuario=usuario)
+    # Obtener URL de la foto
+    foto_url = url_for('static', filename='uploads/' + usuario[6]) if usuario[6] else url_for('static', filename='img/default-avatar.png')
+
+    return render_template("auth/perfil.html", usuario=usuario, foto_url=foto_url)
 
 
 @app.route("/editar_perfil", methods=["GET", "POST"])
@@ -424,33 +443,57 @@ def editar_perfil():
     cursor = db.connection.cursor()
 
     if request.method == "POST":
-        fullname = request.form.get("fullname")  # Usamos .get() para evitar errores
+        fullname = request.form.get("fullname")
+        foto_perfil = request.files.get('foto_perfil')  # Nuevo campo
 
-        # Solo actualizamos el nombre
-        cursor.execute(
-            """
-            UPDATE user 
-            SET fullname = %s
-            WHERE id = %s
-        """,
-            (fullname, session["user_id"]),
-        )
+        if foto_perfil and foto_perfil.filename != '':
+            if allowed_file(foto_perfil.filename):
+                # Generar nombre único
+                filename = f"perfil_{session['user_id']}_{uuid.uuid4().hex}.jpg"
+                filepath = os.path.join(UPLOAD_FOLDER, filename)
+                foto_perfil.save(filepath)
+                
+                # Actualizar nombre Y foto
+                cursor.execute(
+                    """
+                    UPDATE user 
+                    SET fullname = %s, foto_perfil = %s
+                    WHERE id = %s
+                """,
+                    (fullname, filename, session["user_id"]),
+                )
+            else:
+                flash("Formato no permitido. Use JPG, PNG o JPEG.", "error")
+                return redirect(url_for('editar_perfil'))
+        else:
+            # Solo actualizar nombre
+            cursor.execute(
+                """
+                UPDATE user 
+                SET fullname = %s
+                WHERE id = %s
+            """,
+                (fullname, session["user_id"]),
+            )
 
         db.connection.commit()
         cursor.close()
-
         flash("Perfil actualizado con éxito", "success")
         return redirect(url_for("perfil"))
 
-    # Obtener datos actuales del usuario
+    # Obtener datos actuales
     cursor.execute(
-        "SELECT id, username, fullname, rol, estado FROM user WHERE id = %s",
+        "SELECT id, username, fullname, rol, estado, foto_perfil FROM user WHERE id = %s",
         (session["user_id"],),
     )
     usuario = cursor.fetchone()
+    
+    # Obtener URL de la foto actual
+    foto_url = url_for('static', filename='uploads/' + usuario[5]) if usuario[5] else url_for('static', filename='img/default-avatar.png')
+    
     cursor.close()
 
-    return render_template("auth/editar_perfil.html", usuario=usuario)
+    return render_template("auth/editar_perfil.html", usuario=usuario, foto_url=foto_url)
 
 
 @app.route("/cambiar_contraseña", methods=["GET", "POST"])

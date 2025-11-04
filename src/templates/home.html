@@ -15,12 +15,12 @@
   <img src="{{ url_for('static', filename='img/Logo_principal.png') }}" alt="Logo">
 </div>
 
-<!-- BOTÓN PERFIL -->
+<!-- BOTÓN PERFIL CON FOTO DINÁMICA -->
 <div class="profile-btn">
   <a href="{{ url_for('perfil') }}">
-    <img src="{{ url_for('static', filename='img/perfil.png') }}" 
+    <img src="{{ foto_perfil_url }}" 
          alt="Perfil" 
-         class="profile-icon">
+         class="profile-icon foto-perfil-circular">
   </a>
 </div>
 

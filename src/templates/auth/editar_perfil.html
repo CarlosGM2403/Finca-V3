@@ -17,7 +17,17 @@
 <div class="form-container">
   <h2 class="titulo-editar-perfil">Editar Perfil</h2>
 
-  <form method="post">
+  <form method="post" enctype="multipart/form-data">
+
+    <!-- Foto de perfil -->
+    <div class="foto-perfil-container">
+      <img src="{{ foto_url }}" 
+           alt="Foto de perfil" 
+           id="preview-foto"
+           class="foto-perfil-preview">
+      <label for="foto_perfil" class="btn-cambiar-foto">Cambiar foto</label>
+      <input type="file" id="foto_perfil" name="foto_perfil" accept="image/*" style="display: none;">
+    </div>
 
     <!-- Nombre (editable) -->
     <label for="fullname">Nombre Completo</label>
@@ -49,7 +59,8 @@
     {% endif %}
 {% endwith %}
 
-
+<!-- Incluir el JavaScript separado -->
+<script src="{{ url_for('static', filename='js/editar_perfil.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ url_for('static', filename='js/alertas_editar_perfil.js') }}"></script>
 

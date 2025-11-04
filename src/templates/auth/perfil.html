@@ -4,7 +4,6 @@
 
 {% block CustomCSS %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
 <link rel="stylesheet" href="{{ url_for('static', filename='css/perfil.css') }}">
 {% endblock %}
 
@@ -34,10 +33,13 @@
     </a>
   </div>
 
-  <!-- Foto -->
+  <!-- Foto de perfil DINÁMICA -->
   <div class="perfil-foto">
-      <img src="{{ url_for('static', filename='img/usuario_icon.png') }}" alt="Foto usuario">
-      <a href="#" class="cambiar-foto">Cambiar foto</a>
+      <img src="{{ foto_url }}" 
+           alt="Foto de perfil" 
+           id="foto-perfil-usuario"
+           class="foto-perfil">
+      <a href="{{ url_for('editar_perfil') }}" class="cambiar-foto">Cambiar foto</a>
   </div>
 
   <!-- Info -->
@@ -46,7 +48,7 @@
       <p class="rol">Rol: {{ usuario[3] }}</p>
       <p><i class="fa-solid fa-envelope"></i>Correo: {{ usuario[1] }}</p>
       <p><i class="fa-solid fa-circle"></i>Estado: {{ usuario[4] }}</p>
-      <p><i class="fa-solid fa-calendar"></i>Fecha Registro: {{ usuario[5] }}</p>
+      <p><i class="fa-solid fa-calendar"></i>Fecha Registro: {{ usuario[5].strftime('%d/%m/%Y') if usuario[5] else 'N/A' }}</p>
 
       <div class="perfil-actions">
         <a href="{{ url_for('cambiar_contraseña') }}" class="btn-password">Cambiar Contraseña</a>
