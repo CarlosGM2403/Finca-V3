@@ -10,19 +10,6 @@
 {% endblock %}
 
 {% block body %}
-
-{% with messages = get_flashed_messages(with_categories=true) %}
-{% if messages %}
-    {% for category, message in messages %}
-    <div id="flash-data"
-         data-icon="{{ category }}"
-         data-message="{{ message }}">
-    </div>
-    {% endfor %}
-{% endif %}
-{% endwith %}
-
-
 <!-- LOGO -->
 <div class="logo">
   <img src="{{ url_for('static', filename='img/Logo_principal.png') }}" alt="Logo">
@@ -31,7 +18,9 @@
 <!-- BOTÓN PERFIL -->
 <div class="profile-btn">
   <a href="{{ url_for('perfil') }}">
-    <img src="{{ url_for('static', filename='img/perfil.png') }}" alt="Perfil" class="profile-icon">
+    <img src="{{ url_for('static', filename='img/perfil.png') }}" 
+         alt="Perfil" 
+         class="profile-icon">
   </a>
 </div>
 
@@ -43,7 +32,7 @@
   </button>
 </div>
 
-<!-- MODAL LOGOUT -->
+<!-- LOGOUT -->
 <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content rounded-3 shadow-lg">
@@ -63,7 +52,7 @@
 </div>
 
 <!-- BOTÓN MENÚ HAMBURGUESA -->
-<button class="menu-btn" onclick="toggleMenu()">
+<button class="menu-btn" id="menu-toggle">
   <span></span>
   <span></span>
   <span></span>
@@ -71,19 +60,14 @@
 
 <!-- MENÚ LATERAL -->
 <div class="menu" id="menu">
-  {% if rol == 'empleado' or rol == 'cuidador' %}
+  {% if  rol == 'empleado' or rol == 'cuidador'%}
     <a href="{{ url_for('registrar_actividad') }}">Registrar Actividad</a>
   {% endif %}
-  <a href="{{ url_for('registrar_problema') }}">Problemas de cultivo</a>
-  {% if rol == 'supervisor' or rol == 'empleado' or rol == 'cuidador' %}
-    <a href="{{ url_for('solicitar_insumo') }}">Solicitudes de Insumos</a>
-  {% endif %}
-  {% if rol == 'administrador' %}
-    <a href="{{ url_for('ver_solicitudes') }}">Ver Solicitudes</a>
-    <a href="{{ url_for('registrar_siembra') }}">Registro de Siembra</a>
+  {% if rol == 'supervisor' or rol == 'empleado' or rol == 'cuidador'%}
+  <a href="{{url_for('solicitar_insumo') }}">Solicitudes de Insumos</a>
   {% endif %}
 
-  <!-- Botones móviles -->
+  <!-- Botones de abajo (solo visibles en móvil) -->
   <div class="menu-mobile">
     {% if rol == 'administrador' %}
       <a href="{{ url_for('usuarios') }}">Usuarios</a>
@@ -92,7 +76,7 @@
     {% endif %}
 
     {% if rol == 'administrador' or rol == 'supervisor' %}
-      <a href="{{ url_for('en_construccion') }}">Producción</a>
+      <a href="{{ url_for('ver_solicitudes') }}">Solicitudes</a>
     {% else %}
       <a href="{{ url_for('registrar_siembra') }}">Registro de Siembra</a>
     {% endif %}
@@ -114,47 +98,77 @@
 <!-- GRUPOS DE BOTONES -->
 <div class="grupo-izquierda">
   {% if rol == 'administrador' %}
-    <a href="{{ url_for('usuarios') }}"><button class="btn-normal">Usuarios</button></a>
+ <div class="btn-wrapper-usuarios">
+  <button class="btn-normal" id="usuarios-btn">Usuarios</button>
+
+  <!-- Contenedor desplegable -->
+  <div class="dropdown-content" id="usuarios-dropdown">
+    <a href="{{ url_for('usuarios') }}">
+      <button class="usuarios-drop-btn">Ver usuarios</button>
+    </a>
+    <a href="{{ url_for('registrar_usuario') }}">
+      <button class="usuarios-drop-btn">Registrar usuarios</button>
+    </a>
+  </div>
+</div>
   {% else %}
-    <a href="{{ url_for('registrar_actividad') }}"><button class="btn-normal">Registra Actividad</button></a>
+  <a href="{{ url_for('registrar_actividad') }}">
+    <button class="btn-normal">Registra Actividad</button>
+  </a>
   {% endif %}
 
   {% if rol == 'administrador' or rol == 'supervisor' %}
-    <a href="{{ url_for('en_construccion') }}"><button class="btn-normal">Producción</button></a>
+  <a href="{{ url_for('ver_solicitudes') }}">
+    <button class="btn-normal">Solicitudes</button>
+  </a>
   {% else %}
-    <a href="{{ url_for('registrar_siembra') }}"><button class="btn-normal">Registra Siembra</button></a>
+  <a href="{{ url_for('registrar_siembra') }}">
+    <button class="btn-normal">Registra Siembra</button>
+  </a>
   {% endif %}
 </div>
 
 <div class="btn-wrapper">
   <div class="circle circle1"></div>
   <div class="circle circle2"></div>
-  <a href="{{ url_for('cultivos') }}" class="btn">Cultivos</a>
+    <a href="#" class="btn" id="dropdown-btn">Cultivos</a>
+    <div class="dropdown-content" id="dropdown-content">
+    <a href="{{ url_for('problemas_registrados') }}" class="drop-btn">Problemas registrados</a>
+    <a href="{{ url_for('produccion_registrada') }}" class="drop-btn">Produccion de cultivo</a>
+    <a href="{{ url_for('siembra_registrada') }}" class="drop-btn">Siembras</a>
+  </div>
 </div>
 
 <div class="grupo-derecha">
-  {% if rol == 'administrador' %}
-    <a href="{{ url_for('registrar_ventas') }}"><button class="btn-normal">Ventas</button></a>
-  {% else %}
-    <a href="{{ url_for('solicitar_insumo') }}"><button class="btn-normal">Solicitar Insumos</button></a>
-  {% endif %}
+{% if rol == 'administrador' %}
+  <a href="{{ url_for('registrar_ventas') }}">
+    <button class="btn-normal">Ventas</button>
+  </a>
+{% else %}
+  <a href="{{ url_for('solicitar_insumo') }}">
+    <button class="btn-normal">Solicitar Insumos</button>
+  </a>
+{% endif %}
 
-  {% if rol == 'administrador' %}
-    <a href="{{ url_for('ver_evidencias') }}"><button class="btn-normal">Evidencias</button></a>
-  {% else %}
-    <a href="{{ url_for('seguimiento_cultivo') }}"><button class="btn-normal">Tratamientos</button></a>
-  {% endif %}
+{% if rol == 'administrador' %}
+  <a href="{{ url_for('ver_evidencias') }}">
+    <button class="btn-normal">Evidencias</button>
+  </a>
+{% else %}
+  <a href="{{ url_for('seguimiento_cultivo') }}">
+    <button class="btn-normal">Tratamientos</button>
+  </a>
+{% endif %}
 </div>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
 
-{% endblock %}
-
-{% block scripts %}
-<!-- SweetAlert -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<!-- Script de alertas -->
 <script src="{{ url_for('static', filename='js/alertas_registros.js') }}"></script>
-
-
 <script src="{{ url_for('static', filename='js/home.js') }}"></script>
 {% endblock %}

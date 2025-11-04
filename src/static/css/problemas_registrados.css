@@ -43,12 +43,14 @@ body {
 
 /* --- Contenedor principal de las cards --- */
 .problemas-container {
-    display: flex;
-    justify-content: center; /* Centra horizontalmente */
-    flex-wrap: wrap;         /* Permite que bajen a otra fila */
-    gap: 30px;               /* Espacio entre tarjetas */
-    padding: 40px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 30px;
+  padding: 40px;
+  max-width: 1000px;
+  margin: 0 auto;
 }
+
 
 /* --- Card individual --- */
 .card {
@@ -58,7 +60,7 @@ body {
     width: 230px;
     text-align: center;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4); /* Sombra elegante */
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    
 }
 
 .card:hover {

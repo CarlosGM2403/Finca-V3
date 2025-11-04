@@ -111,6 +111,7 @@ def login():
     return render_template("auth/login.html")
 
 
+# ---------------------- PRODUCCIÓN REGISTRADA ----------------------
 
 @app.route('/logout')
 def logout():
@@ -987,6 +988,28 @@ def problemas_registrados():
 
     return render_template("problemas_registrados.html", problemas=problemas, usuario=usuario)
 
+
+@app.route('/produccion_registrada')
+@login_required
+def produccion_registrada():
+    try:
+        cur = db.connection.cursor()
+        cur.execute("""
+            SELECT p.id_produccion, c.nombre as cultivo, p.fecha, p.cantidad, 
+                   p.descripcion, u.fullname as registrado_por
+            FROM produccion p
+            JOIN cultivos c ON p.id_cultivo = c.id_cultivo
+            JOIN user u ON p.id_usuario = u.id
+            ORDER BY p.fecha DESC
+        """)
+        produccion = cur.fetchall()
+        cur.close()
+        return render_template('auth/produccion_registrada.html', produccion=produccion)
+    except Exception as e:
+        flash(f"Error al cargar la producción: {str(e)}", "danger")
+        return redirect(url_for('home'))
+    
+    
 # ---------------------- MAIN ----------------------
 if __name__ == '__main__':
     app.config.from_object(config['development'])
