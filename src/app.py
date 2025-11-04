@@ -5,6 +5,7 @@ from flask_mysqldb import MySQL
 from flask_login import LoginManager, login_user, logout_user, login_required
 from flask_mail import Mail, Message
 from flask_login import current_user
+from functools import wraps
 import os
 import base64
 import uuid
@@ -73,6 +74,25 @@ login_manager_app.login_view = 'login'
 def load_user(id):
     return ModelUser.get_by_id(db, id)
 
+
+#----------------------- LOGIN REQUIRED ----------------------
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+#----------------------- EVITER CACHE -------------------------
+@app.after_request
+def disable_cache(response):
+    response.headers['Cache-control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
+
 # ---------------------- RUTAS PRINCIPALES ----------------------
 
 @app.route('/')
@@ -116,21 +136,24 @@ def login():
 # ---------------------- PRODUCCIÓN REGISTRADA ----------------------
 
 @app.route('/logout')
+@login_required
 def logout():
     logout_user()
     session.clear()
-    return redirect(url_for('login'))
+    print("Sesión después de logout:", session)
+    return redirect(url_for("login"))
 
 
 # ---------------------- HOME ----------------------
 @app.route('/home')
+@login_required
 def home():
+    print("Accediendo a /home con sesión activa")
     rol = session.get("rol")
     nombre = session.get("fullname")
     if 'user_id' not in session:
         return redirect(url_for('login'))
     return render_template('home.html', rol=rol, nombre=nombre)
-
 
 
 # ---------------------- ERRORES ----------------------

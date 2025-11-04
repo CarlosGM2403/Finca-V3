@@ -22,7 +22,15 @@
 
   <!-- Contenido dinámico -->
   {% block body %}{% endblock %}
-  {% block scripts %}{% endblock %}
+
+  {% block scripts %}
+  <script>
+    // Verifica si el usuario aún tiene sesión activa
+    {% if not session.get('user_id') %}
+      window.location.href = "{{ url_for('login') }}";
+    {% endif %}
+  </script>
+  {% endblock %}
 
   <!-- Bootstrap JS -->
   <script 
