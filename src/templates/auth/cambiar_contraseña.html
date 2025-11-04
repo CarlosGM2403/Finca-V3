@@ -15,12 +15,27 @@
     <div class="container">
         <h2>Cambiar Contraseña</h2>
 
-        <!-- Aquí corregí el action -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+
         <form id="cambiarPassForm" action="{{ url_for('cambiar_contraseña') }}" method="POST">
+            <!-- 🔒 Campo para la contraseña actual -->
+            <div class="input-container">
+                <input type="password" name="actual" id="old_password" placeholder="Contraseña actual" required>
+                <span class="toggle-password" onclick="togglePassword('old_password')">VER</span>
+            </div>
+
             <div class="input-container">
                 <input type="password" name="nueva" id="new_password" placeholder="Nueva contraseña" required>
                 <span class="toggle-password" onclick="togglePassword('new_password')">VER</span>
             </div>
+
             <div class="input-container">
                 <input type="password" name="confirmar" id="confirm_password" placeholder="Confirmar contraseña" required>
                 <span class="toggle-password" onclick="togglePassword('confirm_password')">VER</span>
@@ -35,16 +50,30 @@
         <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta">
     </div>
 
-    <script src="{{ url_for('static', filename='js/cambiar_contraseña.js') }}"></script>
+<script>
+    const form = document.getElementById('cambiarPassForm');
+    const errorDiv = document.getElementById('error');
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for category, message in messages %}
-            <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
-        {% endfor %}
-    {% endif %}
-    {% endwith %}
+    form.addEventListener('submit', function(e){
+        const newPass = document.getElementById('new_password').value;
+        const confirmPass = document.getElementById('confirm_password').value;
 
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="{{ url_for('static', filename='js/alertas_registros.js') }}"></script>
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+        if(newPass !== confirmPass){
+            e.preventDefault();
+            errorDiv.textContent = "Las contraseñas no coinciden";
+        } else if(!passwordRegex.test(newPass)){
+            e.preventDefault();
+            errorDiv.textContent = "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo";
+        } else {
+            errorDiv.textContent = "";
+        }
+    });
+
+    function togglePassword(id){
+        const input = document.getElementById(id);
+        input.type = input.type === "password" ? "text" : "password";
+    }
+</script>
 {% endblock %}
