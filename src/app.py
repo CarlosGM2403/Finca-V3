@@ -88,7 +88,8 @@ def login():
         password = request.form['password']
 
         cur = db.connection.cursor()
-        cur.execute("SELECT id, password, must_change_password, rol FROM user WHERE username=%s", (username,))
+        # CONSULTA CORREGIDA - agregar fullname
+        cur.execute("SELECT id, password, must_change_password, rol, fullname FROM user WHERE username=%s", (username,))
         row = cur.fetchone()
         cur.close()
 
@@ -97,12 +98,13 @@ def login():
             login_user(user)
             session['user_id'] = row[0]
             session['rol'] = row[3]
+            session['fullname'] = row[4]  # ← Ahora row[4] existe
 
             if row[2] == 1:  
                 return redirect(url_for('cambiar_password'))
 
             next_page = request.args.get('next')
-            flash("Bienvenido!", "success")
+            flash(f"¡Bienvenido, {row[4]}!", "success")
             return redirect(next_page or url_for('home'))
         else:
             flash("Usuario o contraseña incorrectos", "error")
@@ -124,9 +126,11 @@ def logout():
 @app.route('/home')
 def home():
     rol = session.get("rol")
+    nombre = session.get("fullname")
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    return render_template('home.html', rol=rol)
+    return render_template('home.html', rol=rol, nombre=nombre)
+
 
 
 # ---------------------- ERRORES ----------------------
