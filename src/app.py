@@ -334,32 +334,65 @@ def usuarios():
 
 
 @app.route("/cambiar_estado/<int:id>", methods=["GET", "POST"])
+@login_required
 def cambiar_estado(id):
-    # --- Obtener datos del usuario ---
+    # VERIFICAR ROL - Solo administradores pueden cambiar estados
+    if session.get('rol') != 'administrador':
+        flash("No tienes permisos para esta acción", "error")
+        return redirect(url_for('home'))
+    
     cur = db.connection.cursor()
-    cur.execute("SELECT id, fullname, estado FROM user WHERE id=%s", (id,))
+    # AGREGAR rol A LA CONSULTA
+    cur.execute("SELECT id, fullname, estado, rol FROM user WHERE id=%s", (id,))
     row = cur.fetchone()
+    
+    if not row:
+        flash("Usuario no encontrado", "error")
+        cur.close()
+        return redirect(url_for('usuarios'))
+    
     cur.close()
 
     usuario = {
         "id": row[0],
         "fullname": row[1],
         "estado": row[2].strip().lower() if row[2] else None,
+        "rol": row[3]  # ← AGREGAR ESTO
     }
 
     if request.method == "POST":
         print("Datos recibidos desde el formulario:", request.form)
         nuevo_estado = request.form.get("estado")
+        nuevo_rol = request.form.get("rol")  # ← CAPTURAR EL ROL TAMBIÉN
         print(f"Valor que Flask recibió para estado: '{nuevo_estado}'")
+        print(f"Valor que Flask recibió para rol: '{nuevo_rol}'")
 
-        # --- Actualizar estado ---
-        cur = db.connection.cursor()
-        cur.execute("UPDATE user SET estado=%s WHERE id=%s", (nuevo_estado, id))
-        db.connection.commit()
-        cur.close()
+        # Validar que el estado sea correcto
+        if nuevo_estado not in ['habilitado', 'inhabilitado']:
+            flash("Estado no válido", "error")
+            return redirect(url_for('cambiar_estado', id=id))
 
-        flash("Estado actualizado correctamente", "success")
-        return redirect(url_for("usuarios"))
+        # Validar que el rol sea correcto
+        if nuevo_rol not in ['administrador', 'supervisor', 'cuidador', 'empleado']:
+            flash("Rol no válido", "error")
+            return redirect(url_for('cambiar_estado', id=id))
+
+        # --- Actualizar estado Y rol ---
+        try:
+            cur = db.connection.cursor()
+            # ACTUALIZAR AMBOS CAMPOS
+            cur.execute("UPDATE user SET estado=%s, rol=%s WHERE id=%s", 
+                       (nuevo_estado, nuevo_rol, id))
+            db.connection.commit()
+            cur.close()
+            
+            flash("Usuario actualizado correctamente", "success")
+            return redirect(url_for("usuarios"))
+            
+        except Exception as e:
+            db.connection.rollback()
+            flash(f"Error al actualizar usuario: {str(e)}", "error")
+            return redirect(url_for('cambiar_estado', id=id))
 
     return render_template("auth/cambiar_estado.html", usuario=usuario)
 

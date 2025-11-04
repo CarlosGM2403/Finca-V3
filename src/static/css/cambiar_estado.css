@@ -15,6 +15,17 @@ body {
     height: auto; 
 }
 
+.campo-solo-lectura {
+  background-color: #2a2a2a;
+  color: #ffffff;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 500;
+  border: 1px solid #3a3a3a;
+}
 
 .form-container {
   max-width: 400px;

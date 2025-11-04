@@ -18,22 +18,22 @@
   <form method="post" action="{{ url_for('cambiar_estado', id=usuario['id']) }}">
     <!-- Nombre -->
     <label for="fullname">Nombre Completo</label>
-    <input type="text" id="fullname" name="fullname" value="{{ usuario['fullname'] }}" required>
+    <div class="campo-solo-lectura">{{ usuario['fullname'] }}</div>
 
     <!-- Rol -->
     <label for="rol">Rol</label>
     <select name="rol" id="rol" class="input-form" required>
-        <option value="administrador" {{ 'selected' if usuario['rol'] == 'administrador' else '' }}>Administrador</option>
-        <option value="supervisor" {{ 'selected' if usuario['rol'] == 'supervisor' else '' }}>Supervisor</option>
-        <option value="cuidador" {{ 'selected' if usuario['rol'] == 'cuidador' else '' }}>Cuidador</option>
-        <option value="empleado" {{ 'selected' if usuario['rol'] == 'empleado' else '' }}>Empleado</option>
+        <option value="administrador" {{ 'selected' if usuario.rol == 'administrador' else '' }}>Administrador</option>
+        <option value="supervisor" {{ 'selected' if usuario.rol == 'supervisor' else '' }}>Supervisor</option>
+        <option value="cuidador" {{ 'selected' if usuario.rol == 'cuidador' else '' }}>Cuidador</option>
+        <option value="empleado" {{ 'selected' if usuario.rol == 'empleado' else '' }}>Empleado</option>
     </select>
 
     <!-- Estado -->
     <label for="estado">Estado</label>
     <select id="estado" name="estado" class="input-form" required>
-        <option value="habilitado" {{ 'selected' if usuario['estado'] == 'habilitado' else '' }}>Habilitado</option>
-        <option value="inhabilitado" {{ 'selected' if usuario['estado'] == 'inhabilitado' else '' }}>Inhabilitado</option>
+        <option value="habilitado" {{ 'selected' if usuario.estado == 'habilitado' else '' }}>Habilitado</option>
+        <option value="inhabilitado" {{ 'selected' if usuario.estado == 'inhabilitado' else '' }}>Inhabilitado</option>
     </select>
 
     <!-- Botones -->
