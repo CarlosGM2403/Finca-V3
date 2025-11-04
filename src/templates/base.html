@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,15 +22,6 @@
 
   <!-- Contenido dinámico -->
   {% block body %}{% endblock %}
-
-  {% block scripts %}
-  <script>
-    // Verifica si el usuario aún tiene sesión activa
-    {% if not session.get('user_id') %}
-      window.location.href = "{{ url_for('login') }}";
-    {% endif %}
-  </script>
-  {% endblock %}
 
   <!-- Bootstrap JS -->
   <script 
