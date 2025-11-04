@@ -7,8 +7,12 @@
 {% endblock %}
 
 {% block body %}
-<h1 class="titulo-principal">Producción registrada por {{ registros[0][3] if registros else 'usuario' }}</h1>
+<!-- Logo consistente con otros templates -->
+<div class="logo">
+    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+</div>
 
+<!-- Botón volver al inicio -->
 <div class="logout-btn">
   <a href="{{ url_for('home') }}">
     <button title="Volver al inicio">
@@ -17,25 +21,37 @@
   </a>
 </div>
 
+<!-- Título seguro -->
+<h1 class="titulo-principal">
+    Producción registrada{% if registros and registros[0] and registros[0][3] %} por {{ registros[0][3] }}{% endif %}
+</h1>
+
 <div class="contenedor-Pregistrada">
-  <table class="tabla-produccion">
-    <thead class="table-dark">
-      <tr>
-        <th>Fecha</th>
-        <th>Cultivo</th>
-        <th>Cantidad de Bultos</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for r in registros %}
-      <tr>
-        <td>{{ r[0] }}</td>
-        <td>{{ r[2] }}</td>
-        <td>{{ r[1] }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  </div>
+  {% if registros %}
+    <table class="tabla-produccion">
+      <thead class="table-dark">
+        <tr>
+          <th>Fecha</th>
+          <th>Cultivo</th>
+          <th>Cantidad de Bultos</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in registros %}
+        <tr>
+          <td>{{ r[0] }}</td>
+          <td>{{ r[2] }}</td>
+          <td>{{ r[1] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="no-registros">
+      <i class="fa-solid fa-inbox"></i>
+      <h3>No hay producción registrada</h3>
+      <p>No se han encontrado registros de producción.</p>
+    </div>
+  {% endif %}
 </div>
 {% endblock %}

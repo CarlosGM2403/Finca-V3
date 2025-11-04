@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Solicitud Insumo{% endblock %}
+
+{% block CustomCSS %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/solicitud_insumo.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="logo">
+    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+</div>
+
+<div class="insumos-container">
+  <h1>Solicita Insumos</h1>
+
+  <form method="POST" enctype="multipart/form-data">
+
+    <!-- Fila de selects + imagen -->
+    <div class="form-row">
+      <div class="form-inputs">
+
+        <!-- Insumos -->
+        <label for="insumos" align="left">Tipo de insumo</label>
+        <select name="tipo_insumo" id="tipo_insumo" required>
+          <option value="Ninguno">Ninguno</option>
+          <option value="Insecticidas">Insecticidas</option>
+          <option value="Fertilizantes">Fertilizantes</option>
+          <option value="Abonos">Abonos</option>
+        </select>
+          <label for="cantidad" align="left">Cantidad</label>
+          <textarea name="cantidad" id="cantidad" rows="1" required></textarea>
+
+      </div>
+
+      <!-- Imagen a la derecha -->
+      <div class="form-image">
+        <img src="{{ url_for('static', filename='img/matierra.png') }}" alt="Actividad">
+      </div>
+    </div>
+
+    <!-- Observaciones -->
+    <label for="observaciones" align="left">Observaciones</label>
+    <textarea name="observaciones" id="observaciones" rows="4" required></textarea>
+
+      <!-- Bloque de botones a la derecha -->
+      <div class="acciones-derecha">
+        <button type="submit" class="btn-solicitar">Solicitar</button>
+        <a href="{{ url_for('home') }}" class="btn-salir">Salir</a>
+      </div>
+    </div>
+  </form>
+</div>
+    <div class="planta">
+        <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta">
+    </div>
+{% endblock %}

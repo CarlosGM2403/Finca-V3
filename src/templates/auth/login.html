@@ -9,71 +9,54 @@
 
 {% block body %}
 
-<!-- LOGO -->
 <div class="logo">
     <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
 </div>
 
-<!-- TÍTULO -->
 <h1 class="titulo-bienvenida">Bienvenido!</h1>
 
-<!-- CONTENEDOR PRINCIPAL -->
 <main class="contenedor-login">
 
-    <!-- Ícono -->
     <div class="icono-login">
         <i class="bi bi-person-circle"></i> 
     </div>
 
-    <!-- FORMULARIO LOGIN -->
     <form id="login-form" action="/login" method="POST">
 
-        <!-- Mensajes Flash -->
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <br />
-                {% for message in messages %}
-                <div class="alert alert-primary alert-dismissible" role="alert">
-                    <strong>{{ message }}</strong>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
 
-        <!-- Usuario -->
+
         <div class="form-floating mb-2">
-            <input type="text" class="form-control" id="username" name="username" placeholder="username" required>
-            <label for="username">Ingrese su correo electrónico</label>
+            <input type="text" class="form-control" id="floatingInput" name="username" required>
+            <label for="floatingInput">Ingrese su correo electrónico</label>
         </div>
 
-        <!-- Contraseña -->
         <div class="form-floating mb-2">
-            <input type="password" class="form-control" id="password" name="password" placeholder="password" required>
-            <label for="password">Ingrese su contraseña</label>
+            <input type="password" class="form-control" id="floatingPassword" name="password" required>
+            <label for="floatingPassword">Ingrese su contraseña</label>
         </div>
 
-        <!-- Opciones -->
         <div class="form-options mt-3">
             <a href="{{ url_for('forgot_password') }}" class="forgot-link">Olvidé mi contraseña</a>
         </div>
 
-        <!-- Botón Ingresar -->
         <button class="btn btn-lg btn-primary" type="submit">Ingresar</button>
     </form>
 </main>
 
-<!-- DECORACIÓN PLANTA -->
 <div class="planta">
     <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta">
 </div>
+<script src="{{ url_for('static', filename='js/login.js') }}"></script>
 
-<!-- Script: Bloquear navegación atrás -->
-<script>
-    window.history.pushState(null, "", window.location.href);
-    window.onpopstate = function () {
-        window.history.pushState(null, "", window.location.href);
-    };
-</script>
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+    {% for category, message in messages %}
+        <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
+    {% endfor %}
+{% endif %}
+{% endwith %}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/alertas_registros.js') }}"></script>
 
 {% endblock %}

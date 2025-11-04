@@ -9,104 +9,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
 {% endblock %}
 
-{% block scripts %}
-
-<!--DESPLEGABLE BOTON USUARIO-->
-
-<script>
-const usuariosBtn = document.getElementById('usuarios-btn');
-const usuariosDropdown = document.getElementById('usuarios-dropdown');
-
-usuariosBtn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    usuariosDropdown.classList.toggle('show');
-});
-
-// Cierra si haces clic fuera del botón o sub-botones
-window.addEventListener('click', function(e) {
-    if (!e.target.closest('.btn-wrapper-usuarios')) {
-        usuariosDropdown.classList.remove('show');
-    }
-});
-</script>
-
-
-
-<!--DESPLEGABLE BOTON CULTIVOS-->
-
-<script>
-document.getElementById('dropdown-btn').addEventListener('click', function() {
-  const dropdown = document.getElementById('dropdown-content');
-  dropdown.classList.toggle('show');
-});
-
-// Cierra si haces clic fuera del botón o los sub-botones
-window.addEventListener('click', function(e) {
-  if (!e.target.closest('.btn-wrapper')) {
-    document.getElementById('dropdown-content').classList.remove('show');
-  }
-});
-</script>
-
-<!--BOTON DE LOGOUT-->
-
-<script>
-  function toggleMenu() {
-    document.getElementById("menu").classList.toggle("show");
-  }
-
-  // Cierra el menú si se hace clic fuera
-  document.addEventListener("click", function(event) {
-    const menu = document.getElementById("menu");
-    const menuBtn = document.querySelector(".menu-btn");
-
-    if (menu.classList.contains("show") && 
-        !menu.contains(event.target) && 
-        !menuBtn.contains(event.target)) {
-      menu.classList.remove("show");
-    }
-  });
-
-  function confirmLogout() {
-    if (confirm("¿Seguro que quieres cerrar sesión?")) {
-      window.location.href = "{{ url_for('logout') }}";  
-    }
-  }
-</script>
-
-<!--MENU HAMBURGUESA-->
-
-<script>
-const toggleBtn = document.getElementById('menu-toggle');
-const menu = document.getElementById('menu');
-
-toggleBtn.addEventListener('click', (e) => {
-  e.stopPropagation(); // evita cerrar inmediatamente al hacer clic
-  menu.classList.toggle('show');
-});
-
-// Cerrar menú si haces clic fuera de él
-window.addEventListener('click', (e) => {
-  if (!e.target.closest('#menu') && !e.target.closest('#menu-toggle')) {
-    menu.classList.remove('show');
-  }
-});
-</script>
-
-{% endblock %}
-
 {% block body %}
-
-
-{% with mensajes = get_flashed_messages(category_filter=["bienvenida"]) %}
-  {% if mensajes %}
-    <div class="mensaje-bienvenida">
-      👋 {{ mensajes[0] }}
-    </div>
-  {% endif %}
-{% endwith %}
-
-
 <!-- LOGO -->
 <div class="logo">
   <img src="{{ url_for('static', filename='img/Logo_principal.png') }}" alt="Logo">
@@ -149,7 +52,7 @@ window.addEventListener('click', (e) => {
 </div>
 
 <!-- BOTÓN MENÚ HAMBURGUESA -->
-<button class="menu-btn" onclick="toggleMenu()">
+<button class="menu-btn" id="menu-toggle">
   <span></span>
   <span></span>
   <span></span>
@@ -192,8 +95,6 @@ window.addEventListener('click', (e) => {
   </div>
 </div>
 
-
-
 <!-- GRUPOS DE BOTONES -->
 <div class="grupo-izquierda">
   {% if rol == 'administrador' %}
@@ -233,7 +134,7 @@ window.addEventListener('click', (e) => {
     <a href="#" class="btn" id="dropdown-btn">Cultivos</a>
     <div class="dropdown-content" id="dropdown-content">
     <a href="{{ url_for('problemas_registrados') }}" class="drop-btn">Problemas registrados</a>
-    <a href="{{ url_for('produccion_registrada') }}" class="drop-btn">Produccion de cultivo</a>
+    <a href="{{ url_for('registrar_produccion') }}" class="drop-btn">Produccion de cultivo</a>
     <a href="{{ url_for('siembra_registrada') }}" class="drop-btn">Siembras</a>
   </div>
 </div>
@@ -259,4 +160,15 @@ window.addEventListener('click', (e) => {
   </a>
 {% endif %}
 </div>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/alertas_registros.js') }}"></script>
+<script src="{{ url_for('static', filename='js/home.js') }}"></script>
 {% endblock %}

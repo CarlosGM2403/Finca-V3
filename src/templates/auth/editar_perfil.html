@@ -17,24 +17,40 @@
 <div class="form-container">
   <h2 class="titulo-editar-perfil">Editar Perfil</h2>
 
-<form method="post">
-<!-- Nombre (editable) -->
-<label for="fullname">Nombre Completo</label>
-<input type="text" id="fullname" name="fullname" value="{{ usuario[2] }}" required>
+  <form method="post">
 
-<!-- Rol -->
-<label class="label-solo-lectura">Rol</label>
-<div class="campo-solo-lectura">{{ usuario[3] }}</div>
+    <!-- Nombre (editable) -->
+    <label for="fullname">Nombre Completo</label>
+    <input type="text" id="fullname" name="fullname" value="{{ usuario[2] }}" required>
 
-<!-- Estado -->
-<label class="label-solo-lectura">Estado</label>
-<div class="campo-solo-lectura">{{ usuario[4] }}</div>
+    <!-- Rol -->
+    <label class="label-solo-lectura">Rol</label>
+    <div class="campo-solo-lectura">{{ usuario[3] }}</div>
 
+    <!-- Estado -->
+    <label class="label-solo-lectura">Estado</label>
+    <div class="campo-solo-lectura">{{ usuario[4] }}</div>
 
-<!-- Botones -->
-<div class="form-buttons">
-  <button type="submit" class="btn-edit">Guardar Cambios</button>
-  <a href="{{ url_for('perfil') }}" class="btn-home">Cancelar</a>
+    <!-- Botones -->
+    <div class="form-buttons">
+      <button type="submit" class="btn-edit">Guardar Cambios</button>
+      <a href="{{ url_for('perfil') }}" class="btn-home">Cancelar</a>
+    </div>
+
+  </form> 
+
 </div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/alertas_editar_perfil.js') }}"></script>
 
 {% endblock %}

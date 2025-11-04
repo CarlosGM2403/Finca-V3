@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Perfil{% endblock %}
+
+{% block CustomCSS %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/editar_perfil.css') }}">
+{% endblock %}
+
+{% block body %}
+
+<!-- Logo -->
+<div class="logo">
+  <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+</div>
+
+<!-- Formulario de edición -->
+<div class="form-container">
+  <h2 class="titulo-editar-perfil">Editar Perfil</h2>
+
+<form method="post">
+<!-- Nombre (editable) -->
+<label for="fullname">Nombre Completo</label>
+<input type="text" id="fullname" name="fullname" value="{{ usuario[2] }}" required>
+
+<!-- Rol -->
+<label class="label-solo-lectura">Rol</label>
+<div class="campo-solo-lectura">{{ usuario[3] }}</div>
+
+<!-- Estado -->
+<label class="label-solo-lectura">Estado</label>
+<div class="campo-solo-lectura">{{ usuario[4] }}</div>
+
+
+<!-- Botones -->
+<div class="form-buttons">
+  <button type="submit" class="btn-edit">Guardar Cambios</button>
+  <a href="{{ url_for('perfil') }}" class="btn-home">Cancelar</a>
+</div>
+
+{% endblock %}

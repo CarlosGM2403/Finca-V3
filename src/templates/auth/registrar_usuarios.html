@@ -8,46 +8,29 @@
 
 {% block body %}
 
-<!-- LOGO -->
 <div class="logo">
   <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
 </div>
 
-<!-- CONTENEDOR PRINCIPAL -->
 <div class="container">
 
   <h1 class="page-title">Registro de Usuario</h1>
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    {% for category, message in messages %}
-      <div class="alert alert-{{ 'success' if category=='success' else 'danger' }}">
-        {{ message }}
-      </div>
-    {% endfor %}
-  {% endif %}
-  {% endwith %}
-
-
   <div class="form-box">
     <form action="{{ url_for('registrar_usuario') }}" method="POST">
 
-      <!-- Nombre -->
       <label for="fullname">Nombre</label>
       <input type="text" id="fullname" name="fullname" required>
 
-      <!-- Correo -->
       <label for="username">Correo electrónico</label>
       <input type="text" id="username" name="username" required>
 
-      <!-- Contraseña -->
       <label for="password">Contraseña</label>
       <div class="password-container">
         <input type="password" id="password" name="password" required>
-        <span class="toggle-password" onclick="togglePassword()">👁</span>
+        <span class="toggle-password" onclick="togglePassword()"></span>
       </div>
 
-      <!-- Rol -->
       <label for="rol">Rol</label>
       <select id="rol" name="rol" required>
         <option value="">Seleccione un rol</option>
@@ -57,35 +40,29 @@
         <option value="cuidador">Cuidador</option>
       </select>
 
-      <!-- Imagen decorativa -->
-      
-
-      <!-- Botón Registrar -->
       <button type="submit">Registrar</button>
     </form>
-  <div class="planta">
-        <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta">
-      </div>
-    <!-- Botón Volver -->
+
+    <div class="planta">
+      <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta">
+    </div>
+
     <a href="{{ url_for('usuarios') }}" class="volver">Volver</a>
   </div>
 
 </div>
 
-<!-- SCRIPT mostrar/ocultar contraseña -->
-<script>
-  function togglePassword() {
-    const passwordInput = document.getElementById("password");
-    const toggleButton = document.querySelector(".toggle-password");
+<script src="{{ url_for('static', filename='js/registrar_usuario.js') }}"></script>
 
-    if (passwordInput.type === "password") {
-      passwordInput.type = "text";
-      toggleButton.textContent = "ocultar";
-    } else {
-      passwordInput.type = "password";
-      toggleButton.textContent = "👁";
-    }
-  }
-</script>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/alertas_registros.js') }}"></script>
 
 {% endblock %}

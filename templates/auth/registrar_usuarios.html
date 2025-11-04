@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrar usuario{% endblock %}
+
+{% block CustomCSS %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/Registrar_usuarios.css') }}">
+{% endblock %}
+
+{% block body %}
+
+<!-- LOGO -->
+<div class="logo">
+  <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+</div>
+
+<!-- CONTENEDOR PRINCIPAL -->
+<div class="container">
+
+  <h1 class="page-title">Registro de Usuario</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ 'success' if category=='success' else 'danger' }}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+  {% endwith %}
+
+
+  <div class="form-box">
+    <form action="{{ url_for('registrar_usuario') }}" method="POST">
+
+      <!-- Nombre -->
+      <label for="fullname">Nombre</label>
+      <input type="text" id="fullname" name="fullname" required>
+
+      <!-- Correo -->
+      <label for="username">Correo electrónico</label>
+      <input type="text" id="username" name="username" required>
+
+      <!-- Contraseña -->
+      <label for="password">Contraseña</label>
+      <div class="password-container">
+        <input type="password" id="password" name="password" required>
+        <span class="toggle-password" onclick="togglePassword()">👁</span>
+      </div>
+
+      <!-- Rol -->
+      <label for="rol">Rol</label>
+      <select id="rol" name="rol" required>
+        <option value="">Seleccione un rol</option>
+        <option value="administrador">Administrador</option>
+        <option value="supervisor">Supervisor</option>
+        <option value="empleado">Empleado</option>
+        <option value="cuidador">Cuidador</option>
+      </select>
+
+      <!-- Imagen decorativa -->
+      
+
+      <!-- Botón Registrar -->
+      <button type="submit">Registrar</button>
+    </form>
+  <div class="planta">
+        <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta">
+      </div>
+    <!-- Botón Volver -->
+    <a href="{{ url_for('usuarios') }}" class="volver">Volver</a>
+  </div>
+
+</div>
+
+<!-- SCRIPT mostrar/ocultar contraseña -->
+<script>
+  function togglePassword() {
+    const passwordInput = document.getElementById("password");
+    const toggleButton = document.querySelector(".toggle-password");
+
+    if (passwordInput.type === "password") {
+      passwordInput.type = "text";
+      toggleButton.textContent = "ocultar";
+    } else {
+      passwordInput.type = "password";
+      toggleButton.textContent = "👁";
+    }
+  }
+</script>
+
+{% endblock %}
