@@ -52,7 +52,7 @@ body {
 }
 
 .form-floating label {
-    color: #e9e8e8;
+    color: #000000;
 }
 
 /* Enlace de "Olvidé mi contraseña" */
@@ -75,7 +75,7 @@ body {
 /* Ingreso boton */
 button[type="submit"] {
     background-color: transparent; 
-    color: white; 
+    color: rgb(255, 255, 255); 
     padding: 10px 10px; 
     border: 4px solid rgb(55, 206, 67); 
     border-radius: 25px; 
