@@ -15,6 +15,11 @@
 </div>
 
 <h1 class="titulo">Evidencias Registradas - {{ usuario }}</h1>
+
+  <div class="buscador-contenedor">
+    <input type="text" id="buscador-siembra" placeholder="Buscar siembras...">
+  </div>
+
 <!-- Botón volver al inicio -->
 <div class="logout-btn">
   <a href="{{ url_for('home') }}">
@@ -41,5 +46,13 @@
             No hay evidencias registradas aún.
         </p>
     {% endif %}
+
+<p id="no-result-siembra" style="display: none; color: white; text-align: center;">
+  No se encontraron evidencias que coincidan con la búsqueda.
+</p>
+
 </div>
+
+<script src="{{ url_for('static', filename='js/ver_fotos.js') }}"></script>
+
 {% endblock %}
