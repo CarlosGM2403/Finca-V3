@@ -96,6 +96,17 @@ window.addEventListener('click', (e) => {
 {% endblock %}
 
 {% block body %}
+
+
+{% with mensajes = get_flashed_messages(category_filter=["bienvenida"]) %}
+  {% if mensajes %}
+    <div class="mensaje-bienvenida">
+      👋 {{ mensajes[0] }}
+    </div>
+  {% endif %}
+{% endwith %}
+
+
 <!-- LOGO -->
 <div class="logo">
   <img src="{{ url_for('static', filename='img/Logo_principal.png') }}" alt="Logo">

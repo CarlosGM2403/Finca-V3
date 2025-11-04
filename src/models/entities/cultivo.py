@@ -1,7 +1,8 @@
 from src.models import db
 
+
 class Cultivo(db.Model):
-    __tablename__ = 'Cultivos'
+    __tablename__ = "Cultivos"
 
     Id_cultivo = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False)
