@@ -696,87 +696,54 @@ def registrar_actividad():
 @app.route("/ver_fotos")
 @login_required
 def ver_fotos():
-    cursor = db.connection.cursor()
+    try:
+        cursor = db.connection.cursor()
 
-    # Consulta actualizada según tus tablas
-    query = """
-        SELECT a.evidencia, a.fecha, u.fullname, a.actividad, a.insumos, a.observaciones
-        FROM actividades a
-        JOIN user u ON a.id_usuario = u.id
-        WHERE u.id = %s
-    """
-    cursor.execute(query, (session["user_id"],))
-    rows = cursor.fetchall()
+        query = """
+            SELECT a.evidencia, a.fecha, u.fullname, a.actividad, a.insumos, a.observaciones
+            FROM actividades a
+            JOIN user u ON a.id_usuario = u.id
+            WHERE u.id = %s AND a.evidencia IS NOT NULL AND a.evidencia != ''
+        """
+        cursor.execute(query, (session["user_id"],))
+        rows = cursor.fetchall()
 
-    fotos = []
-    usuario = None  # Evitar el error de variable no definida
+        fotos = []
+        usuario = None
 
-    for row in rows:
-        if usuario is None:
-            usuario = row[2]  # Capturamos el nombre completo solo una vez
-        fotos.append(
-            {
-                "ruta": url_for("static", filename="uploads/" + row[0]),
+        for row in rows:
+            if usuario is None:
+                usuario = row[2]
+            
+            # Construir ruta de forma segura
+            nombre_archivo = row[0] if row[0] else ""
+            ruta_imagen = f"uploads/{nombre_archivo}" if nombre_archivo else None
+            
+            fotos.append({
+                "ruta": url_for("static", filename=ruta_imagen) if ruta_imagen else None,
                 "fecha": row[1],
                 "usuario": row[2],
                 "actividad": row[3],
                 "insumos": row[4],
                 "observaciones": row[5],
-            }
-        )
+            })
 
-    cursor.close()
-
-    # Si no hay fotos, aún obtenemos el nombre del usuario
-    if usuario is None:
-        cursor = db.connection.cursor()
-        cursor.execute("SELECT fullname FROM user WHERE id = %s", (session["user_id"],))
-        result = cursor.fetchone()
-        usuario = result[0] if result else "Usuario desconocido"
         cursor.close()
 
-    return render_template("ver_fotos.html", fotos=fotos, usuario=usuario)
+        if usuario is None:
+            cursor = db.connection.cursor()
+            cursor.execute("SELECT fullname FROM user WHERE id = %s", (session["user_id"],))
+            result = cursor.fetchone()
+            usuario = result[0] if result else "Usuario desconocido"
+            cursor.close()
 
+        return render_template("ver_fotos.html", fotos=fotos, usuario=usuario)
+    
+    except Exception as e:
+        # Manejo de errores
+        print(f"Error en ver_fotos: {str(e)}")
+        return render_template("ver_fotos.html", fotos=[], usuario="Usuario", error=str(e))
 
-# ---------------------- SOLICITUD INSUMOS ----------------------
-@app.route("/solicitud_insumos", methods=["GET", "POST"])
-@login_required
-def solicitud_insumos():
-    cur = db.connection.cursor()
-
-    # Obtener tipos únicos de insumos sin filtrar por id
-    cur.execute("SELECT DISTINCT tipo_insumo FROM solicitud_insumo")
-    tipos = [row[0] for row in cur.fetchall()]
-
-    if request.method == "POST":
-        tipo_insumo = request.form.get(
-            "tipo_insumo"
-        )  # Cambiado a .get() para evitar errores
-        cantidad = request.form.get("cantidad")
-        observaciones = request.form.get("observaciones", "")
-
-        if not tipo_insumo or not cantidad:
-            flash("Por favor, complete los campos obligatorios", "error")
-            return redirect(url_for("solicitud_insumos"))
-
-        fecha = datetime.now()
-
-        # Insertar nueva solicitud
-        cur.execute(
-            """
-            INSERT INTO solicitudes_insumos (fecha, tipo_insumo, cantidad, observaciones)
-            VALUES (%s, %s, %s, %s)
-        """,
-            (fecha, tipo_insumo, cantidad, observaciones),
-        )
-        db.connection.commit()
-        cur.close()
-
-        flash("Solicitud de insumo registrada con éxito", "success")
-        return redirect(url_for("solicitud_insumos"))
-
-    cur.close()
-    return render_template("auth/solicitud_insumo.html", tipos=tipos)
 
 
 @app.route("/registrar_ventas", methods=["GET", "POST"])
@@ -877,7 +844,6 @@ def siembra_registrada():
 
 # ---------------------- SOLICITUD DE INSUMO ----------------------
 
-
 @app.route("/solicitar_insumo", methods=["GET", "POST"])
 @login_required
 def solicitar_insumo():
@@ -893,8 +859,8 @@ def solicitar_insumo():
             cur = db.connection.cursor()
             cur.execute(
                 """
-                INSERT INTO solicitud_insumo (usuario_id, tipo_insumo, cantidad, observaciones, fecha_solicitud)
-                VALUES (%s, %s, %s, %s, NOW())
+                INSERT INTO solicitud_insumo (usuario_id, tipo_insumo, cantidad, observaciones, fecha_solicitud, estado)
+                VALUES (%s, %s, %s, %s, NOW(), 'Pendiente')
             """,
                 (session["user_id"], tipo_insumo, cantidad, observaciones),
             )
@@ -913,14 +879,14 @@ def solicitar_insumo():
 
 # ---------------------- SOLICITUDES REALIZADAS ----------------------
 
-
-@app.route("/solicitudes", methods=["GET"])
+@app.route("/ver_solicitudes", methods=["GET"])
 @login_required
 def ver_solicitudes():
     if "user_id" not in session:
         return redirect(url_for("login"))
 
     cur = db.connection.cursor()
+    
     # Solicitudes pendientes
     cur.execute(
         """
@@ -928,19 +894,19 @@ def ver_solicitudes():
         FROM solicitud_insumo s
         JOIN user u ON s.usuario_id = u.id
         WHERE s.estado = 'Pendiente'
-        ORDER BY s.fecha_solicitud
+        ORDER BY s.fecha_solicitud DESC
     """
     )
     solicitudes_pendientes = cur.fetchall()
 
-    # Solicitudes procesadas (aceptadas o rechazadas)
+    # Solicitudes procesadas (aceptadas o rechazadas) - AGREGAR observacion_supervisor
     cur.execute(
         """
-        SELECT s.id, u.fullname, s.tipo_insumo, s.cantidad, s.observaciones, s.fecha_solicitud, s.estado
+        SELECT s.id, u.fullname, s.tipo_insumo, s.cantidad, s.observaciones, s.fecha_solicitud, s.estado, s.observacion_supervisor
         FROM solicitud_insumo s
         JOIN user u ON s.usuario_id = u.id
         WHERE s.estado IN ('Aceptada', 'Rechazada')
-        ORDER BY s.fecha_solicitud 
+        ORDER BY s.fecha_solicitud DESC
     """
     )
     solicitudes_procesadas = cur.fetchall()
@@ -953,14 +919,16 @@ def ver_solicitudes():
     )
 
 
-# ---------------------- ACTUALIZAR SOLICITUD ----------------------
+# ---------------------- ACTUALIZAR SOLICITUD CON OBSERVACIONES ----------------------
 @app.route("/actualizar_solicitud/<int:id>/<string:accion>", methods=["POST"])
 @login_required
 def actualizar_solicitud(id, accion):
     """
-    Actualiza el estado de la solicitud: 'Aceptada' o 'Rechazada'
+    Actualiza el estado de la solicitud: 'Aceptada' o 'Rechazada' con observaciones del supervisor
     """
+    observacion_supervisor = request.form.get('observacion_supervisor', '')
     nuevo_estado = None
+    
     if accion == "aceptar":
         nuevo_estado = "Aceptada"
     elif accion == "rechazar":
@@ -969,22 +937,43 @@ def actualizar_solicitud(id, accion):
     if nuevo_estado:
         try:
             cur = db.connection.cursor()
-            cur.execute(
-                """
-                UPDATE solicitud_insumo
-                SET estado = %s
-                WHERE id = %s
-            """,
-                (nuevo_estado, id),
-            )
+            
+            # Verificar si la columna observacion_supervisor existe, si no, agregarla
+            try:
+                cur.execute(
+                    """
+                    UPDATE solicitud_insumo
+                    SET estado = %s, observacion_supervisor = %s
+                    WHERE id = %s
+                """,
+                    (nuevo_estado, observacion_supervisor, id),
+                )
+            except Exception as columna_error:
+                # Si la columna no existe, crearla y luego actualizar
+                if "Unknown column" in str(columna_error):
+                    cur.execute("ALTER TABLE solicitud_insumo ADD COLUMN observacion_supervisor TEXT")
+                    cur.execute(
+                        """
+                        UPDATE solicitud_insumo
+                        SET estado = %s, observacion_supervisor = %s
+                        WHERE id = %s
+                    """,
+                        (nuevo_estado, observacion_supervisor, id),
+                    )
+                else:
+                    raise columna_error
+            
             db.connection.commit()
             cur.close()
             flash(f"Solicitud {nuevo_estado.lower()} correctamente", "success")
+            
         except Exception as e:
             db.connection.rollback()
             flash(f"Error al actualizar la solicitud: {str(e)}", "danger")
 
     return redirect(url_for("ver_solicitudes"))
+
+
 
 
 # ---------------------- EVIDENCIAS ----------------------

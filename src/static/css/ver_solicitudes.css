@@ -12,8 +12,6 @@
     background-size: cover;
 }
 
-
-
 /* Fondo general */
 body {
   font-family: 'Poppins', sans-serif;
@@ -30,7 +28,7 @@ body {
   padding: 25px;
   color: white !important;
   text-align: center;
-  max-width: 800px;
+  max-width: 1000px; /* Aumentado para más columnas */
   margin: 50px auto;
   box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.5);
 }
@@ -49,12 +47,13 @@ h1 {
   color: white;
 }
 
-/* Tabla */
+/* Tablas - AJUSTADAS PARA MÁS COLUMNAS */
 table {
   width: 100%;
   border-collapse: collapse;
   margin: 20px 0;
   color: white !important; 
+  font-size: 14px; /* Reducido ligeramente para más columnas */
 }
 
 .container h1 {
@@ -65,48 +64,39 @@ table {
 table thead th {
   background: rgba(0, 0, 0, 0.6);
   color: #4CAF50 !important; 
-  padding: 10px;
+  padding: 10px 8px; /* Padding reducido horizontalmente */
   text-align: center;
   font-weight: bold;
+  font-size: 13px; /* Texto más pequeño en headers */
 }
 
 table tbody td {
   background: rgba(255, 255, 255, 0.05);
-  padding: 10px;
+  padding: 10px 8px; /* Padding reducido horizontalmente */
   text-align: center;
   color: white !important; 
   font-weight: 500;
+  font-size: 13px; /* Texto más pequeño en celdas */
 }
 
 table, th, td {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-
-/* Botón */
-.acciones {
-  text-align: center;
-  margin-top: 20px;
+/* Columnas específicas para observaciones - más compactas */
+table tbody td:nth-child(5), /* Observaciones Usuario */
+table tbody td:nth-child(6) { /* Observaciones Supervisor */
+  max-width: 150px;
+  word-wrap: break-word;
+  text-align: left;
+  line-height: 1.3;
 }
 
-.btn-volver {
-  background: #4CAF50;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 5px;
-  text-decoration: none;
-  font-weight: bold;
-  transition: background 0.3s ease;
-}
-
-.btn-volver:hover {
-  background: #45a049;
-}
-/* Contenedor de botones */
+/* Botones de acción más compactos */
 .acciones-botones {
     display: flex;
     justify-content: center;
-    gap: 10px;
+    gap: 8px;
 }
 
 /* Botón Aceptar */
@@ -114,8 +104,8 @@ table, th, td {
     background-color: #4CAF50; /* Verde */
     color: white;
     border: none;
-    padding: 8px 14px;
-    font-size: 14px;
+    padding: 6px 12px;
+    font-size: 12px;
     font-weight: bold;
     border-radius: 5px;
     cursor: pointer;
@@ -125,6 +115,24 @@ table, th, td {
 .btn-aceptar:hover {
     background-color: #45a049;
 }
+
+/* Botón Rechazar */
+.btn-rechazar {
+    background-color: #f44336; /* Rojo */
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.btn-rechazar:hover {
+    background-color: #d32f2f;
+}
+
 /* Botón volver */
 .logout-btn {
   position: absolute;
@@ -148,22 +156,6 @@ table, th, td {
   background: #00ff88;
   color: black;
 }
-/* Botón Rechazar */
-.btn-rechazar {
-    background-color: #f44336; /* Rojo */
-    color: white;
-    border: none;
-    padding: 8px 14px;
-    font-size: 14px;
-    font-weight: bold;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: 0.3s ease;
-}
-
-.btn-rechazar:hover {
-    background-color: #d32f2f;
-}
 
 /* Mensajes de estado */
 .flash-success {
@@ -184,4 +176,40 @@ table, th, td {
     border-radius: 5px;
     margin-top: 15px;
     text-align: center;
+}
+
+/* Responsive para tablas con muchas columnas */
+@media (max-width: 768px) {
+  .container {
+    max-width: 95%;
+    padding: 15px;
+    margin: 20px auto;
+  }
+  
+  table {
+    font-size: 12px;
+  }
+  
+  table thead th {
+    padding: 8px 4px;
+    font-size: 11px;
+  }
+  
+  table tbody td {
+    padding: 8px 4px;
+    font-size: 11px;
+  }
+  
+  /* Ocultar columnas menos importantes en móvil */
+  table tbody td:nth-child(5),
+  table tbody td:nth-child(6) {
+    max-width: 100px;
+    font-size: 10px;
+  }
+  
+  .btn-aceptar,
+  .btn-rechazar {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
 }
