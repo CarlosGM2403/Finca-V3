@@ -979,38 +979,81 @@ def actualizar_solicitud(id, accion):
 # ---------------------- EVIDENCIAS ----------------------
 
 
+# Ruta para ver evidencias (MUCHO más simple)
 @app.route("/ver_evidencias")
 @login_required
 def ver_evidencias():
     cursor = db.connection.cursor()
-
-    # Consulta para traer TODAS las evidencias con nombre de usuario
+    
+    # Consulta simple - todo en una tabla
     query = """
-        SELECT a.evidencia, a.fecha, u.fullname, a.actividad, a.insumos, a.observaciones
+        SELECT a.id, a.evidencia, a.fecha, u.fullname, a.actividad, 
+               a.insumos, a.observaciones, a.comentarios_admin,
+               admin.fullname as admin_nombre, a.fecha_comentario
         FROM actividades a
         JOIN user u ON a.id_usuario = u.id
-        ORDER BY a.fecha 
+        LEFT JOIN user admin ON a.admin_comentario_id = admin.id
+        ORDER BY a.fecha DESC
     """
     cursor.execute(query)
     rows = cursor.fetchall()
-    cursor.close()
 
     evidencias = []
     for row in rows:
-        evidencias.append(
-            {
-                "ruta": (
-                    url_for("static", filename="uploads/" + row[0]) if row[0] else None
-                ),
-                "fecha": row[1],
-                "usuario": row[2],
-                "actividad": row[3],
-                "insumos": row[4],
-                "observaciones": row[5],
-            }
-        )
+        # Construir la ruta de la imagen de forma segura
+        ruta_imagen = None
+        if row[1]:  # Si hay evidencia (no es NULL)
+            ruta_imagen = url_for("static", filename="uploads/" + row[1])
+        
+        evidencias.append({
+            "id": row[0],
+            "ruta": ruta_imagen,
+            "fecha": row[2].strftime('%d/%m/%Y %H:%M') if row[2] else 'Fecha no disponible',
+            "usuario": row[3],
+            "actividad": row[4],
+            "insumos": row[5],
+            "observaciones": row[6],
+            "comentario_admin": row[7],  # Comentario del administrador
+            "admin_nombre": row[8],      # Quién comentó
+            "fecha_comentario": row[9].strftime('%d/%m/%Y %H:%M') if row[9] else None
+        })
 
+    cursor.close()
     return render_template("ver_evidencias.html", evidencias=evidencias)
+
+# Ruta para agregar/comentar evidencia (MUCHO más simple)
+@app.route("/comentar_evidencia/<int:actividad_id>", methods=["POST"])
+@login_required
+def comentar_evidencia(actividad_id):
+    if request.method == "POST":
+        comentario = request.form.get("comentario")
+        
+        if not comentario or not comentario.strip():
+            flash("El comentario no puede estar vacío", "error")
+            return redirect(url_for("ver_evidencias"))
+        
+        try:
+            cursor = db.connection.cursor()
+            
+            # Actualizar directamente la actividad
+            cursor.execute("""
+                UPDATE actividades 
+                SET comentarios_admin = %s, 
+                    admin_comentario_id = %s,
+                    fecha_comentario = NOW()
+                WHERE id = %s
+            """, (comentario.strip(), session["user_id"], actividad_id))
+            
+            db.connection.commit()
+            cursor.close()
+            
+            flash("Comentario agregado correctamente", "success")
+            
+        except Exception as e:
+            db.connection.rollback()
+            flash(f"Error al agregar comentario: {str(e)}", "danger")
+    
+    return redirect(url_for("ver_evidencias"))
 
 
 # ---------------------- EN CONSTRUCCIÓN ----------------------
@@ -1274,6 +1317,22 @@ def registrar_produccion():
 
     return render_template("registrar_produccion.html", cultivos=cultivos)
 
+@app.route("/mis_solicitudes")
+@login_required
+def mis_solicitudes():
+    cur = db.connection.cursor()
+    cur.execute("""
+        SELECT tipo_insumo, cantidad, observaciones, estado, 
+               observacion_supervisor, fecha_solicitud
+        FROM solicitud_insumo 
+        WHERE usuario_id = %s
+        ORDER BY fecha_solicitud DESC
+    """, (session["user_id"],))
+    
+    mis_solicitudes = cur.fetchall()
+    cur.close()
+    
+    return render_template("mis_solicitudes.html", solicitudes=mis_solicitudes)
 
 # ---------------------- MAIN ----------------------
 if __name__ == "__main__":

@@ -12,8 +12,6 @@
     background-size: cover;
 }
 
-
-
 /* Fondo general */
 body {
   font-family: 'Poppins', sans-serif;
@@ -72,13 +70,14 @@ body {
 
 /* --- Card individual --- */
 .card {
-  background: rgba(0, 0, 0, 0.9);
+  background: rgba(0, 0, 0, 0.7); 
   border-radius: 15px;
   overflow: hidden;
-  width: 230px; /* Tamaño fijo */
+  width: 230px; 
   text-align: center;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .card:hover {
@@ -98,40 +97,118 @@ body {
 .no-image {
   width: 100%;
   height: 180px;
-  background: #222;
-  color: #fff;
+  background: rgba(128, 128, 128, 0.5); /* Gris más claro */
+  color: #ffffff; /* Texto blanco */
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
   font-size: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Contenido de la card */
+.card-content {
+  padding: 15px;
 }
 
 /* Nombre del usuario */
 .card h3 {
   font-size: 18px;
   margin: 10px 0 5px;
-  color: #ffffff;
+  color: #000000; /* Texto blanco */
 }
 
 /* Texto general en las cards */
 .card p {
   font-size: 14px;
-  color: #ffffff;
+  color: #000000; /* Texto blanco */
   margin: 5px 0;
+  text-align: left;
 }
 
 /* Fecha */
 .fecha {
   font-size: 12px;
-  color: #bbbbbb;
+  color: #000000; /* Gris claro para fecha */
   margin-top: 10px;
+  text-align: center;
+}
+
+/* Sección de comentarios */
+.comentario-admin-section {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.comentario-admin h4 {
+  color: #000000; /* Texto blanco */
+  margin-bottom: 10px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+
+.comentario-contenido {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 10px;
+  border-radius: 8px;
+  border-left: 3px solid #4c9677;
+}
+
+.comentario-contenido p {
+  margin-bottom: 8px;
+  color: #000000; /* Texto blanco */
+  text-align: left;
+}
+
+.comentario-info small {
+  color: #000000; /* Gris claro */
+  font-size: 0.8rem;
+}
+
+.sin-comentario {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  border-radius: 8px;
+  text-align: center;
+  color: #000000; /* Gris claro */
+  font-style: italic;
+  border: 1px dashed rgba(255, 255, 255, 0.3);
+}
+
+/* Botones */
+.acciones {
+  margin-top: 15px;
+}
+
+.btn-comentar {
+  background: #4c9677;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 auto;
+  font-size: 12px;
+}
+
+.btn-comentar:hover {
+  background: #3a7a5f;
+  transform: translateY(-2px);
 }
 
 /* Mensaje cuando no hay evidencias */
 .sin-evidencias {
   text-align: center;
-  color: gray;
+  color: #000000; /* Gris claro */
   font-size: 16px;
   margin-top: 20px;
 }
@@ -145,7 +222,7 @@ body {
 
 .logout-btn button {
   background: #111;
-  color: white;
+  color: rgb(255, 255, 255);
   border: 2px solid #00ff88;
   border-radius: 50%;
   width: 50px;
@@ -160,4 +237,66 @@ body {
 .logout-btn button:hover {
   background: #00ff88;
   color: black;
+}
+
+/* Modales personalizados */
+.modal-content {
+  background: rgba(128, 128, 128, 0.9); /* Gris transparente */
+  color: rgb(0, 0, 0);
+  border-radius: 15px;
+  border: 1px solid #4c9677;
+}
+
+.modal-header {
+  background: #4c9677;
+  color: rgb(0, 0, 0);
+  border-bottom: 1px solid #3a7a5f;
+  border-radius: 15px 15px 0 0;
+}
+
+.modal-body .form-control {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: rgb(0, 0, 0);
+}
+
+.modal-body .form-control:focus {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #4c9677;
+  color: rgb(0, 0, 0);
+  box-shadow: 0 0 0 0.2rem rgba(76, 150, 119, 0.25);
+}
+
+.modal-body .form-label {
+  color: #ffffff; /* Texto blanco */
+}
+
+.info-evidencia {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.info-evidencia p {
+  margin: 5px 0;
+  color: #000000; /* Texto blanco */
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .fotos-container {
+      grid-template-columns: repeat(2, 1fr); /* 2 columnas en móvil */
+      gap: 20px;
+  }
+  
+  .container {
+      padding: 15px;
+      margin: 20px auto;
+  }
+  
+  .card {
+      padding: 10px;
+      width: 200px;
+  }
 }
