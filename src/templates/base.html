@@ -18,6 +18,7 @@
   <!-- Custom CSS -->
   {% block CustomCSS %}{% endblock %}
 </head>
+<body id="page-body"></body>
 <body class="text-center">
 
   <!-- Contenido dinámico -->
@@ -29,5 +30,8 @@
     integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" 
     crossorigin="anonymous">
   </script>
+
+<script src="{{ url_for('static', filename='js/theme_toggle.js') }}"></script>
+
 </body>
 </html>

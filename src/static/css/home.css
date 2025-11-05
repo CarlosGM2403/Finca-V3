@@ -1,8 +1,21 @@
+/* --- Fondo de Perfil para Tema Oscuro --- */
+.dark-theme {
+    /* Imagen específica de Perfil en modo oscuro */
+    background: url("../img/fondo_principal.png") no-repeat center center fixed; 
+    background-size: cover;
+}
+
+/* --- Fondo de Perfil para Tema Claro --- */
+.light-theme {
+    /* Imagen específica de Perfil en modo claro */
+    background: url("../img/fondo_claro_principal.png") no-repeat center center fixed; 
+    background-size: cover;
+}
+
 /*estilos del body*/
 body {
     margin: 0;
     height: 100vh;
-    background: url("../img/fondo_principal.png") no-repeat center center fixed;
     background-size: cover;
     display: flex;
     justify-content: center;
@@ -336,6 +349,72 @@ body {
 /* Mostrar menú cuando esté activo */
 .menu.show {
     display: flex;
+}
+
+/* ======================================= */
+/* 🌙 ESTILOS DEL BOTÓN CAMBIAR TEMA */
+/* Se reubica junto al botón de perfil (a su izquierda) */
+/* ======================================= */
+
+.theme-btn {
+    /* Fija el botón en la ventana, independientemente del scroll */
+    position: fixed; 
+    /* Colócalo a la misma altura que el botón de perfil (ajustamos a 20px para coincidir) */
+    top: 30px; 
+    /* Posición a la izquierda del botón de perfil (140px + 50px + 20px de margen) */
+    right: 220px; 
+    /* Asegura que esté por encima de la mayoría de los otros elementos */
+    z-index: 1000; 
+}
+
+.theme-btn button {
+    background: transparent; 
+    border: none; 
+    
+    background: var(--primary-button-bg);
+    
+    border-radius: 50%; 
+    
+    /* Color del icono usando la variable de texto */
+    color:#fdda10; 
+    
+    cursor: pointer;
+    font-size: 24px;
+    width: 50px;
+    height: 50px;
+    
+    /* Centra el icono */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    /* Transiciones suaves para hover y cambio de tema */
+    transition: all 0.3s ease; 
+    
+    /* Sombra sutil */
+    box-shadow: 0 4px 8px var(--shadow-color); 
+}
+
+.theme-btn button:hover {
+    /* Efecto al pasar el mouse */
+    background: var(--secondary-button-bg);
+    /* Corregimos la escala para que no sea tan grande */
+    transform: scale(2.1);
+}
+
+/* 📱 Ajuste Responsive para Pantallas Pequeñas */
+@media (max-width: 768px) {
+    .theme-btn {
+        /* Mueve el botón para que esté a la izquierda del perfil en móviles */
+        right: 170px; /* Ajuste basado en el nuevo posicionamiento */
+        top: 30px;
+    }
+    .theme-btn button {
+        /* Reduce ligeramente el tamaño del botón en móviles */
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+    }
 }
 
 .logo {

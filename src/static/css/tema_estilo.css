@@ -1,0 +1,46 @@
+
+/* --- TEMA OSCURO (Valores por defecto) --- */
+.dark-theme {
+    /* Define variables de color para todos los elementos, menos el fondo */
+    --text-color: #f0f0f0;
+    --primary-button-bg: #4c9677;
+    --secondary-button-bg: #5f886f;
+    --header-bg: #333333ad;
+    --border-color: #636363a2;
+    --shadow-color: rgba(0, 0, 0, 0.5);
+    transition: all 0.5s ease;
+}
+
+/* --- TEMA CLARO --- */
+.light-theme {
+    /* Define las variables con colores para el tema claro */
+    --text-color: #333333;
+    --primary-button-bg: #80ad8c;
+    --secondary-button-bg: #b0d8b7;
+    --header-bg: #ffffffad;
+    --border-color: #ccc;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    transition: all 0.5s ease;
+}
+
+/* Aplicar variables CSS y estilos base (SIN FONDO) */
+body {
+    /* El color de texto siempre usa la variable */
+    color: var(--text-color);
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+/* Ejemplo de uso de variables en otros elementos */
+.grupo-izquierda .btn-normal,
+.grupo-derecha .btn-normal {
+    background: var(--primary-button-bg);
+    color: var(--text-color);
+    border: 3px solid var(--border-color);
+    box-shadow: 0 4px 10px var(--shadow-color);
+}
+
+/* ... Aplica var(--variable) a todos los elementos que cambian ... */

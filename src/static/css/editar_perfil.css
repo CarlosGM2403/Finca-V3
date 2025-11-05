@@ -1,5 +1,18 @@
+/* --- Fondo de Perfil para Tema Oscuro --- */
+.dark-theme {
+    /* Imagen específica de Perfil en modo oscuro */
+    background: url("../img/fondo_forms.png") no-repeat center center fixed; 
+    background-size: cover;
+}
+
+/* --- Fondo de Perfil para Tema Claro --- */
+.light-theme {
+    /* Imagen específica de Perfil en modo claro */
+    background: url("../img/fondo_claro_forms.png") no-repeat center center fixed; 
+    background-size: cover;
+}
+
 body {
-  background-image: url("../img/fondo_forms.png");
   color: #fff;
   font-family: 'Poppins', sans-serif;
   margin: 0;
