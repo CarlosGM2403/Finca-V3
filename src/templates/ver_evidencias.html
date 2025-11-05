@@ -14,8 +14,6 @@
   <img src="{{ url_for('static', filename='img/Logo_principal.png') }}" alt="Logo">
 </div>
 
-
-
 <div class="logout-btn">
   <a href="{{ url_for('home') }}">
     <button title="Volver al inicio">
@@ -27,6 +25,9 @@
 <div class="container">
     <h1 class="titulo">Evidencias Registradas</h1>
 
+    <div class="buscador-contenedor">
+    <input type="text" id="buscador-siembra" placeholder="Buscar...">
+    </div>
 
     <div class="fotos-container">
         {% for evidencia in evidencias %}
@@ -40,20 +41,6 @@
                     <p>Sin imagen</p>
                 </div>
             {% endif %}
-
-<div class="buscador-contenedor">
-    <input type="text" id="buscador-siembra" placeholder="Buscar...">
-</div>
-
-        <div class="fotos-container">
-            {% for evidencia in evidencias %}
-            <div class="card">
-                <!-- Imagen -->
-                {% if evidencia.ruta %}
-                    <img src="{{ evidencia.ruta }}" alt="Evidencia">
-                {% else %}
-                    <div class="no-image">Sin imagen</div>
-                {% endif %}
 
             <!-- Información de la actividad -->
             <div class="info-actividad">
@@ -98,7 +85,6 @@
                 </button>
             </div>
         </div>
-<<<<<<< Updated upstream
 
         <!-- Modal para comentar -->
         <div class="modal fade" id="modalComentar{{ evidencia.id }}" tabindex="-1" aria-hidden="true">
@@ -143,10 +129,9 @@
     </div>
 
     {% if evidencias|length == 0 %}
-    <div class="sin-evidencias">
-        <i class="fa-solid fa-inbox"></i>
-        <p>No hay evidencias registradas</p>
-    </div>
+   <div class="buscador-contenedor">
+    <input type="text" id="buscador-siembra" placeholder="Buscar...">
+  </div>
     {% endif %}
 </div>
 
@@ -164,15 +149,3 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ url_for('static', filename='js/alertas_registros.js') }}"></script>
 {% endblock %}
-=======
-          <p id="no-result-evidencia" class="NoResultado">
-            No se encontraron evidencias que coincidan con la búsqueda.
-          </p>
-        {% if evidencias|length == 0 %}
-        {% endif %}
-    </div>
-
-<script src="{{ url_for('static', filename='js/ver_evidencias.js') }}"></script>
-
-{% endblock %}
->>>>>>> Stashed changes
