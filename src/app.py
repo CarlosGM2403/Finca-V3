@@ -116,7 +116,6 @@ def login():
         password = request.form["password"]
 
         cur = db.connection.cursor()
-        # CONSULTA CORREGIDA - agregar fullname
         cur.execute(
             "SELECT id, password, must_change_password, rol, fullname FROM user WHERE username=%s",
             (username,),
@@ -129,7 +128,27 @@ def login():
             login_user(user)
             session["user_id"] = row[0]
             session["rol"] = row[3]
-            session["fullname"] = row[4]  # ← Ahora row[4] existe
+            session["fullname"] = row[4]
+
+            # ===============================
+            # REGISTRO DEL INICIO DE SESIÓN
+            # ===============================
+            try:
+                cur = db.connection.cursor()
+                ip = request.remote_addr
+                navegador = request.user_agent.string
+                cur.execute(
+                    """
+                    INSERT INTO registro_sesiones (id_usuario, direccion_ip, navegador)
+                    VALUES (%s, %s, %s)
+                    """,
+                    (row[0], ip, navegador),
+                )
+                db.connection.commit()
+                cur.close()
+            except Exception as e:
+                print(f"Error al registrar inicio de sesión: {e}")
+            # ===============================
 
             if row[2] == 1:
                 return redirect(url_for("cambiar_password"))
@@ -142,7 +161,6 @@ def login():
             return redirect(url_for("login"))
 
     return render_template("auth/login.html")
-
 
 # ---------------------- PRODUCCIÓN REGISTRADA ----------------------
 
@@ -163,27 +181,25 @@ def home():
     print("Accediendo a /home con sesión activa")
     rol = session.get("rol")
     nombre = session.get("fullname")
-
+    
     if "user_id" not in session:
         return redirect(url_for("login"))
-
+    
     # Obtener foto de perfil del usuario
     cur = db.connection.cursor()
-    cur.execute("SELECT foto_perfil FROM user WHERE id=%s", (session["user_id"],))
+    cur.execute("SELECT foto_perfil FROM user WHERE id=%s", (session['user_id'],))
     resultado = cur.fetchone()
     cur.close()
-
+    
     # Construir URL de la foto de perfil
     if resultado and resultado[0]:  # Si tiene foto en la base de datos
-        foto_perfil_url = url_for("static", filename="uploads/" + resultado[0])
+        foto_perfil_url = url_for('static', filename='uploads/' + resultado[0])
     else:  # Si no tiene foto, usar la por defecto
-        foto_perfil_url = url_for("static", filename="img/perfil.png")
-
+        foto_perfil_url = url_for('static', filename='img/perfil.png')
+    
     print(f"Foto de perfil URL: {foto_perfil_url}")
-
-    return render_template(
-        "home.html", rol=rol, nombre=nombre, foto_perfil_url=foto_perfil_url
-    )
+    
+    return render_template("home.html", rol=rol, nombre=nombre, foto_perfil_url=foto_perfil_url)
 
 
 # ---------------------- ERRORES ----------------------
@@ -355,27 +371,27 @@ def usuarios():
 @login_required
 def cambiar_estado(id):
     # VERIFICAR ROL - Solo administradores pueden cambiar estados
-    if session.get("rol") != "administrador":
+    if session.get('rol') != 'administrador':
         flash("No tienes permisos para esta acción", "error")
-        return redirect(url_for("home"))
-
+        return redirect(url_for('home'))
+    
     cur = db.connection.cursor()
     # AGREGAR rol A LA CONSULTA
     cur.execute("SELECT id, fullname, estado, rol FROM user WHERE id=%s", (id,))
     row = cur.fetchone()
-
+    
     if not row:
         flash("Usuario no encontrado", "error")
         cur.close()
-        return redirect(url_for("usuarios"))
-
+        return redirect(url_for('usuarios'))
+    
     cur.close()
 
     usuario = {
         "id": row[0],
         "fullname": row[1],
         "estado": row[2].strip().lower() if row[2] else None,
-        "rol": row[3],  # ← AGREGAR ESTO
+        "rol": row[3]  # ← AGREGAR ESTO
     }
 
     if request.method == "POST":
@@ -386,33 +402,31 @@ def cambiar_estado(id):
         print(f"Valor que Flask recibió para rol: '{nuevo_rol}'")
 
         # Validar que el estado sea correcto
-        if nuevo_estado not in ["habilitado", "inhabilitado"]:
+        if nuevo_estado not in ['habilitado', 'inhabilitado']:
             flash("Estado no válido", "error")
-            return redirect(url_for("cambiar_estado", id=id))
+            return redirect(url_for('cambiar_estado', id=id))
 
         # Validar que el rol sea correcto
-        if nuevo_rol not in ["administrador", "supervisor", "cuidador", "empleado"]:
+        if nuevo_rol not in ['administrador', 'supervisor', 'cuidador', 'empleado']:
             flash("Rol no válido", "error")
-            return redirect(url_for("cambiar_estado", id=id))
+            return redirect(url_for('cambiar_estado', id=id))
 
         # --- Actualizar estado Y rol ---
         try:
             cur = db.connection.cursor()
             # ACTUALIZAR AMBOS CAMPOS
-            cur.execute(
-                "UPDATE user SET estado=%s, rol=%s WHERE id=%s",
-                (nuevo_estado, nuevo_rol, id),
-            )
+            cur.execute("UPDATE user SET estado=%s, rol=%s WHERE id=%s", 
+                       (nuevo_estado, nuevo_rol, id))
             db.connection.commit()
             cur.close()
-
+            
             flash("Usuario actualizado correctamente", "success")
             return redirect(url_for("usuarios"))
-
+            
         except Exception as e:
             db.connection.rollback()
             flash(f"Error al actualizar usuario: {str(e)}", "error")
-            return redirect(url_for("cambiar_estado", id=id))
+            return redirect(url_for('cambiar_estado', id=id))
 
     return render_template("auth/cambiar_estado.html", usuario=usuario)
 
@@ -434,11 +448,7 @@ def perfil():
     cur.close()
 
     # Obtener URL de la foto
-    foto_url = (
-        url_for("static", filename="uploads/" + usuario[6])
-        if usuario[6]
-        else url_for("static", filename="img/default-avatar.png")
-    )
+    foto_url = url_for('static', filename='uploads/' + usuario[6]) if usuario[6] else url_for('static', filename='img/default-avatar.png')
 
     return render_template("auth/perfil.html", usuario=usuario, foto_url=foto_url)
 
@@ -452,15 +462,15 @@ def editar_perfil():
 
     if request.method == "POST":
         fullname = request.form.get("fullname")
-        foto_perfil = request.files.get("foto_perfil")  # Nuevo campo
+        foto_perfil = request.files.get('foto_perfil')  # Nuevo campo
 
-        if foto_perfil and foto_perfil.filename != "":
+        if foto_perfil and foto_perfil.filename != '':
             if allowed_file(foto_perfil.filename):
                 # Generar nombre único
                 filename = f"perfil_{session['user_id']}_{uuid.uuid4().hex}.jpg"
                 filepath = os.path.join(UPLOAD_FOLDER, filename)
                 foto_perfil.save(filepath)
-
+                
                 # Actualizar nombre Y foto
                 cursor.execute(
                     """
@@ -472,7 +482,7 @@ def editar_perfil():
                 )
             else:
                 flash("Formato no permitido. Use JPG, PNG o JPEG.", "error")
-                return redirect(url_for("editar_perfil"))
+                return redirect(url_for('editar_perfil'))
         else:
             # Solo actualizar nombre
             cursor.execute(
@@ -495,19 +505,13 @@ def editar_perfil():
         (session["user_id"],),
     )
     usuario = cursor.fetchone()
-
+    
     # Obtener URL de la foto actual
-    foto_url = (
-        url_for("static", filename="uploads/" + usuario[5])
-        if usuario[5]
-        else url_for("static", filename="img/default-avatar.png")
-    )
-
+    foto_url = url_for('static', filename='uploads/' + usuario[5]) if usuario[5] else url_for('static', filename='img/default-avatar.png')
+    
     cursor.close()
 
-    return render_template(
-        "auth/editar_perfil.html", usuario=usuario, foto_url=foto_url
-    )
+    return render_template("auth/editar_perfil.html", usuario=usuario, foto_url=foto_url)
 
 
 @app.route("/cambiar_contraseña", methods=["GET", "POST"])
