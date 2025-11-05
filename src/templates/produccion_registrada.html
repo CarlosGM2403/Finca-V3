@@ -27,8 +27,14 @@
 </h1>
 
 <div class="contenedor-Pregistrada">
+
+<div class="buscador-produccion">
+    <input type="text" id="buscador-siembra" placeholder="Buscar...">
+  </div>
+
   {% if registros %}
     <table class="tabla-produccion">
+      <table id="tabla-siembra" class="tabla-produccion">
       <thead class="table-dark">
         <tr>
           <th>Fecha</th>
@@ -46,12 +52,13 @@
         {% endfor %}
       </tbody>
     </table>
-  {% else %}
-    <div class="no-registros">
-      <i class="fa-solid fa-inbox"></i>
-      <h3>No hay producción registrada</h3>
-      <p>No se han encontrado registros de producción.</p>
-    </div>
+ 
+  <p id="no-result-siembra" style="display: none; color: white; text-align: center;">
+       No se encontraron evidencias que coincidan con la búsqueda.
+  </p>
   {% endif %}
 </div>
+
+<script src="{{ url_for('static', filename='js/produccion_registrada.js') }}"></script>
+
 {% endblock %}

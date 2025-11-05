@@ -3,10 +3,20 @@
 {% block title %}Usuarios{% endblock %}
 
 {% block CustomCSS %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/usuarios.css') }}">
 {% endblock %}
 
 {% block body %}
+
+<!-- Botón volver al inicio -->
+<div class="logout-btn">
+  <a href="{{ url_for('home') }}">
+    <button title="Volver al inicio">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+  </a>
+</div>
 
 <h1 class="titulo-principal">Lista de Usuarios</h1>
 

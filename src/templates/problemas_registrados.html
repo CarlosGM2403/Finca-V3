@@ -22,6 +22,10 @@
 
 <h1> Problemas reportados por {{ usuario }}</h1>
 
+<div class="buscador-contenedor">
+    <input type="text" id="buscador-siembra" placeholder="Buscar...">
+  </div>
+
 <div class="problemas-container">
   <div class="row">
     {% for p in problemas %}
@@ -39,5 +43,13 @@
     </div>
     {% endfor %}
   </div>
+
+<p id="no-result-siembra" class="NoResultado">
+  No se encontraron evidencias que coincidan con la búsqueda.
+</p>
+
 </div>
+
+<script src="{{ url_for('static', filename='js/problemas_registrados.js') }}"></script>
+
 {% endblock %}

@@ -239,6 +239,7 @@ body {
   color: black;
 }
 
+
 /* Modales personalizados */
 .modal-content {
   background: rgba(128, 128, 128, 0.9); /* Gris transparente */
@@ -300,3 +301,4 @@ body {
       width: 200px;
   }
 }
+

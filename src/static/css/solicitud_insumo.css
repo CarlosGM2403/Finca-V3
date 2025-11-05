@@ -180,24 +180,7 @@ textarea {
 }
 
 
-.btn-salir {
-  background: #dc3545;
-  color: white;
-  padding: 10px 25px;
-  border-radius: 15px;
-  border: 2px solid #dc3545;
-  text-decoration: none;
-  font-size: 16px;
-  transition: 0.3s;
-  align-items: right;
-  display: flex-end;
-  margin-left: 355px;
-}
 
-.btn-salir:hover {
-  background: #a71d2a;
-  border-color: #a71d2a;
-}
 
 /* Inputs generales con fondo oscuro */
 input[type="text"],
@@ -240,4 +223,28 @@ select {
   margin-top: 10px;
   margin-bottom: 10px;
   align-items: left;
+}
+
+/* Botón volver */
+.logout-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+.logout-btn button {
+  background: #111;
+  color: white;
+  border: 2px solid #00ff88;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.logout-btn button:hover {
+  background: #00ff88;
+  color: black;
 }

@@ -3,10 +3,20 @@
 {% block title %}Cultivos{% endblock %}
 
 {% block CustomCSS %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/cultivos.css') }}">
 {% endblock %}
 
 {% block body %}
+
+<!-- Botón volver al inicio -->
+<div class="logout-btn">
+  <a href="{{ url_for('home') }}">
+    <button title="Volver al inicio">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+  </a>
+</div>
 
 <!-- Título -->
 <h1 class="titulo-principal">Lista de Cultivos</h1>
@@ -56,6 +66,9 @@
         {% endfor %}
       </tbody>
     </table>
+    <p id="no-result-cultivos" style="display: none; color: white; text-align: center;">
+       No se encontraron evidencias que coincidan con la búsqueda.
+    </p>
   </div>
 
   <!-- Botones de acción -->
@@ -65,7 +78,7 @@
     </a>
   {% endif %}
 
-  <a href="{{ url_for('home') }}">Volver al inicio</a>
+  
 </div>
 
 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -78,5 +91,5 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<script src="{{ url_for('static', filename='js/alertas_cultivos.js') }}"></script>
+<script src="{{ url_for('static', filename='js/cultivos.js') }}"></script>
 {% endblock %}

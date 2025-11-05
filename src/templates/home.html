@@ -151,12 +151,7 @@
       <a href="{{ url_for('registrar_produccion') }}" class="drop-btn">Produccion de cultivo</a>
       {% else %}
       {% endif %}
-
-    {% if rol == 'administrador' %}
-      <a href="{{ url_for('siembra_registrada') }}" class="drop-btn">Siembras registradas</a>
-      {% else %}
-      <a href="{{ url_for('registrar_siembra') }}" class="drop-btn">Registrar siembra</a>
-      {% endif %}
+  
     <a href="{{ url_for('cultivos') }}" class="drop-btn">Cultivos</a>
 
     {% if rol != 'administrador' %}

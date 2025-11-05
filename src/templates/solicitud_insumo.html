@@ -3,12 +3,22 @@
 {% block title %}Solicitud Insumo{% endblock %}
 
 {% block CustomCSS %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/solicitud_insumo.css') }}">
 {% endblock %}
 
 {% block body %}
 <div class="logo">
     <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+</div>
+
+<!-- Botón volver al inicio -->
+<div class="logout-btn">
+  <a href="{{ url_for('home') }}">
+    <button title="Volver al inicio">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+  </a>
 </div>
 
 <div class="insumos-container">
@@ -46,7 +56,6 @@
       <!-- Bloque de botones a la derecha -->
       <div class="acciones-derecha">
         <button type="submit" class="btn-solicitar">Solicitar</button>
-        <a href="{{ url_for('home') }}" class="btn-salir">Salir</a>
       </div>
     </div>
   </form>
