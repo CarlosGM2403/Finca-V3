@@ -162,6 +162,7 @@ def login():
 
     return render_template("auth/login.html")
 
+
 # ---------------------- PRODUCCIÓN REGISTRADA ----------------------
 
 
@@ -181,25 +182,27 @@ def home():
     print("Accediendo a /home con sesión activa")
     rol = session.get("rol")
     nombre = session.get("fullname")
-    
+
     if "user_id" not in session:
         return redirect(url_for("login"))
-    
+
     # Obtener foto de perfil del usuario
     cur = db.connection.cursor()
-    cur.execute("SELECT foto_perfil FROM user WHERE id=%s", (session['user_id'],))
+    cur.execute("SELECT foto_perfil FROM user WHERE id=%s", (session["user_id"],))
     resultado = cur.fetchone()
     cur.close()
-    
+
     # Construir URL de la foto de perfil
     if resultado and resultado[0]:  # Si tiene foto en la base de datos
-        foto_perfil_url = url_for('static', filename='uploads/' + resultado[0])
+        foto_perfil_url = url_for("static", filename="uploads/" + resultado[0])
     else:  # Si no tiene foto, usar la por defecto
-        foto_perfil_url = url_for('static', filename='img/perfil.png')
-    
+        foto_perfil_url = url_for("static", filename="img/perfil.png")
+
     print(f"Foto de perfil URL: {foto_perfil_url}")
-    
-    return render_template("home.html", rol=rol, nombre=nombre, foto_perfil_url=foto_perfil_url)
+
+    return render_template(
+        "home.html", rol=rol, nombre=nombre, foto_perfil_url=foto_perfil_url
+    )
 
 
 # ---------------------- ERRORES ----------------------
@@ -371,27 +374,27 @@ def usuarios():
 @login_required
 def cambiar_estado(id):
     # VERIFICAR ROL - Solo administradores pueden cambiar estados
-    if session.get('rol') != 'administrador':
+    if session.get("rol") != "administrador":
         flash("No tienes permisos para esta acción", "error")
-        return redirect(url_for('home'))
-    
+        return redirect(url_for("home"))
+
     cur = db.connection.cursor()
     # AGREGAR rol A LA CONSULTA
     cur.execute("SELECT id, fullname, estado, rol FROM user WHERE id=%s", (id,))
     row = cur.fetchone()
-    
+
     if not row:
         flash("Usuario no encontrado", "error")
         cur.close()
-        return redirect(url_for('usuarios'))
-    
+        return redirect(url_for("usuarios"))
+
     cur.close()
 
     usuario = {
         "id": row[0],
         "fullname": row[1],
         "estado": row[2].strip().lower() if row[2] else None,
-        "rol": row[3]  # ← AGREGAR ESTO
+        "rol": row[3],  # ← AGREGAR ESTO
     }
 
     if request.method == "POST":
@@ -402,31 +405,33 @@ def cambiar_estado(id):
         print(f"Valor que Flask recibió para rol: '{nuevo_rol}'")
 
         # Validar que el estado sea correcto
-        if nuevo_estado not in ['habilitado', 'inhabilitado']:
+        if nuevo_estado not in ["habilitado", "inhabilitado"]:
             flash("Estado no válido", "error")
-            return redirect(url_for('cambiar_estado', id=id))
+            return redirect(url_for("cambiar_estado", id=id))
 
         # Validar que el rol sea correcto
-        if nuevo_rol not in ['administrador', 'supervisor', 'cuidador', 'empleado']:
+        if nuevo_rol not in ["administrador", "supervisor", "cuidador", "empleado"]:
             flash("Rol no válido", "error")
-            return redirect(url_for('cambiar_estado', id=id))
+            return redirect(url_for("cambiar_estado", id=id))
 
         # --- Actualizar estado Y rol ---
         try:
             cur = db.connection.cursor()
             # ACTUALIZAR AMBOS CAMPOS
-            cur.execute("UPDATE user SET estado=%s, rol=%s WHERE id=%s", 
-                       (nuevo_estado, nuevo_rol, id))
+            cur.execute(
+                "UPDATE user SET estado=%s, rol=%s WHERE id=%s",
+                (nuevo_estado, nuevo_rol, id),
+            )
             db.connection.commit()
             cur.close()
-            
+
             flash("Usuario actualizado correctamente", "success")
             return redirect(url_for("usuarios"))
-            
+
         except Exception as e:
             db.connection.rollback()
             flash(f"Error al actualizar usuario: {str(e)}", "error")
-            return redirect(url_for('cambiar_estado', id=id))
+            return redirect(url_for("cambiar_estado", id=id))
 
     return render_template("auth/cambiar_estado.html", usuario=usuario)
 
@@ -448,7 +453,11 @@ def perfil():
     cur.close()
 
     # Obtener URL de la foto
-    foto_url = url_for('static', filename='uploads/' + usuario[6]) if usuario[6] else url_for('static', filename='img/default-avatar.png')
+    foto_url = (
+        url_for("static", filename="uploads/" + usuario[6])
+        if usuario[6]
+        else url_for("static", filename="img/default-avatar.png")
+    )
 
     return render_template("auth/perfil.html", usuario=usuario, foto_url=foto_url)
 
@@ -462,15 +471,15 @@ def editar_perfil():
 
     if request.method == "POST":
         fullname = request.form.get("fullname")
-        foto_perfil = request.files.get('foto_perfil')  # Nuevo campo
+        foto_perfil = request.files.get("foto_perfil")  # Nuevo campo
 
-        if foto_perfil and foto_perfil.filename != '':
+        if foto_perfil and foto_perfil.filename != "":
             if allowed_file(foto_perfil.filename):
                 # Generar nombre único
                 filename = f"perfil_{session['user_id']}_{uuid.uuid4().hex}.jpg"
                 filepath = os.path.join(UPLOAD_FOLDER, filename)
                 foto_perfil.save(filepath)
-                
+
                 # Actualizar nombre Y foto
                 cursor.execute(
                     """
@@ -482,7 +491,7 @@ def editar_perfil():
                 )
             else:
                 flash("Formato no permitido. Use JPG, PNG o JPEG.", "error")
-                return redirect(url_for('editar_perfil'))
+                return redirect(url_for("editar_perfil"))
         else:
             # Solo actualizar nombre
             cursor.execute(
@@ -505,13 +514,19 @@ def editar_perfil():
         (session["user_id"],),
     )
     usuario = cursor.fetchone()
-    
+
     # Obtener URL de la foto actual
-    foto_url = url_for('static', filename='uploads/' + usuario[5]) if usuario[5] else url_for('static', filename='img/default-avatar.png')
-    
+    foto_url = (
+        url_for("static", filename="uploads/" + usuario[5])
+        if usuario[5]
+        else url_for("static", filename="img/default-avatar.png")
+    )
+
     cursor.close()
 
-    return render_template("auth/editar_perfil.html", usuario=usuario, foto_url=foto_url)
+    return render_template(
+        "auth/editar_perfil.html", usuario=usuario, foto_url=foto_url
+    )
 
 
 @app.route("/cambiar_contraseña", methods=["GET", "POST"])
@@ -635,45 +650,54 @@ def registrar_cultivo():
 @login_required
 def registrar_actividad():
     if request.method == "POST":
-        actividad = request.form["actividad"]
-        insumos = request.form["insumos"]
-        observaciones = request.form["observaciones"]
-        evidencia_base64 = request.form["evidencia"]
+        actividad = request.form.get("actividad")
+        # Obtener lista de insumos (multiple)
+        insumos_lista = request.form.getlist("insumos")
+        # Convertir a string para DB
+        insumos_str = ", ".join(insumos_lista) if insumos_lista else None
+        observaciones = request.form.get("observaciones")
+        evidencia_base64 = request.form.get("evidencia")
 
+        # --- DEBUG: imprimir en la consola de Flask (no en SQL) ---
         print("DEBUG - Datos recibidos:")
         print("Actividad:", actividad)
-        print("Insumos:", insumos)
+        print("INSUMOS RECIBIDOS (lista):", insumos_lista)
+        print("INSUMOS STRING a guardar:", insumos_str)
         print("Observaciones:", observaciones)
-        print("Evidencia:", len(evidencia_base64) if evidencia_base64 else "No llegó")
+        print(
+            "Evidencia (len):",
+            len(evidencia_base64) if evidencia_base64 else "No llegó",
+        )
+        # -----------------------------------------------------------
+
+        # Validación: evitar insertar NULL si la columna es NOT NULL
+        if not insumos_str:
+            flash("Debes seleccionar al menos un insumo.", "danger")
+            return redirect(url_for("registrar_actividad"))
 
         filename = None
-
         if evidencia_base64:
             try:
                 if "," in evidencia_base64:
                     evidencia_base64 = evidencia_base64.split(",")[1]
-
                 image_data = base64.b64decode(evidencia_base64)
                 filename = f"{uuid.uuid4().hex}.jpg"
                 filepath = os.path.join(UPLOAD_FOLDER, filename)
-
                 with open(filepath, "wb") as f:
                     f.write(image_data)
-
             except Exception as e:
                 print("Error al guardar imagen:", e)
                 flash(f"Error al guardar la imagen: {str(e)}", "danger")
                 return redirect(url_for("registrar_actividad"))
 
         try:
-            print(f"Actividad recibida: '{actividad}'")
             cursor = db.connection.cursor()
             cursor.execute(
                 """
                 INSERT INTO actividades (id_usuario, actividad, insumos, observaciones, evidencia, fecha)
                 VALUES (%s, %s, %s, %s, %s, NOW())
             """,
-                (session["user_id"], actividad, insumos, observaciones, filename),
+                (session["user_id"], actividad, insumos_str, observaciones, filename),
             )
             db.connection.commit()
             cursor.close()
@@ -714,36 +738,43 @@ def ver_fotos():
         for row in rows:
             if usuario is None:
                 usuario = row[2]
-            
+
             # Construir ruta de forma segura
             nombre_archivo = row[0] if row[0] else ""
             ruta_imagen = f"uploads/{nombre_archivo}" if nombre_archivo else None
-            
-            fotos.append({
-                "ruta": url_for("static", filename=ruta_imagen) if ruta_imagen else None,
-                "fecha": row[1],
-                "usuario": row[2],
-                "actividad": row[3],
-                "insumos": row[4],
-                "observaciones": row[5],
-            })
+
+            fotos.append(
+                {
+                    "ruta": (
+                        url_for("static", filename=ruta_imagen) if ruta_imagen else None
+                    ),
+                    "fecha": row[1],
+                    "usuario": row[2],
+                    "actividad": row[3],
+                    "insumos": row[4],
+                    "observaciones": row[5],
+                }
+            )
 
         cursor.close()
 
         if usuario is None:
             cursor = db.connection.cursor()
-            cursor.execute("SELECT fullname FROM user WHERE id = %s", (session["user_id"],))
+            cursor.execute(
+                "SELECT fullname FROM user WHERE id = %s", (session["user_id"],)
+            )
             result = cursor.fetchone()
             usuario = result[0] if result else "Usuario desconocido"
             cursor.close()
 
         return render_template("ver_fotos.html", fotos=fotos, usuario=usuario)
-    
+
     except Exception as e:
         # Manejo de errores
         print(f"Error en ver_fotos: {str(e)}")
-        return render_template("ver_fotos.html", fotos=[], usuario="Usuario", error=str(e))
-
+        return render_template(
+            "ver_fotos.html", fotos=[], usuario="Usuario", error=str(e)
+        )
 
 
 @app.route("/registrar_ventas", methods=["GET", "POST"])
@@ -844,6 +875,7 @@ def siembra_registrada():
 
 # ---------------------- SOLICITUD DE INSUMO ----------------------
 
+
 @app.route("/solicitar_insumo", methods=["GET", "POST"])
 @login_required
 def solicitar_insumo():
@@ -851,9 +883,13 @@ def solicitar_insumo():
         return redirect(url_for("login"))
 
     if request.method == "POST":
-        tipo_insumo = request.form.get("tipo_insumo")
+        # 🔹 getlist() para campos con selección múltiple
+        tipos_insumo = request.form.getlist("tipo_insumo")
         cantidad = request.form.get("cantidad")
         observaciones = request.form.get("observaciones")
+
+        # 🔹 Convertir la lista a texto separado por comas
+        tipo_insumo_str = ", ".join(tipos_insumo) if tipos_insumo else None
 
         try:
             cur = db.connection.cursor()
@@ -862,8 +898,9 @@ def solicitar_insumo():
                 INSERT INTO solicitud_insumo (usuario_id, tipo_insumo, cantidad, observaciones, fecha_solicitud, estado)
                 VALUES (%s, %s, %s, %s, NOW(), 'Pendiente')
             """,
-                (session["user_id"], tipo_insumo, cantidad, observaciones),
+                (session["user_id"], tipo_insumo_str, cantidad, observaciones),
             )
+
             db.connection.commit()
             cur.close()
 
@@ -879,22 +916,27 @@ def solicitar_insumo():
 
 # ---------------------- SOLICITUDES REALIZADAS ----------------------
 
+
 @app.route("/mis_solicitudes")
 @login_required
 def mis_solicitudes():
     cur = db.connection.cursor()
-    cur.execute("""
+    cur.execute(
+        """
         SELECT tipo_insumo, cantidad, observaciones, estado, 
                observacion_supervisor, fecha_solicitud
         FROM solicitud_insumo 
         WHERE usuario_id = %s
         ORDER BY fecha_solicitud DESC
-    """, (session["user_id"],))
-    
+    """,
+        (session["user_id"],),
+    )
+
     mis_solicitudes = cur.fetchall()
     cur.close()
-    
+
     return render_template("mis_solicitudes.html", solicitudes=mis_solicitudes)
+
 
 @app.route("/ver_solicitudes", methods=["GET"])
 @login_required
@@ -903,7 +945,7 @@ def ver_solicitudes():
         return redirect(url_for("login"))
 
     cur = db.connection.cursor()
-    
+
     # Solicitudes pendientes
     cur.execute(
         """
@@ -943,9 +985,9 @@ def actualizar_solicitud(id, accion):
     """
     Actualiza el estado de la solicitud: 'Aceptada' o 'Rechazada' con observaciones del supervisor
     """
-    observacion_supervisor = request.form.get('observacion_supervisor', '')
+    observacion_supervisor = request.form.get("observacion_supervisor", "")
     nuevo_estado = None
-    
+
     if accion == "aceptar":
         nuevo_estado = "Aceptada"
     elif accion == "rechazar":
@@ -954,7 +996,7 @@ def actualizar_solicitud(id, accion):
     if nuevo_estado:
         try:
             cur = db.connection.cursor()
-            
+
             # Verificar si la columna observacion_supervisor existe, si no, agregarla
             try:
                 cur.execute(
@@ -968,7 +1010,9 @@ def actualizar_solicitud(id, accion):
             except Exception as columna_error:
                 # Si la columna no existe, crearla y luego actualizar
                 if "Unknown column" in str(columna_error):
-                    cur.execute("ALTER TABLE solicitud_insumo ADD COLUMN observacion_supervisor TEXT")
+                    cur.execute(
+                        "ALTER TABLE solicitud_insumo ADD COLUMN observacion_supervisor TEXT"
+                    )
                     cur.execute(
                         """
                         UPDATE solicitud_insumo
@@ -979,18 +1023,16 @@ def actualizar_solicitud(id, accion):
                     )
                 else:
                     raise columna_error
-            
+
             db.connection.commit()
             cur.close()
             flash(f"Solicitud {nuevo_estado.lower()} correctamente", "success")
-            
+
         except Exception as e:
             db.connection.rollback()
             flash(f"Error al actualizar la solicitud: {str(e)}", "danger")
 
     return redirect(url_for("ver_solicitudes"))
-
-
 
 
 # ---------------------- EVIDENCIAS ----------------------
@@ -1001,7 +1043,7 @@ def actualizar_solicitud(id, accion):
 @login_required
 def ver_evidencias():
     cursor = db.connection.cursor()
-    
+
     # Consulta simple - todo en una tabla
     query = """
         SELECT a.id, a.evidencia, a.fecha, u.fullname, a.actividad, 
@@ -1021,22 +1063,31 @@ def ver_evidencias():
         ruta_imagen = None
         if row[1]:  # Si hay evidencia (no es NULL)
             ruta_imagen = url_for("static", filename="uploads/" + row[1])
-        
-        evidencias.append({
-            "id": row[0],
-            "ruta": ruta_imagen,
-            "fecha": row[2].strftime('%d/%m/%Y %H:%M') if row[2] else 'Fecha no disponible',
-            "usuario": row[3],
-            "actividad": row[4],
-            "insumos": row[5],
-            "observaciones": row[6],
-            "comentario_admin": row[7],  # Comentario del administrador
-            "admin_nombre": row[8],      # Quién comentó
-            "fecha_comentario": row[9].strftime('%d/%m/%Y %H:%M') if row[9] else None
-        })
+
+        evidencias.append(
+            {
+                "id": row[0],
+                "ruta": ruta_imagen,
+                "fecha": (
+                    row[2].strftime("%d/%m/%Y %H:%M")
+                    if row[2]
+                    else "Fecha no disponible"
+                ),
+                "usuario": row[3],
+                "actividad": row[4],
+                "insumos": row[5],
+                "observaciones": row[6],
+                "comentario_admin": row[7],  # Comentario del administrador
+                "admin_nombre": row[8],  # Quién comentó
+                "fecha_comentario": (
+                    row[9].strftime("%d/%m/%Y %H:%M") if row[9] else None
+                ),
+            }
+        )
 
     cursor.close()
     return render_template("ver_evidencias.html", evidencias=evidencias)
+
 
 # Ruta para agregar/comentar evidencia (MUCHO más simple)
 @app.route("/comentar_evidencia/<int:actividad_id>", methods=["POST"])
@@ -1044,32 +1095,35 @@ def ver_evidencias():
 def comentar_evidencia(actividad_id):
     if request.method == "POST":
         comentario = request.form.get("comentario")
-        
+
         if not comentario or not comentario.strip():
             flash("El comentario no puede estar vacío", "error")
             return redirect(url_for("ver_evidencias"))
-        
+
         try:
             cursor = db.connection.cursor()
-            
+
             # Actualizar directamente la actividad
-            cursor.execute("""
+            cursor.execute(
+                """
                 UPDATE actividades 
                 SET comentarios_admin = %s, 
                     admin_comentario_id = %s,
                     fecha_comentario = NOW()
                 WHERE id = %s
-            """, (comentario.strip(), session["user_id"], actividad_id))
-            
+            """,
+                (comentario.strip(), session["user_id"], actividad_id),
+            )
+
             db.connection.commit()
             cursor.close()
-            
+
             flash("Comentario agregado correctamente", "success")
-            
+
         except Exception as e:
             db.connection.rollback()
             flash(f"Error al agregar comentario: {str(e)}", "danger")
-    
+
     return redirect(url_for("ver_evidencias"))
 
 
@@ -1096,20 +1150,28 @@ def seguimiento_cultivo():
 
     if request.method == "POST":
         cultivo_id = request.form.get("cultivo")
-        tratamiento = request.form.get("tratamiento")
-        problema = request.form.get("problema")
-        prioridad = request.form.get("prioridad")
-        insumos = request.form.get("insumos")
+
+        # 🔹 getlist() para los campos múltiples
+        tratamientos = request.form.getlist("tratamiento")
+        problemas = request.form.getlist("problema")
+        prioridades = request.form.getlist("prioridad")
+        insumos = request.form.getlist("insumos")
+
+        # 🔹 Convertir las listas a texto separado por comas
+        tratamiento_str = ", ".join(tratamientos) if tratamientos else None
+        problema_str = ", ".join(problemas) if problemas else None
+        prioridad_str = ", ".join(prioridades) if prioridades else None
+        insumo_str = ", ".join(insumos) if insumos else None
 
         try:
-            # Traer el nombre del cultivo a partir del Id_cultivo
+            # Obtener el nombre del cultivo
             cur.execute(
                 "SELECT nombre FROM Cultivos WHERE Id_cultivo = %s", (cultivo_id,)
             )
             cultivo_nombre = cur.fetchone()
 
             if cultivo_nombre:
-                cultivo_nombre = cultivo_nombre[0]  # Tomamos el valor del nombre
+                cultivo_nombre = cultivo_nombre[0]
 
                 # Insertar en la tabla tratamientos
                 cur.execute(
@@ -1117,13 +1179,18 @@ def seguimiento_cultivo():
                     INSERT INTO tratamientos (cultivo, tratamiento, problema, prioridad, insumos, fecha_registro)
                     VALUES (%s, %s, %s, %s, %s, NOW())
                 """,
-                    (cultivo_nombre, tratamiento, problema, prioridad, insumos),
+                    (
+                        cultivo_nombre,
+                        tratamiento_str,
+                        problema_str,
+                        prioridad_str,
+                        insumo_str,
+                    ),
                 )
-                db.connection.commit()
 
+                db.connection.commit()
                 flash("Seguimiento registrado con éxito", "success")
                 return redirect(url_for("seguimiento_cultivo"))
-
             else:
                 flash("El cultivo seleccionado no existe.", "danger")
 
@@ -1159,6 +1226,29 @@ def tratamientos_registrados():
     except Exception as e:
         flash(f"Error al cargar los tratamientos: {str(e)}", "danger")
         return redirect(url_for("home"))
+    
+
+@app.route('/guardar_comentarios', methods=['POST'])
+@login_required
+def guardar_comentarios():
+    if current_user.rol != 'administrador':
+        flash('No tienes permiso para realizar esta acción', 'error')
+        return redirect(url_for('tratamientos'))
+
+    # Por ejemplo, si tienes los tratamientos en DB con id, y campo comentario:
+    for key, value in request.form.items():
+        if key.startswith('comentario_'):
+            id_tratamiento = int(key.split('_')[1])
+            comentario = value
+            # Guardar comentario en DB, ejemplo:
+            tratamiento = tratamiento.query.get(id_tratamiento)
+            if tratamiento:
+                tratamiento.comentario = comentario
+                db.session.commit()
+
+    flash('Comentarios guardados correctamente', 'success')
+    return redirect(url_for('tratamientos'))
+
 
 
 # ---------------------- ELIMINAR TRATAMIENTO ----------------------

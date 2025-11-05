@@ -156,6 +156,51 @@ select option {
   width: 150px;
 }
 
+/* --- Estilo para selects múltiples --- */
+select[multiple] {
+  height: 70px; /* altura más compacta */
+  border: 1px solid #3a3a3a;
+  border-radius: 10px;
+  background-color: #222; /* fondo oscuro */
+  color: #eee;
+  padding: 6px;
+  font-size: 14px;
+  outline: none;
+  transition: 0.3s;
+  scrollbar-width: thin; /* scroll más delgado */
+}
+
+select[multiple]:focus {
+  border-color: #00ff88; /* color verde al enfocar */
+  box-shadow: 0 0 8px #00ff8850;
+}
+
+/* --- Opciones dentro del select --- */
+select[multiple] option {
+  padding: 4px;
+  border-radius: 5px;
+}
+
+select[multiple] option:checked {
+  background-color: #00ff8850;
+  color: #fff;
+}
+
+/* --- Ajuste visual para que el scroll no se vea feo --- */
+select[multiple]::-webkit-scrollbar {
+  width: 6px;
+}
+
+select[multiple]::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 10px;
+}
+
+select[multiple]::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+
 .btn-consultar {
   background: none;
   color: white;

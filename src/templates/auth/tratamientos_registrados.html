@@ -35,37 +35,56 @@
   </div>
 
   <div class="tabla-contenedor">
-    <table class="tabla-tratamientos" id="tabla-tratamientos">
-      <thead>
-        <tr>
-          <th>Cultivo</th>
-          <th>Tratamiento</th>
-          <th>Problema</th>
-          <th>Prioridad</th>
-          <th>Insumos</th>
-          <th>Fecha Registro</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for t in tratamientos %}
-        <tr>
-          <td>{{ t[1] }}</td> <!-- cultivo -->
-          <td>{{ t[2] }}</td> <!-- tratamiento -->
-          <td>{{ t[3] }}</td> <!-- problema -->
-          <td>{{ t[4] }}</td> <!-- prioridad -->
-          <td>{{ t[5] }}</td> <!-- insumos -->
-          <td>{{ t[6] }}</td> <!-- fecha -->
-          <td>
-            <a href="{{ url_for('eliminar_tratamiento', id=t[0]) }}">
-              <button class="btn-guardar">Eliminar</button>
-            </a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    <p id="no-result-siembra" class="NoResultado" style="display: none;">
+    <form method="POST" action="{{ url_for('guardar_comentarios') }}">
+      <table class="tabla-tratamientos" id="tabla-tratamientos">
+        <thead>
+          <tr>
+            <th>Cultivo</th>
+            <th>Tratamiento</th>
+            <th>Problema</th>
+            <th>Prioridad</th>
+            <th>Insumos</th>
+            <th>Fecha Registro</th>
+            {% if rol_usuario == 'administrador' %}
+            <th>Comentarios</th>
+            {% endif %}
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in tratamientos %}
+          <tr>
+            <td>{{ t[1] }}</td> <!-- cultivo -->
+            <td>{{ t[2] }}</td> <!-- tratamiento -->
+            <td>{{ t[3] }}</td> <!-- problema -->
+            <td>{{ t[4] }}</td> <!-- prioridad -->
+            <td>{{ t[5] }}</td> <!-- insumos -->
+            <td>{{ t[6] }}</td> <!-- fecha -->
+
+            {% if rol_usuario == 'administrador' %}
+            <td>
+              <!-- textarea con nombre único para cada tratamiento -->
+              <textarea name="comentario_{{ t[0] }}" rows="2" cols="30">{{ t[7] if t|length > 7 else '' }}</textarea>
+            </td>
+            {% endif %}
+
+            <td>
+              <a href="{{ url_for('eliminar_tratamiento', id=t[0]) }}">
+                <button class="btn-guardar" type="button">Eliminar</button>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {% if rol_usuario == 'administrador' %}
+      <div style="margin-top:10px;">
+        <button type="submit" class="btn-guardar">Guardar Comentarios</button>
+      </div>
+      {% endif %}
+    </form>
+    <p id="no-result-siembra" class="NoResultado">
       No se encontraron evidencias que coincidan con la búsqueda.
     </p>
   </div>
@@ -84,5 +103,3 @@
 <script src="{{ url_for('static', filename='js/tratamientos_registrados.js') }}"></script>
 
 {% endblock %}
-
-

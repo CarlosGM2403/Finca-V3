@@ -159,6 +159,11 @@
     {% else %}
     {% endif %}
 
+    {% if rol == 'administrador' %}
+    <a href="{{ url_for('tratamientos_registrados') }}" class="drop-btn">Tratamientos registrados</a>
+    {% else %}
+    {% endif %}
+
   </div>
 </div>
 

@@ -42,13 +42,30 @@
 
 
         <!-- Insumos -->
-        <label for="insumos" align="left">Insumos utilizados</label>
-        <select name="insumos" id="insumos" required>
-          <option value="Ninguno">Ninguno</option>
-          <option value="Insecticidas">Insecticidas</option>
-          <option value="Fertilizantes">Fertilizantes</option>
-          <option value="Abonos">Abonos</option>
-        </select>
+<label for="insumos" align="left">Insumos utilizados</label>
+<select name="insumos" id="insumos" multiple required>
+  <optgroup label="Fertilizantes">
+      <option value="abono_organico">Abono orgánico</option>
+      <option value="fertilizante_quimico">Fertilizante químico</option>
+      <option value="cal">Cal agrícola</option>
+  </optgroup>
+
+  <optgroup label="Control de Plagas">
+      <option value="insecticida">Insecticida</option>
+      <option value="aceite_neem">Aceite de neem</option>
+  </optgroup>
+
+  <optgroup label="Control de Hongos">
+      <option value="fungicida">Fungicida</option>
+      <option value="trichoderma">Trichoderma</option>
+  </optgroup>
+
+  <optgroup label="Mejoradores de Suelo">
+      <option value="compost">Compost</option>
+      <option value="estiércol">Estiércol</option>
+  </optgroup>
+</select>
+
 
         <!-- Observaciones -->
         <label for="observaciones" align="left">Observaciones</label>

@@ -32,6 +32,7 @@
     <div class="form-row">
       <div class="form-inputs">
 
+    <!-- Selector de Cultivo (solo una opción) -->
     <label for="cultivo">Selector de Cultivo</label>
     <select name="cultivo" required>
         <option value="" disabled selected>Seleccione un Cultivo</option>
@@ -40,11 +41,9 @@
         {% endfor %}
     </select>
 
-
-    <!-- Tratamiento -->
+    <!-- Tratamiento (múltiple) -->
     <label for="tratamiento">Tratamiento Aplicado</label>
-    <select name="tratamiento" required>
-        <option value="" disabled selected>Seleccione un tratamiento</option>
+    <select name="tratamiento" multiple required>
         <option value="fungicida">Fungicida</option>
         <option value="insecticida">Insecticida</option>
         <option value="herbicida">Herbicida</option>
@@ -57,50 +56,46 @@
         <option value="enmienda_suelo">Enmienda de suelo</option>
     </select>
 
-    <!-- Problema -->
+    <!-- Problema (múltiple) -->
     <label for="problema">Problema Identificado</label>
-    <select name="problema" required>
-        <option value="" disabled selected>Seleccione un problema</option>
+    <select name="problema" multiple required>
         <option value="plagas">Plagas</option>
         <option value="hongos">Hongos</option>
         <option value="malezas">Malezas</option>
         <option value="deficiencia_nutrientes">Deficiencia de nutrientes</option>
     </select>
 
-    <!-- Prioridad -->
+    <!-- Prioridad (múltiple) -->
     <label for="prioridad">Tipo de Prioridad</label>
-    <select name="prioridad" required>
-        <option value="" disabled selected>Seleccione una prioridad</option>
+    <select name="prioridad">
         <option value="alta">Alta</option>
         <option value="media">Media</option>
         <option value="baja">Baja</option>
     </select>
 
-    <!-- Insumos -->
+    <!-- Insumos (múltiple) -->
     <label for="insumos">Insumos Aplicados</label>
-    <select name="insumos" required>
-        <option value="" disabled selected>Seleccione un insumo</option>
+    <select name="insumos" multiple required>
+        <optgroup label="Fertilizantes">
+            <option value="abono_organico">Abono orgánico</option>
+            <option value="fertilizante_quimico">Fertilizante químico</option>
+            <option value="cal">Cal agrícola</option>
+        </optgroup>
 
-    <optgroup label="Fertilizantes">
-        <option value="abono_organico">Abono orgánico</option>
-        <option value="fertilizante_quimico">Fertilizante químico</option>
-        <option value="cal">Cal agrícola</option>
-    </optgroup>
+        <optgroup label="Control de Plagas">
+            <option value="insecticida">Insecticida</option>
+            <option value="aceite_neem">Aceite de neem</option>
+        </optgroup>
 
-    <optgroup label="Control de Plagas">
-        <option value="insecticida">Insecticida</option>
-        <option value="aceite_neem">Aceite de neem</option>
-    </optgroup>
+        <optgroup label="Control de Hongos">
+            <option value="fungicida">Fungicida</option>
+            <option value="trichoderma">Trichoderma</option>
+        </optgroup>
 
-    <optgroup label="Control de Hongos">
-        <option value="fungicida">Fungicida</option>
-        <option value="trichoderma">Trichoderma</option>
-    </optgroup>
-
-    <optgroup label="Mejoradores de Suelo">
-        <option value="compost">Compost</option>
-        <option value="estiércol">Estiércol</option>
-    </optgroup>
+        <optgroup label="Mejoradores de Suelo">
+            <option value="compost">Compost</option>
+            <option value="estiércol">Estiércol</option>
+        </optgroup>
     </select>
       </div>
 
