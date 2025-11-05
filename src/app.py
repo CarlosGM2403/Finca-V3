@@ -6,6 +6,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required
 from flask_mail import Mail, Message
 from flask_login import current_user
 from functools import wraps
+from datetime import datetime, timedelta
 import os
 import base64
 import uuid
@@ -115,53 +116,138 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
-        cur = db.connection.cursor()
-        cur.execute(
-            "SELECT id, password, must_change_password, rol, fullname FROM user WHERE username=%s",
-            (username,),
-        )
-        row = cur.fetchone()
-        cur.close()
+        try:
+            cur = db.connection.cursor()
+            
+            # Consulta con campos de seguridad - AGREGAR CAMPO 'estado'
+            cur.execute("""
+                SELECT id, password, must_change_password, rol, fullname, 
+                       intentos_login, bloqueado_hasta, bloqueos_permanentes, estado
+                FROM user WHERE username=%s
+            """, (username,))
+            row = cur.fetchone()
 
-        if row and check_password_hash(row[1], password):
-            user = ModelUser.get_by_id(db, row[0])
-            login_user(user)
-            session["user_id"] = row[0]
-            session["rol"] = row[3]
-            session["fullname"] = row[4]
+            if not row:
+                flash("Usuario o contraseña incorrectos", "error")
+                return redirect(url_for("login"))
 
-            # ===============================
-            # REGISTRO DEL INICIO DE SESIÓN
-            # ===============================
-            try:
-                cur = db.connection.cursor()
-                ip = request.remote_addr
-                navegador = request.user_agent.string
-                cur.execute(
-                    """
-                    INSERT INTO registro_sesiones (id_usuario, direccion_ip, navegador)
-                    VALUES (%s, %s, %s)
-                    """,
-                    (row[0], ip, navegador),
-                )
-                db.connection.commit()
+            user_id, hashed_password, must_change_password, rol, fullname, intentos_login, bloqueado_hasta, bloqueos_permanentes, estado = row
+
+            # VERIFICAR ESTADO DEL USUARIO - NUEVA VALIDACIÓN
+            if estado.lower() != "habilitado":
+                flash("Usuario inhabilitado. Contacta al administrador.", "error")
                 cur.close()
-            except Exception as e:
-                print(f"Error al registrar inicio de sesión: {e}")
-            # ===============================
+                return render_template("auth/login.html")
 
-            if row[2] == 1:
-                return redirect(url_for("cambiar_password"))
+            # CONFIGURACIÓN DE SEGURIDAD
+            MAX_INTENTOS = 3
+            TIEMPO_BLOQUEO = 15  # minutos
+            BLOQUEO_PERMANENTE_AFTER = 5
 
-            next_page = request.args.get("next")
-            flash(f"¡Bienvenido, {row[4]}!", "success")
-            return redirect(next_page or url_for("home"))
-        else:
-            flash("Usuario o contraseña incorrectos", "error")
+            # Verificar bloqueo permanente
+            if bloqueos_permanentes and bloqueos_permanentes >= BLOQUEO_PERMANENTE_AFTER:
+                flash("Cuenta bloqueada permanentemente. Contacta al administrador.", "error")
+                cur.close()
+                return render_template("auth/login.html")
+
+            # Verificar bloqueo temporal
+            if bloqueado_hasta and bloqueado_hasta > datetime.now():
+                tiempo_restante = bloqueado_hasta - datetime.now()
+                minutos_restantes = max(1, int(tiempo_restante.total_seconds() / 60))
+                flash(f"Cuenta bloqueada temporalmente. Intenta en {minutos_restantes} minutos", "error")
+                cur.close()
+                return render_template("auth/login.html")
+
+            # Verificar contraseña
+            if check_password_hash(hashed_password, password):
+                # LOGIN EXITOSO - Resetear contadores de seguridad
+                cur.execute("""
+                    UPDATE user 
+                    SET intentos_login = 0, bloqueado_hasta = NULL
+                    WHERE id = %s
+                """, (user_id,))
+                db.connection.commit()
+
+                # Iniciar sesión
+                user = ModelUser.get_by_id(db, user_id)
+                login_user(user)
+                session["user_id"] = user_id
+                session["rol"] = rol
+                session["fullname"] = fullname
+
+                # REGISTRO DEL INICIO DE SESIÓN
+                try:
+                    ip = request.remote_addr
+                    navegador = request.user_agent.string
+                    cur.execute("""
+                        INSERT INTO registro_sesiones (id_usuario, direccion_ip, navegador, exito)
+                        VALUES (%s, %s, %s, 1)
+                    """, (user_id, ip, navegador))
+                    db.connection.commit()
+                except Exception as e:
+                    print(f"Error al registrar inicio de sesión: {e}")
+
+                cur.close()
+
+                if must_change_password == 1:
+                    return redirect(url_for("cambiar_password"))
+
+                next_page = request.args.get("next")
+                flash(f"¡Bienvenido, {fullname}!", "success")
+                return redirect(next_page or url_for("home"))
+
+            else:
+                # CONTRASEÑA INCORRECTA - Manejar intentos
+                nuevos_intentos = (intentos_login or 0) + 1
+
+                # Registrar intento fallido
+                try:
+                    ip = request.remote_addr
+                    navegador = request.user_agent.string
+                    cur.execute("""
+                        INSERT INTO registro_sesiones (id_usuario, direccion_ip, navegador, exito)
+                        VALUES (%s, %s, %s, 0)
+                    """, (user_id, ip, navegador))
+                except Exception as e:
+                    print(f"Error al registrar intento fallido: {e}")
+
+                if nuevos_intentos >= MAX_INTENTOS:
+                    # BLOQUEAR CUENTA
+                    bloqueado_hasta = datetime.now() + timedelta(minutes=TIEMPO_BLOQUEO)
+                    nuevos_bloqueos = (bloqueos_permanentes or 0) + 1
+                    
+                    cur.execute("""
+                        UPDATE user 
+                        SET intentos_login = %s, bloqueado_hasta = %s,
+                            bloqueos_permanentes = %s
+                        WHERE id = %s
+                    """, (nuevos_intentos, bloqueado_hasta, nuevos_bloqueos, user_id))
+                    
+                    db.connection.commit()
+                    cur.close()
+                    
+                    flash(f"Demasiados intentos fallidos. Cuenta bloqueada por {TIEMPO_BLOQUEO} minutos", "error")
+                else:
+                    # INCREMENTAR INTENTOS
+                    cur.execute("""
+                        UPDATE user 
+                        SET intentos_login = %s 
+                        WHERE id = %s
+                    """, (nuevos_intentos, user_id))
+                    
+                    db.connection.commit()
+                    cur.close()
+                    
+                    intentos_restantes = MAX_INTENTOS - nuevos_intentos
+                    flash(f"Contraseña incorrecta. Te quedan {intentos_restantes} intentos", "error")
+
+                return redirect(url_for("login"))
+
+        except Exception as e:
+            flash(f"Error en el sistema: {str(e)}", "error")
             return redirect(url_for("login"))
 
     return render_template("auth/login.html")
-
 
 # ---------------------- PRODUCCIÓN REGISTRADA ----------------------
 
@@ -426,7 +512,7 @@ def cambiar_estado(id):
             cur.close()
 
             flash("Usuario actualizado correctamente", "success")
-            return redirect(url_for("usuarios"))
+            return redirect(url_for("home"))
 
         except Exception as e:
             db.connection.rollback()
@@ -883,12 +969,12 @@ def solicitar_insumo():
         return redirect(url_for("login"))
 
     if request.method == "POST":
-        # 🔹 getlist() para campos con selección múltiple
+        # getlist() para campos con selección múltiple
         tipos_insumo = request.form.getlist("tipo_insumo")
         cantidad = request.form.get("cantidad")
         observaciones = request.form.get("observaciones")
 
-        # 🔹 Convertir la lista a texto separado por comas
+        # Convertir la lista a texto separado por comas
         tipo_insumo_str = ", ".join(tipos_insumo) if tipos_insumo else None
 
         try:
@@ -909,7 +995,8 @@ def solicitar_insumo():
 
         except Exception as e:
             db.connection.rollback()
-            flash(f"Error al registrar la solicitud: {str(e)}", "danger")
+            flash(f"Error al registrar la solicitud: {str(e)}", "error")
+            return redirect(url_for("solicitar_insumo"))
 
     return render_template("solicitud_insumo.html")
 
