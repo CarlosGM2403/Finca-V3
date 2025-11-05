@@ -879,6 +879,23 @@ def solicitar_insumo():
 
 # ---------------------- SOLICITUDES REALIZADAS ----------------------
 
+@app.route("/mis_solicitudes")
+@login_required
+def mis_solicitudes():
+    cur = db.connection.cursor()
+    cur.execute("""
+        SELECT tipo_insumo, cantidad, observaciones, estado, 
+               observacion_supervisor, fecha_solicitud
+        FROM solicitud_insumo 
+        WHERE usuario_id = %s
+        ORDER BY fecha_solicitud DESC
+    """, (session["user_id"],))
+    
+    mis_solicitudes = cur.fetchall()
+    cur.close()
+    
+    return render_template("mis_solicitudes.html", solicitudes=mis_solicitudes)
+
 @app.route("/ver_solicitudes", methods=["GET"])
 @login_required
 def ver_solicitudes():
@@ -1317,22 +1334,6 @@ def registrar_produccion():
 
     return render_template("registrar_produccion.html", cultivos=cultivos)
 
-@app.route("/mis_solicitudes")
-@login_required
-def mis_solicitudes():
-    cur = db.connection.cursor()
-    cur.execute("""
-        SELECT tipo_insumo, cantidad, observaciones, estado, 
-               observacion_supervisor, fecha_solicitud
-        FROM solicitud_insumo 
-        WHERE usuario_id = %s
-        ORDER BY fecha_solicitud DESC
-    """, (session["user_id"],))
-    
-    mis_solicitudes = cur.fetchall()
-    cur.close()
-    
-    return render_template("mis_solicitudes.html", solicitudes=mis_solicitudes)
 
 # ---------------------- MAIN ----------------------
 if __name__ == "__main__":

@@ -1,3 +1,17 @@
+/* --- Fondo de Perfil para Tema Oscuro --- */
+.dark-theme {
+    /* Imagen específica de Perfil en modo oscuro */
+    background: url("../img/fondo_forms.png") no-repeat center center fixed; 
+    background-size: cover;
+}
+
+/* --- Fondo de Perfil para Tema Claro --- */
+.light-theme {
+    /* Imagen específica de Perfil en modo claro */
+    background: url("../img/fondo_claro_forms.png") no-repeat center center fixed; 
+    background-size: cover;
+}
+
 /* Estilos generales */
 .container {
     max-width: 1200px;
@@ -7,7 +21,7 @@
 
 .titulo-principal {
     text-align: center;
-    color: #2d3748;
+    color: #ffffff;
     margin-bottom: 30px;
     font-size: 2.5rem;
     font-weight: 700;
@@ -43,10 +57,10 @@
 
 /* Tabla */
 .tabla-container {
-    background: white;
+    background: rgba(148, 148, 148, 0.452);
     border-radius: 15px;
     padding: 20px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.377);
     margin-bottom: 30px;
 }
 
@@ -113,7 +127,7 @@
 
 .respuesta-supervisor {
     font-style: italic;
-    color: #4a5568;
+    color: #000000;
 }
 
 /* Mensaje sin solicitudes */
@@ -132,6 +146,15 @@
 .no-solicitudes p {
     font-size: 1.2rem;
     margin-bottom: 20px;
+}
+
+/* Logo */
+.logo {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 50px;
+  height: auto;
 }
 
 /* Botones */

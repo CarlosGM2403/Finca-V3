@@ -92,6 +92,7 @@
     {% else %}
       <a href="{{ url_for('en_construccion') }}">Tratamientos</a>
     {% endif %}
+
   </div>
 </div>
 
@@ -139,6 +140,7 @@
   <div class="circle circle2"></div>
     <a href="#" class="btn" id="dropdown-btn">Cultivos</a>
     <div class="dropdown-content" id="dropdown-content">
+
       {% if rol == 'administrador' %}
       <a href="{{ url_for('problemas_registrados') }}" class="drop-btn">Problemas registrados</a>
       {% else %}
@@ -156,6 +158,12 @@
       <a href="{{ url_for('registrar_siembra') }}" class="drop-btn">Registrar siembra</a>
       {% endif %}
     <a href="{{ url_for('cultivos') }}" class="drop-btn">Cultivos</a>
+
+    {% if rol != 'administrador' %}
+    <a href="{{ url_for('mis_solicitudes') }}" class="drop-btn">Mis solicitudes</a>
+    {% else %}
+    {% endif %}
+
   </div>
 </div>
 
