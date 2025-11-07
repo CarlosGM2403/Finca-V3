@@ -177,3 +177,261 @@ th {
   .btn-guardar { width: 100%; margin: 5px 0; }
   .planta { display: none; }
 }
+
+
+/* Botón de observaciones */
+.btn-observaciones {
+  background: none;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 8px;
+  border: 2px solid #4db856;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.3s;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-observaciones:hover {
+  background: #4db856;
+  color: black;
+}
+
+.badge-observaciones {
+  background: #ff4444;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: bold;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Modal de observaciones */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.modal-content {
+  background: rgba(39, 39, 39, 0.95);
+  border-radius: 16px;
+  max-width: 700px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  border: 2px solid #4db856;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 2px solid rgba(77, 184, 86, 0.3);
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #4db856;
+  font-size: 24px;
+}
+
+.btn-cerrar-modal {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  transition: 0.3s;
+  padding: 5px 10px;
+}
+
+.btn-cerrar-modal:hover {
+  color: #ff4444;
+  transform: rotate(90deg);
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+/* Lista de observaciones */
+.lista-observaciones {
+  max-height: 400px;
+  overflow-y: auto;
+  margin-bottom: 20px;
+  padding-right: 10px;
+}
+
+.observacion-item {
+  background: rgba(0, 0, 0, 0.3);
+  border-left: 4px solid #4db856;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 8px;
+  transition: 0.3s;
+}
+
+.observacion-item:hover {
+  background: rgba(0, 0, 0, 0.5);
+  transform: translateX(5px);
+}
+
+.observacion-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: #aaa;
+}
+
+.observacion-usuario {
+  color: #4db856;
+  font-weight: bold;
+}
+
+.observacion-fecha {
+  color: #888;
+}
+
+.observacion-texto {
+  color: white;
+  line-height: 1.6;
+  word-wrap: break-word;
+}
+
+.sin-observaciones,
+.texto-cargando,
+.error-observaciones {
+  text-align: center;
+  padding: 30px;
+  color: #888;
+  font-style: italic;
+}
+
+/* Formulario de observación */
+.form-observacion {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  border-radius: 12px;
+  border: 2px solid rgba(77, 184, 86, 0.3);
+}
+
+.form-observacion h3 {
+  margin-top: 0;
+  color: #4db856;
+  font-size: 18px;
+  margin-bottom: 15px;
+}
+
+.form-observacion textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 2px solid #4db856;
+  background: rgba(49, 49, 49, 0.8);
+  color: white;
+  font-size: 14px;
+  font-family: 'Poppins', sans-serif;
+  resize: vertical;
+  min-height: 100px;
+  outline: none;
+  transition: 0.3s;
+  box-sizing: border-box;
+}
+
+.form-observacion textarea:focus {
+  border-color: #54c55a;
+  box-shadow: 0 0 10px rgba(82, 175, 82, 0.5);
+}
+
+.contador-caracteres {
+  text-align: right;
+  margin-top: 5px;
+  margin-bottom: 15px;
+  font-size: 13px;
+  color: #888;
+}
+
+.contador-caracteres span {
+  font-weight: bold;
+  color: #ff4444;
+}
+
+/* Scrollbar personalizado para modal */
+.lista-observaciones::-webkit-scrollbar,
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.lista-observaciones::-webkit-scrollbar-track,
+.modal-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+.lista-observaciones::-webkit-scrollbar-thumb,
+.modal-content::-webkit-scrollbar-thumb {
+  background: #4db856;
+  border-radius: 10px;
+}
+
+.lista-observaciones::-webkit-scrollbar-thumb:hover,
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: #54c55a;
+}
+
+/* Responsive para modal */
+@media screen and (max-width: 768px) {
+  .modal-content {
+    max-width: 95%;
+    max-height: 95vh;
+  }
+  
+  .modal-header h2 {
+    font-size: 20px;
+  }
+  
+  .observacion-header {
+    flex-direction: column;
+    gap: 5px;
+  }
+}
+
+/* Mensaje de información para usuarios sin permisos */
+.info-permisos {
+  background: rgba(255, 193, 7, 0.15);
+  border: 2px solid rgba(255, 193, 7, 0.5);
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  color: #ffc107;
+  margin-top: 20px;
+}
+
+.info-permisos i {
+  font-size: 32px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.info-permisos p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+}

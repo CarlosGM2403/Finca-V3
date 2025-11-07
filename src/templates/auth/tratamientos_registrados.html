@@ -35,57 +35,45 @@
   </div>
 
   <div class="tabla-contenedor">
-    <form method="POST" action="{{ url_for('guardar_comentarios') }}">
-      <table class="tabla-tratamientos" id="tabla-tratamientos">
-        <thead>
-          <tr>
-            <th>Cultivo</th>
-            <th>Tratamiento</th>
-            <th>Problema</th>
-            <th>Prioridad</th>
-            <th>Insumos</th>
-            <th>Fecha Registro</th>
-            {% if rol_usuario == 'administrador' %}
-            <th>Comentarios</th>
-            {% endif %}
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for t in tratamientos %}
-          <tr>
-            <td>{{ t[1] }}</td> <!-- cultivo -->
-            <td>{{ t[2] }}</td> <!-- tratamiento -->
-            <td>{{ t[3] }}</td> <!-- problema -->
-            <td>{{ t[4] }}</td> <!-- prioridad -->
-            <td>{{ t[5] }}</td> <!-- insumos -->
-            <td>{{ t[6] }}</td> <!-- fecha -->
-
-            {% if rol_usuario == 'administrador' %}
-            <td>
-              <!-- textarea con nombre único para cada tratamiento -->
-              <textarea name="comentario_{{ t[0] }}" rows="2" cols="30">{{ t[7] if t|length > 7 else '' }}</textarea>
-            </td>
-            {% endif %}
-
-            <td>
-              <a href="{{ url_for('eliminar_tratamiento', id=t[0]) }}">
-                <button class="btn-guardar" type="button">Eliminar</button>
-              </a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-
-      {% if rol_usuario == 'administrador' %}
-      <div style="margin-top:10px;">
-        <button type="submit" class="btn-guardar">Guardar Comentarios</button>
-      </div>
-      {% endif %}
-    </form>
+    <table class="tabla-tratamientos" id="tabla-tratamientos">
+      <thead>
+        <tr>
+          <th>Cultivo</th>
+          <th>Tratamiento</th>
+          <th>Problema</th>
+          <th>Prioridad</th>
+          <th>Insumos</th>
+          <th>Fecha Registro</th>
+          <th>Observaciones</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in tratamientos %}
+        <tr data-id-tratamiento="{{ t[0] }}">
+          <td>{{ t[1] }}</td> <!-- cultivo -->
+          <td>{{ t[2] }}</td> <!-- tratamiento -->
+          <td>{{ t[3] }}</td> <!-- problema -->
+          <td>{{ t[4] }}</td> <!-- prioridad -->
+          <td>{{ t[5] }}</td> <!-- insumos -->
+          <td>{{ t[6] }}</td> <!-- fecha -->
+          <td>
+  <button class="btn-observaciones" data-id-tratamiento="{{ t[0] }}">
+    <i class="fa-solid fa-comments"></i> 
+    <span class="badge-observaciones">{{ t[7] }}</span>
+  </button>
+</td>
+  <td>
+      <a href="{{ url_for('eliminar_tratamiento', id=t[0]) }}">
+        <button class="btn-guardar">Eliminar</button>
+      </a>
+  </td>
+      </tr>
+        {% endfor %}
+      </tbody>
+    </table>
     <p id="no-result-siembra" class="NoResultado">
-      No se encontraron evidencias que coincidan con la búsqueda.
+      No se encontraron tratamientos que coincidan con la búsqueda.
     </p>
   </div>
 
@@ -97,9 +85,60 @@
   </div>
 </div>
 
+<!-- Modal de Observaciones -->
+<div id="modal-observaciones" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Observaciones del Tratamiento</h2>
+      <button class="btn-cerrar-modal" onclick="cerrarModal()">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+  <!-- Campo oculto para el ID del tratamiento (visible pero oculto) -->
+  <input type="hidden" id="id_tratamiento_modal">
+  
+  <!-- Lista de observaciones -->
+  <div id="lista-observaciones" class="lista-observaciones">
+    <p class="texto-cargando">Cargando observaciones...</p>
+  </div>
+  
+  <!-- Formulario para agregar observación (solo para admin/supervisor) -->
+  {% if rol == 'administrador' or rol == 'supervisor' %}
+  <div class="form-observacion">
+    <h3>Agregar Nueva Observación</h3>
+    <form id="form-observacion">
+      <input type="hidden" id="id_tratamiento_form" name="id_tratamiento">
+      <textarea 
+        id="nueva-observacion" 
+        name="observacion" 
+        placeholder="Escribe tu observación (mínimo 5 caracteres)..."
+        rows="4"
+        required
+      ></textarea>
+      <div class="contador-caracteres">
+        <span id="contador">0</span>/5 caracteres mínimos
+      </div>
+      <button type="submit" class="btn-guardar">
+        <i class="fa-solid fa-save"></i> Guardar Observación
+      </button>
+    </form>
+  </div>
+  {% else %}
+  <div class="info-permisos">
+    <i class="fa-solid fa-info-circle"></i>
+    <p>Solo los supervisores y administradores pueden agregar observaciones.</p>
+  </div>
+  {% endif %}
+</div>
+  </div>
+</div>
+
 <!-- Imagen decorativa -->
 <img src="{{ url_for('static', filename='img/plantaa.png') }}" class="planta" alt="Planta decorativa">
 
 <script src="{{ url_for('static', filename='js/tratamientos_registrados.js') }}"></script>
+
 
 {% endblock %}
