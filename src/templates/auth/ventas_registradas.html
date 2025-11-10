@@ -1,17 +1,18 @@
-{% extends 'base.html' %}
-
-{% block title %}Ventas Registradas{% endblock %}
-
-{% block CustomCSS %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/ventas.css') }}">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-{% endblock %}
-
-{% block body %}
+{% extends 'base.html' %} {% block title %}Ventas Registradas{% endblock %} {%
+block CustomCSS %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/ventas.css') }}"
+/>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+/>
+{% endblock %} {% block body %}
 
 <!------- Logo ------------>
 <div class="logo">
-    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+  <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo" />
 </div>
 
 <!------- Titulo ------------>
@@ -28,9 +29,8 @@
 
 <!-- Contenedor principal -->
 <div class="containerSiembra">
-
   <div class="buscador-contenedor">
-    <input type="text" id="buscador-ventas" placeholder="Buscar ventas...">
+    <input type="text" id="buscador-ventas" placeholder="Buscar ventas..." />
   </div>
 
   <div class="tabla-contenedor">
@@ -48,11 +48,16 @@
       <tbody>
         {% for venta in ventas %}
         <tr>
-          <td>{{ venta[1] }}</td> <!-- nombre del cultivo -->
-          <td>{{ venta[2] }}</td> <!-- fecha -->
-          <td>{{ venta[3] }}</td> <!-- cantidad -->
-          <td>${{ venta[4] }}</td> <!-- precio -->
-          <td>{{ venta[5] }}</td> <!-- descripcion -->
+          <td>{{ venta[1] }}</td>
+          <!-- nombre del cultivo -->
+          <td>{{ venta[2] }}</td>
+          <!-- fecha -->
+          <td>{{ venta[3] }}</td>
+          <!-- cantidad -->
+          <td>${{ venta[4] }}</td>
+          <!-- precio -->
+          <td>{{ venta[5] }}</td>
+          <!-- descripcion -->
           <td>
             <a href="{{ url_for('eliminar_venta', id=venta[0]) }}">
               <button class="btn-guardar">Eliminar</button>
@@ -66,7 +71,6 @@
     <p id="no-result-siembra" class="NoResultado">
       No se encontraron evidencias que coincidan con la búsqueda.
     </p>
-
   </div>
 
   <!-- Botones inferiores -->
@@ -75,19 +79,23 @@
       <button class="btn-guardar">Registrar Nueva Venta</button>
     </a>
   </div>
-
 </div>
 
 <!------- Imagen planta ------------>
-<img src="{{ url_for('static', filename='img/plantaa.png') }}" class="planta" alt="Planta decorativa">
+<img
+  src="{{ url_for('static', filename='img/plantaa.png') }}"
+  class="planta"
+  alt="Planta decorativa"
+/>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    {% for category, message in messages %}
-      <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
-    {% endfor %}
-  {% endif %}
-{% endwith %}
+{% with messages = get_flashed_messages(with_categories=true) %} {% if messages
+%} {% for category, message in messages %}
+<div
+  id="flash-data"
+  data-icon="{{ category }}"
+  data-message="{{ message }}"
+></div>
+{% endfor %} {% endif %} {% endwith %}
 
 <!-- Conexión con JS -->
 <script src="{{ url_for('static', filename='js/alertas_registros.js') }}"></script>
@@ -95,4 +103,3 @@
 <script src="{{ url_for('static', filename='js/ventas_registradas.js') }}"></script>
 
 {% endblock %}
-

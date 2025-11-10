@@ -1,13 +1,14 @@
-{% extends 'base.html' %}
-
-{% block title %}Cultivos{% endblock %}
-
-{% block CustomCSS %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/cultivos.css') }}">
-{% endblock %}
-
-{% block body %}
+{% extends 'base.html' %} {% block title %}Cultivos{% endblock %} {% block
+CustomCSS %}
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+/>
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/cultivos.css') }}"
+/>
+{% endblock %} {% block body %}
 
 <!-- Botón volver al inicio -->
 <div class="logout-btn">
@@ -18,14 +19,17 @@
   </a>
 </div>
 
-<!-- Título -->
+<!-- Título -->   
 <h1 class="titulo-principal">Lista de Cultivos</h1>
 
 <!-- Contenedor principal -->
 <div class="cuadro-cultivos">
-
-    <div class="buscador-contenedor">
-    <input type="text" id="buscador-cultivos" placeholder="Buscar cultivos...">
+  <div class="buscador-contenedor">
+    <input
+      type="text"
+      id="buscador-cultivos"
+      placeholder="Buscar cultivos..."
+    />
   </div>
 
   <!-- Tabla con scroll -->
@@ -39,7 +43,7 @@
           <th>Fecha Registro</th>
           <th>Estado</th>
           {% if rol == 'administrador' %}
-            <th>Acciones</th>
+          <th>Acciones</th>
           {% endif %}
         </tr>
       </thead>
@@ -51,43 +55,49 @@
           <td>{{ cultivo[3] }}</td>
           <td>{{ cultivo[4] }}</td>
           <td>{{ cultivo[5] }}</td>
-        {% if rol == 'administrador' %}
+          {% if rol == 'administrador' %}
           <td>
-            <form action="{{ url_for('cambiar_estado_cultivo', id=cultivo[0]) }}" method="post" style="display:inline;">
+            <form
+              action="{{ url_for('cambiar_estado_cultivo', id=cultivo[0]) }}"
+              method="post"
+              style="display: inline"
+            >
               {% if cultivo[5] == "Habilitado" %}
-                <button type="submit" class="btn-danger">Inhabilitar</button>
+              <button type="submit" class="btn-danger">Inhabilitar</button>
               {% else %}
-                <button type="submit" class="btn-success">Habilitar</button>
+              <button type="submit" class="btn-success">Habilitar</button>
               {% endif %}
             </form>
           </td>
-        {% endif %}
+          {% endif %}
         </tr>
         {% endfor %}
       </tbody>
     </table>
-    <p id="no-result-cultivos" style="display: none; color: white; text-align: center;">
-       No se encontraron evidencias que coincidan con la búsqueda.
+    <p
+      id="no-result-cultivos"
+      style="display: none; color: white; text-align: center"
+    >
+      No se encontraron evidencias que coincidan con la búsqueda.
     </p>
   </div>
 
   <!-- Botones de acción -->
   {% if rol == 'administrador' %}
-    <a href="{{ url_for('registrar_cultivo') }}">
-      <button class="btn-normal">Registrar Cultivo</button>
-    </a>
+  <a href="{{ url_for('registrar_cultivo') }}">
+    <button class="btn-normal">Registrar Cultivo</button>
+  </a>
   {% endif %}
-
-  
 </div>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    {% for category, message in messages %}
-      <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
-    {% endfor %}
-  {% endif %}
-{% endwith %}
+{% with messages = get_flashed_messages(with_categories=true) %} {% if messages
+%} {% for category, message in messages %}
+<div
+  id="flash-data"
+  data-icon="{{ category }}"
+  data-message="{{ message }}"
+></div>
+{% endfor %} {% endif %} {% endwith %}
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 

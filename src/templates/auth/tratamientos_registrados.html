@@ -1,17 +1,18 @@
-{% extends 'base.html' %}
-
-{% block title %}Tratamientos Registrados{% endblock %}
-
-{% block CustomCSS %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/tratamientos.css') }}">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-{% endblock %}
-
-{% block body %}
+{% extends 'base.html' %} {% block title %}Tratamientos Registrados{% endblock
+%} {% block CustomCSS %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/tratamientos.css') }}"
+/>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+/>
+{% endblock %} {% block body %}
 
 <!-- Logo -->
 <div class="logo">
-    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+  <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo" />
 </div>
 
 <!-- Título -->
@@ -28,10 +29,13 @@
 
 <!-- Contenedor principal -->
 <div class="containerSiembra">
-
   <!-- Buscador -->
   <div class="buscador-contenedor">
-    <input type="text" id="buscador-tratamientos" placeholder="Buscar tratamientos...">
+    <input
+      type="text"
+      id="buscador-tratamientos"
+      placeholder="Buscar tratamientos..."
+    />
   </div>
 
   <div class="tabla-contenedor">
@@ -51,24 +55,30 @@
       <tbody>
         {% for t in tratamientos %}
         <tr data-id-tratamiento="{{ t[0] }}">
-          <td>{{ t[1] }}</td> <!-- cultivo -->
-          <td>{{ t[2] }}</td> <!-- tratamiento -->
-          <td>{{ t[3] }}</td> <!-- problema -->
-          <td>{{ t[4] }}</td> <!-- prioridad -->
-          <td>{{ t[5] }}</td> <!-- insumos -->
-          <td>{{ t[6] }}</td> <!-- fecha -->
+          <td>{{ t[1] }}</td>
+          <!-- cultivo -->
+          <td>{{ t[2] }}</td>
+          <!-- tratamiento -->
+          <td>{{ t[3] }}</td>
+          <!-- problema -->
+          <td>{{ t[4] }}</td>
+          <!-- prioridad -->
+          <td>{{ t[5] }}</td>
+          <!-- insumos -->
+          <td>{{ t[6] }}</td>
+          <!-- fecha -->
           <td>
-  <button class="btn-observaciones" data-id-tratamiento="{{ t[0] }}">
-    <i class="fa-solid fa-comments"></i> 
-    <span class="badge-observaciones">{{ t[7] }}</span>
-  </button>
-</td>
-  <td>
-      <a href="{{ url_for('eliminar_tratamiento', id=t[0]) }}">
-        <button class="btn-guardar">Eliminar</button>
-      </a>
-  </td>
-      </tr>
+            <button class="btn-observaciones" data-id-tratamiento="{{ t[0] }}">
+              <i class="fa-solid fa-comments"></i>
+              <span class="badge-observaciones">{{ t[7] }}</span>
+            </button>
+          </td>
+          <td>
+            <a href="{{ url_for('eliminar_tratamiento', id=t[0]) }}">
+              <button class="btn-guardar">Eliminar</button>
+            </a>
+          </td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
@@ -94,51 +104,56 @@
         <i class="fa-solid fa-times"></i>
       </button>
     </div>
-    
+
     <div class="modal-body">
-  <!-- Campo oculto para el ID del tratamiento (visible pero oculto) -->
-  <input type="hidden" id="id_tratamiento_modal">
-  
-  <!-- Lista de observaciones -->
-  <div id="lista-observaciones" class="lista-observaciones">
-    <p class="texto-cargando">Cargando observaciones...</p>
-  </div>
-  
-  <!-- Formulario para agregar observación (solo para admin/supervisor) -->
-  {% if rol == 'administrador' or rol == 'supervisor' %}
-  <div class="form-observacion">
-    <h3>Agregar Nueva Observación</h3>
-    <form id="form-observacion">
-      <input type="hidden" id="id_tratamiento_form" name="id_tratamiento">
-      <textarea 
-        id="nueva-observacion" 
-        name="observacion" 
-        placeholder="Escribe tu observación (mínimo 5 caracteres)..."
-        rows="4"
-        required
-      ></textarea>
-      <div class="contador-caracteres">
-        <span id="contador">0</span>/5 caracteres mínimos
+      <!-- Campo oculto para el ID del tratamiento (visible pero oculto) -->
+      <input type="hidden" id="id_tratamiento_modal" />
+
+      <!-- Lista de observaciones -->
+      <div id="lista-observaciones" class="lista-observaciones">
+        <p class="texto-cargando">Cargando observaciones...</p>
       </div>
-      <button type="submit" class="btn-guardar">
-        <i class="fa-solid fa-save"></i> Guardar Observación
-      </button>
-    </form>
-  </div>
-  {% else %}
-  <div class="info-permisos">
-    <i class="fa-solid fa-info-circle"></i>
-    <p>Solo los supervisores y administradores pueden agregar observaciones.</p>
-  </div>
-  {% endif %}
-</div>
+
+      <!-- Formulario para agregar observación (solo para admin/supervisor) -->
+      {% if rol == 'administrador' or rol == 'supervisor' %}
+      <div class="form-observacion">
+        <h3>Agregar Nueva Observación</h3>
+        <form id="form-observacion">
+          <input type="hidden" id="id_tratamiento_form" name="id_tratamiento" />
+          <textarea
+            id="nueva-observacion"
+            name="observacion"
+            placeholder="Escribe tu observación (mínimo 5 caracteres)..."
+            rows="4"
+            required
+          ></textarea>
+          <div class="contador-caracteres">
+            <span id="contador">0</span>/5 caracteres mínimos
+          </div>
+          <button type="submit" class="btn-guardar">
+            <i class="fa-solid fa-save"></i> Guardar Observación
+          </button>
+        </form>
+      </div>
+      {% else %}
+      <div class="info-permisos">
+        <i class="fa-solid fa-info-circle"></i>
+        <p>
+          Solo los supervisores y administradores pueden agregar observaciones.
+        </p>
+      </div>
+      {% endif %}
+    </div>
   </div>
 </div>
 
 <!-- Imagen decorativa -->
-<img src="{{ url_for('static', filename='img/plantaa.png') }}" class="planta" alt="Planta decorativa">
+<img
+  src="{{ url_for('static', filename='img/plantaa.png') }}"
+  class="planta"
+  alt="Planta decorativa"
+/>
 
 <script src="{{ url_for('static', filename='js/tratamientos_registrados.js') }}"></script>
-
 
 {% endblock %}

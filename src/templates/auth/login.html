@@ -1,60 +1,72 @@
-{% extends './base.html' %}
-
-{% block title %}Login{% endblock %}
-
-{% block CustomCSS %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/login.css')}}">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-{% endblock %}
-
-{% block body %}
+{% extends './base.html' %} {% block title %}Login{% endblock %} {% block
+CustomCSS %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/login.css')}}"
+/>
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+/>
+{% endblock %} {% block body %}
 
 <div class="logo">
-    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+  <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo" />
 </div>
 
 <h1 class="titulo-bienvenida">Bienvenido!</h1>
 
 <main class="contenedor-login">
+  <div class="icono-login">
+    <i class="bi bi-person-circle"></i>
+  </div>
 
-    <div class="icono-login">
-        <i class="bi bi-person-circle"></i> 
+  <form id="login-form" action="/login" method="POST">
+    <div class="form-floating mb-2">
+      <input
+        type="text"
+        class="form-control"
+        id="floatingInput"
+        name="username"
+        required
+      />
+      <label for="floatingInput">Ingrese su correo electrónico</label>
     </div>
 
-    <form id="login-form" action="/login" method="POST">
+    <div class="form-floating mb-2">
+      <input
+        type="password"
+        class="form-control"
+        id="floatingPassword"
+        name="password"
+        required
+      />
+      <label for="floatingPassword">Ingrese su contraseña</label>
+    </div>
 
+    <div class="form-options mt-3">
+      <a href="{{ url_for('forgot_password') }}" class="forgot-link"
+        >Olvidé mi contraseña</a
+      >
+    </div>
 
-
-        <div class="form-floating mb-2">
-            <input type="text" class="form-control" id="floatingInput" name="username" required>
-            <label for="floatingInput">Ingrese su correo electrónico</label>
-        </div>
-
-        <div class="form-floating mb-2">
-            <input type="password" class="form-control" id="floatingPassword" name="password" required>
-            <label for="floatingPassword">Ingrese su contraseña</label>
-        </div>
-
-        <div class="form-options mt-3">
-            <a href="{{ url_for('forgot_password') }}" class="forgot-link">Olvidé mi contraseña</a>
-        </div>
-
-        <button class="btn btn-lg btn-primary" type="submit">Ingresar</button>
-    </form>
+    <button class="btn btn-lg btn-primary" type="submit">Ingresar</button>
+  </form>
 </main>
 
 <div class="planta">
-    <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta">
+  <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta" />
 </div>
 <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-{% if messages %}
-    {% for category, message in messages %}
-        <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
-    {% endfor %}
-{% endif %}
-{% endwith %}
+{% with messages = get_flashed_messages(with_categories=true) %} {% if messages
+%} {% for category, message in messages %}
+<div
+  id="flash-data"
+  data-icon="{{ category }}"
+  data-message="{{ message }}"
+></div>
+{% endfor %} {% endif %} {% endwith %}
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ url_for('static', filename='js/alertas_registros.js') }}"></script>
