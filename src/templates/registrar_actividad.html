@@ -1,16 +1,17 @@
-{% extends 'base.html' %}
-
-{% block title %}Registrar Actividad{% endblock %}
-
-{% block CustomCSS %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% extends 'base.html' %} {% block title %}Registrar Actividad{% endblock %} {%
+block CustomCSS %}
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+/>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/registrar_actividad.css') }}">
-{% endblock %}
-
-{% block body %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/registrar_actividad.css') }}"
+/>
+{% endblock %} {% block body %}
 <div class="logo">
-    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+  <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo" />
 </div>
 
 <!-- Botón volver al inicio -->
@@ -26,97 +27,100 @@
   <h1>¡Registrar Mi Actividad!</h1>
 
   <form method="POST" enctype="multipart/form-data">
-
     <!-- Fila de selects + imagen -->
     <div class="form-row">
       <div class="form-inputs">
-
         <!-- Tipo de actividad -->
         <label for="actividad" align="left">Tipo de actividad</label>
         <select name="actividad" id="actividad" required>
-            <option value='cosecha cafe'>Cosecha de café</option>
-            <option value='cosecha limon'>Cosecha de limón</option>
-            <option value='cosecha mani'>Cosecha de maní</option>
-            <option value='fumigacion'>Fumigación</option>
+          <option value="cosecha cafe">Cosecha de café</option>
+          <option value="cosecha limon">Cosecha de limón</option>
+          <option value="cosecha mani">Cosecha de maní</option>
+          <option value="fumigacion">Fumigación</option>
         </select>
 
-
         <!-- Insumos -->
-<label for="insumos" align="left">Insumos utilizados</label>
-<select name="insumos" id="insumos" multiple required>
-  <optgroup label="Fertilizantes">
-      <option value="abono_organico">Abono orgánico</option>
-      <option value="fertilizante_quimico">Fertilizante químico</option>
-      <option value="cal">Cal agrícola</option>
-  </optgroup>
+        <label for="insumos" align="left">Insumos utilizados</label>
+        <select name="insumos" id="insumos" multiple required>
+          <optgroup label="Fertilizantes">
+            <option value="abono_organico">Abono orgánico</option>
+            <option value="fertilizante_quimico">Fertilizante químico</option>
+            <option value="cal">Cal agrícola</option>
+          </optgroup>
 
-  <optgroup label="Control de Plagas">
-      <option value="insecticida">Insecticida</option>
-      <option value="aceite_neem">Aceite de neem</option>
-  </optgroup>
+          <optgroup label="Control de Plagas">
+            <option value="insecticida">Insecticida</option>
+            <option value="aceite_neem">Aceite de neem</option>
+          </optgroup>
 
-  <optgroup label="Control de Hongos">
-      <option value="fungicida">Fungicida</option>
-      <option value="trichoderma">Trichoderma</option>
-  </optgroup>
+          <optgroup label="Control de Hongos">
+            <option value="fungicida">Fungicida</option>
+            <option value="trichoderma">Trichoderma</option>
+          </optgroup>
 
-  <optgroup label="Mejoradores de Suelo">
-      <option value="compost">Compost</option>
-      <option value="estiércol">Estiércol</option>
-  </optgroup>
-</select>
-
+          <optgroup label="Mejoradores de Suelo">
+            <option value="compost">Compost</option>
+            <option value="estiércol">Estiércol</option>
+          </optgroup>
+        </select>
 
         <!-- Observaciones -->
         <label for="observaciones" align="left">Observaciones</label>
-        <textarea name="observaciones" id="observaciones" rows="4" required></textarea>
+        <textarea
+          name="observaciones"
+          id="observaciones"
+          rows="4"
+          required
+        ></textarea>
       </div>
 
       <!-- Imagen/ícono a la derecha -->
       <div class="form-image">
-        <img src="{{ url_for('static', filename='img/agricultor.png') }}" alt="Actividad">
+        <img
+          src="{{ url_for('static', filename='img/agricultor.png') }}"
+          alt="Actividad"
+        />
       </div>
     </div>
 
     <!-- Cámara / Evidencia -->
-<div class="camera-box">
-  <video id="video" autoplay playsinline></video>
-  <canvas id="canvas" style="display:none;"></canvas>
-  <img id="preview" class="preview" style="display:none;">
+    <div class="camera-box">
+      <video id="video" autoplay playsinline></video>
+      <canvas id="canvas" style="display: none"></canvas>
+      <img id="preview" class="preview" style="display: none" />
 
-  <!-- Botones cámara -->
-  <div class="camera-buttons">
-    <button type="button" id="tomarFoto" class="btn-cam"> Tomar Foto</button>
-    <button type="button" id="borrarFoto" class="btn-delete"> Borrar</button>
-    <a href="{{ url_for('ver_fotos') }}" class="btn-fotos"> Ver Fotos</a>
-  </div>
+      <!-- Botones cámara -->
+      <div class="camera-buttons">
+        <button type="button" id="tomarFoto" class="btn-cam">Tomar Foto</button>
+        <button type="button" id="borrarFoto" class="btn-delete">Borrar</button>
+        <a href="{{ url_for('ver_fotos') }}" class="btn-fotos"> Ver Fotos</a>
+      </div>
 
-  <!-- input oculto que viaja a Flask -->
-  <input type="hidden" id="evidenciaInput" name="evidencia">
-</div>
+      <!-- input oculto que viaja a Flask -->
+      <input type="hidden" id="evidenciaInput" name="evidencia" />
+    </div>
 
     <!-- Botones -->
     <div class="acciones-derecha">
       <button type="submit" class="btn-guardar">Guardar</button>
     </div>
-
   </form>
 </div>
 
 <div class="planta">
-  <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta">
+  <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta" />
 </div>
 
 <script src="{{ url_for('static', filename='js/registrar_actividad.js') }}"></script>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    {% for category, message in messages %}
-      <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
-    {% endfor %}
-  {% endif %}
-{% endwith %}
-
+{% with messages = get_flashed_messages(with_categories=true) %} {% if messages
+%} {% for category, message in messages %}
+<div
+  id="flash-data"
+  data-icon="{{ category }}"
+  data-message="{{ message }}"
+></div>
+{% endfor %} {% endif %} {% endwith %}
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 

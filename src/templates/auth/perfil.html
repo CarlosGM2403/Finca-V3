@@ -1,16 +1,17 @@
-{% extends 'base.html' %}
-
-{% block title %}Perfil{% endblock %}
-
-{% block CustomCSS %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/perfil.css') }}">
-{% endblock %}
-
-{% block body %}
+{% extends 'base.html' %} {% block title %}Perfil{% endblock %} {% block
+CustomCSS %}
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+/>
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/perfil.css') }}"
+/>
+{% endblock %} {% block body %}
 
 <div class="logo">
-  <img src="{{ url_for('static', filename='img/Logo_icon.png') }}" alt="Logo">
+  <img src="{{ url_for('static', filename='img/Logo_icon.png') }}" alt="Logo" />
 </div>
 
 <!-- Botón volver al inicio -->
@@ -25,7 +26,6 @@
 <h1 class="titulo-perfil">Perfil de Usuario</h1>
 
 <div class="container-perfil">
-
   <!-- Botón editar -->
   <div class="edit-btn">
     <a href="{{ url_for('editar_perfil') }}" title="Editar perfil">
@@ -35,34 +35,44 @@
 
   <!-- Foto de perfil DINÁMICA -->
   <div class="perfil-foto">
-      <img src="{{ foto_url }}" 
-           alt="Foto de perfil" 
-           id="foto-perfil-usuario"
-           class="foto-perfil">
-      <a href="{{ url_for('editar_perfil') }}" class="cambiar-foto">Cambiar foto</a>
+    <img
+      src="{{ foto_url }}"
+      alt="Foto de perfil"
+      id="foto-perfil-usuario"
+      class="foto-perfil"
+    />
+    <a href="{{ url_for('editar_perfil') }}" class="cambiar-foto"
+      >Cambiar foto</a
+    >
   </div>
 
   <!-- Info -->
   <div class="perfil-info">
-      <h2>Nombre: {{ usuario[2] }}</h2> 
-      <p class="rol">Rol: {{ usuario[3] }}</p>
-      <p><i class="fa-solid fa-envelope"></i>Correo: {{ usuario[1] }}</p>
-      <p><i class="fa-solid fa-circle"></i>Estado: {{ usuario[4] }}</p>
-      <p><i class="fa-solid fa-calendar"></i>Fecha Registro: {{ usuario[5].strftime('%d/%m/%Y') if usuario[5] else 'N/A' }}</p>
+    <h2>Nombre: {{ usuario[2] }}</h2>
+    <p class="rol">Rol: {{ usuario[3] }}</p>
+    <p><i class="fa-solid fa-envelope"></i>Correo: {{ usuario[1] }}</p>
+    <p><i class="fa-solid fa-circle"></i>Estado: {{ usuario[4] }}</p>
+    <p>
+      <i class="fa-solid fa-calendar"></i>Fecha Registro: {{
+      usuario[5].strftime('%d/%m/%Y') if usuario[5] else 'N/A' }}
+    </p>
 
-      <div class="perfil-actions">
-        <a href="{{ url_for('cambiar_contraseña') }}" class="btn-password">Cambiar Contraseña</a>
-      </div>
+    <div class="perfil-actions">
+      <a href="{{ url_for('cambiar_contraseña') }}" class="btn-password"
+        >Cambiar Contraseña</a
+      >
+    </div>
   </div>
 </div>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for category, message in messages %}
-            <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
-        {% endfor %}
-    {% endif %}
-{% endwith %}
+{% with messages = get_flashed_messages(with_categories=true) %} {% if messages
+%} {% for category, message in messages %}
+<div
+  id="flash-data"
+  data-icon="{{ category }}"
+  data-message="{{ message }}"
+></div>
+{% endfor %} {% endif %} {% endwith %}
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ url_for('static', filename='js/alertas_registros.js') }}"></script>

@@ -1,6 +1,15 @@
 # ---------------------- LIBRERÍAS FLASK ----------------------
 from sqlite3 import Cursor
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    flash,
+    session,
+    jsonify,
+)
 from flask_mysqldb import MySQL
 from flask_login import LoginManager, login_user, logout_user, login_required
 from flask_mail import Mail, Message
@@ -118,20 +127,33 @@ def login():
 
         try:
             cur = db.connection.cursor()
-            
+
             # Consulta con campos de seguridad - AGREGAR CAMPO 'estado'
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT id, password, must_change_password, rol, fullname, 
                        intentos_login, bloqueado_hasta, bloqueos_permanentes, estado
                 FROM user WHERE username=%s
-            """, (username,))
+            """,
+                (username,),
+            )
             row = cur.fetchone()
 
             if not row:
                 flash("Usuario o contraseña incorrectos", "error")
                 return redirect(url_for("login"))
 
-            user_id, hashed_password, must_change_password, rol, fullname, intentos_login, bloqueado_hasta, bloqueos_permanentes, estado = row
+            (
+                user_id,
+                hashed_password,
+                must_change_password,
+                rol,
+                fullname,
+                intentos_login,
+                bloqueado_hasta,
+                bloqueos_permanentes,
+                estado,
+            ) = row
 
             # VERIFICAR ESTADO DEL USUARIO - NUEVA VALIDACIÓN
             if estado.lower() != "habilitado":
@@ -145,8 +167,14 @@ def login():
             BLOQUEO_PERMANENTE_AFTER = 5
 
             # Verificar bloqueo permanente
-            if bloqueos_permanentes and bloqueos_permanentes >= BLOQUEO_PERMANENTE_AFTER:
-                flash("Cuenta bloqueada permanentemente. Contacta al administrador.", "error")
+            if (
+                bloqueos_permanentes
+                and bloqueos_permanentes >= BLOQUEO_PERMANENTE_AFTER
+            ):
+                flash(
+                    "Cuenta bloqueada permanentemente. Contacta al administrador.",
+                    "error",
+                )
                 cur.close()
                 return render_template("auth/login.html")
 
@@ -154,18 +182,24 @@ def login():
             if bloqueado_hasta and bloqueado_hasta > datetime.now():
                 tiempo_restante = bloqueado_hasta - datetime.now()
                 minutos_restantes = max(1, int(tiempo_restante.total_seconds() / 60))
-                flash(f"Cuenta bloqueada temporalmente. Intenta en {minutos_restantes} minutos", "error")
+                flash(
+                    f"Cuenta bloqueada temporalmente. Intenta en {minutos_restantes} minutos",
+                    "error",
+                )
                 cur.close()
                 return render_template("auth/login.html")
 
             # Verificar contraseña
             if check_password_hash(hashed_password, password):
                 # LOGIN EXITOSO - Resetear contadores de seguridad
-                cur.execute("""
+                cur.execute(
+                    """
                     UPDATE user 
                     SET intentos_login = 0, bloqueado_hasta = NULL
                     WHERE id = %s
-                """, (user_id,))
+                """,
+                    (user_id,),
+                )
                 db.connection.commit()
 
                 # Iniciar sesión
@@ -179,10 +213,13 @@ def login():
                 try:
                     ip = request.remote_addr
                     navegador = request.user_agent.string
-                    cur.execute("""
+                    cur.execute(
+                        """
                         INSERT INTO registro_sesiones (id_usuario, direccion_ip, navegador, exito)
                         VALUES (%s, %s, %s, 1)
-                    """, (user_id, ip, navegador))
+                    """,
+                        (user_id, ip, navegador),
+                    )
                     db.connection.commit()
                 except Exception as e:
                     print(f"Error al registrar inicio de sesión: {e}")
@@ -204,10 +241,13 @@ def login():
                 try:
                     ip = request.remote_addr
                     navegador = request.user_agent.string
-                    cur.execute("""
+                    cur.execute(
+                        """
                         INSERT INTO registro_sesiones (id_usuario, direccion_ip, navegador, exito)
                         VALUES (%s, %s, %s, 0)
-                    """, (user_id, ip, navegador))
+                    """,
+                        (user_id, ip, navegador),
+                    )
                 except Exception as e:
                     print(f"Error al registrar intento fallido: {e}")
 
@@ -215,31 +255,43 @@ def login():
                     # BLOQUEAR CUENTA
                     bloqueado_hasta = datetime.now() + timedelta(minutes=TIEMPO_BLOQUEO)
                     nuevos_bloqueos = (bloqueos_permanentes or 0) + 1
-                    
-                    cur.execute("""
+
+                    cur.execute(
+                        """
                         UPDATE user 
                         SET intentos_login = %s, bloqueado_hasta = %s,
                             bloqueos_permanentes = %s
                         WHERE id = %s
-                    """, (nuevos_intentos, bloqueado_hasta, nuevos_bloqueos, user_id))
-                    
+                    """,
+                        (nuevos_intentos, bloqueado_hasta, nuevos_bloqueos, user_id),
+                    )
+
                     db.connection.commit()
                     cur.close()
-                    
-                    flash(f"Demasiados intentos fallidos. Cuenta bloqueada por {TIEMPO_BLOQUEO} minutos", "error")
+
+                    flash(
+                        f"Demasiados intentos fallidos. Cuenta bloqueada por {TIEMPO_BLOQUEO} minutos",
+                        "error",
+                    )
                 else:
                     # INCREMENTAR INTENTOS
-                    cur.execute("""
+                    cur.execute(
+                        """
                         UPDATE user 
                         SET intentos_login = %s 
                         WHERE id = %s
-                    """, (nuevos_intentos, user_id))
-                    
+                    """,
+                        (nuevos_intentos, user_id),
+                    )
+
                     db.connection.commit()
                     cur.close()
-                    
+
                     intentos_restantes = MAX_INTENTOS - nuevos_intentos
-                    flash(f"Contraseña incorrecta. Te quedan {intentos_restantes} intentos", "error")
+                    flash(
+                        f"Contraseña incorrecta. Te quedan {intentos_restantes} intentos",
+                        "error",
+                    )
 
                 return redirect(url_for("login"))
 
@@ -248,6 +300,7 @@ def login():
             return redirect(url_for("login"))
 
     return render_template("auth/login.html")
+
 
 # ---------------------- PRODUCCIÓN REGISTRADA ----------------------
 
@@ -1292,50 +1345,156 @@ def seguimiento_cultivo():
 # ---------------------- TRATAMIENTOS REGISTRADOS ----------------------
 
 
+# Ruta para ver tratamientos con sus observaciones
 @app.route("/tratamientos_registrados")
 @login_required
 def tratamientos_registrados():
     try:
         cur = db.connection.cursor()
+
+        # Obtener tratamientos con el conteo de observaciones
         cur.execute(
             """
-            SELECT id_tratamiento, cultivo, tratamiento, problema, prioridad, insumos, fecha_registro
-            FROM tratamientos
-            ORDER BY fecha_registro DESC
-        """
+            SELECT t.id_tratamiento, t.cultivo, t.tratamiento, t.problema, 
+                   t.prioridad, t.insumos, t.fecha_registro,
+                   COUNT(o.id_observacion) as total_observaciones
+            FROM tratamientos t
+            LEFT JOIN observaciones_tratamiento o ON t.id_tratamiento = o.id_tratamiento
+            GROUP BY t.id_tratamiento
+            ORDER BY t.fecha_registro DESC
+            """
         )
         tratamientos = cur.fetchall()
+
+        # Obtener el rol del usuario desde la sesión
+        rol = session.get("rol", "")
+
         cur.close()
         return render_template(
-            "auth/tratamientos_registrados.html", tratamientos=tratamientos
+            "auth/tratamientos_registrados.html", tratamientos=tratamientos, rol=rol
         )
 
     except Exception as e:
         flash(f"Error al cargar los tratamientos: {str(e)}", "danger")
         return redirect(url_for("home"))
-    
 
-@app.route('/guardar_comentarios', methods=['POST'])
+
+# Ruta para obtener observaciones de un tratamiento (AJAX)
+@app.route("/obtener_observaciones/<int:id_tratamiento>")
 @login_required
-def guardar_comentarios():
-    if current_user.rol != 'administrador':
-        flash('No tienes permiso para realizar esta acción', 'error')
-        return redirect(url_for('tratamientos'))
+def obtener_observaciones(id_tratamiento):
+    try:
+        cur = db.connection.cursor()
+        cur.execute(
+            """
+            SELECT o.id_observacion, o.observacion, o.usuario_nombre, 
+                   DATE_FORMAT(o.fecha_registro, '%%d/%%m/%%Y %%H:%%i') as fecha_formateada
+            FROM observaciones_tratamiento o
+            WHERE o.id_tratamiento = %s
+            ORDER BY o.fecha_registro DESC
+            """,
+            (id_tratamiento,),
+        )
+        observaciones = cur.fetchall()
+        cur.close()
 
-    # Por ejemplo, si tienes los tratamientos en DB con id, y campo comentario:
-    for key, value in request.form.items():
-        if key.startswith('comentario_'):
-            id_tratamiento = int(key.split('_')[1])
-            comentario = value
-            # Guardar comentario en DB, ejemplo:
-            tratamiento = tratamiento.query.get(id_tratamiento)
-            if tratamiento:
-                tratamiento.comentario = comentario
-                db.session.commit()
+        # Convertir a lista de diccionarios para JSON
+        observaciones_list = []
+        for obs in observaciones:
+            observaciones_list.append(
+                {
+                    "id": obs[0],
+                    "observacion": obs[1],
+                    "usuario": obs[2],
+                    "fecha": obs[3],
+                }
+            )
 
-    flash('Comentarios guardados correctamente', 'success')
-    return redirect(url_for('tratamientos'))
+        return jsonify({"success": True, "observaciones": observaciones_list})
 
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# Ruta para agregar observación
+@app.route("/agregar_observacion", methods=["POST"])
+@login_required
+def agregar_observacion():
+    try:
+        # Verificar que el usuario sea supervisor o administrador
+        rol = session.get("rol", "")
+        if rol not in ["administrador", "supervisor"]:
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "No tienes permisos para agregar observaciones",
+                    }
+                ),
+                403,
+            )
+
+        # Obtener datos del formulario
+        id_tratamiento = request.form.get("id_tratamiento")
+        observacion = request.form.get("observacion", "").strip()
+
+        # Validar que la observación tenga al menos 5 caracteres
+        if len(observacion) < 5:
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "La observación debe tener al menos 5 caracteres",
+                    }
+                ),
+                400,
+            )
+
+        # Verificar que el tratamiento existe
+        cur = db.connection.cursor()
+        cur.execute(
+            "SELECT id_tratamiento FROM tratamientos WHERE id_tratamiento = %s",
+            (id_tratamiento,),
+        )
+        tratamiento = cur.fetchone()
+
+        if not tratamiento:
+            cur.close()
+            return jsonify({"success": False, "error": "El tratamiento no existe"}), 404
+
+        # Obtener información del usuario
+        usuario_id = session.get("user_id")
+
+        # Obtener el nombre del usuario desde la base de datos
+        cur.execute("SELECT fullname FROM user WHERE id = %s", (usuario_id,))
+        usuario_info = cur.fetchone()
+        usuario_nombre = usuario_info[0] if usuario_info else "Usuario Desconocido"
+
+        # Insertar la observación
+        cur.execute(
+            """
+            INSERT INTO observaciones_tratamiento 
+            (id_tratamiento, observacion, usuario_id, usuario_nombre)
+            VALUES (%s, %s, %s, %s)
+            """,
+            (id_tratamiento, observacion, usuario_id, usuario_nombre),
+        )
+
+        db.connection.commit()
+        cur.close()
+
+        return jsonify(
+            {"success": True, "message": "Observación agregada correctamente"}
+        )
+
+    except Exception as e:
+        db.connection.rollback()
+        return (
+            jsonify(
+                {"success": False, "error": f"Error al agregar observación: {str(e)}"}
+            ),
+            500,
+        )
 
 
 # ---------------------- ELIMINAR TRATAMIENTO ----------------------

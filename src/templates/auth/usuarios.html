@@ -1,13 +1,14 @@
-{% extends 'base.html' %}
-
-{% block title %}Usuarios{% endblock %}
-
-{% block CustomCSS %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/usuarios.css') }}">
-{% endblock %}
-
-{% block body %}
+{% extends 'base.html' %} {% block title %}Usuarios{% endblock %} {% block
+CustomCSS %}
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+/>
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/usuarios.css') }}"
+/>
+{% endblock %} {% block body %}
 
 <!-- Botón volver al inicio -->
 <div class="logout-btn">
@@ -21,9 +22,8 @@
 <h1 class="titulo-principal">Lista de Usuarios</h1>
 
 <div class="cuadro-usuarios">
-
   <div class="buscador-contenedor">
-    <input type="text" id="buscador" placeholder="Buscar usuario...">
+    <input type="text" id="buscador" placeholder="Buscar usuario..." />
   </div>
 
   <!-- Contenedor con scroll SOLO para la tabla -->
@@ -52,14 +52,16 @@
           </td>
         </tr>
         {% endfor %}
-        <tr id="no-result" style="display:none;">
-          <td colspan="5" style="text-align:center; color:#f00;">No se encontraron resultados</td>
+        <tr id="no-result" style="display: none">
+          <td colspan="5" style="text-align: center; color: #f00">
+            No se encontraron resultados
+          </td>
         </tr>
       </tbody>
     </table>
   </div>
 
+  <script src="{{ url_for('static', filename='js/usuarios.js') }}"></script>
 
-<script src="{{ url_for('static', filename='js/usuarios.js') }}"></script>
-
-{% endblock %}
+  {% endblock %}
+</div>

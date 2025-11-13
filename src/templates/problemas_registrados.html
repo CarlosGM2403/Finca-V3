@@ -1,14 +1,16 @@
-{% extends 'base.html' %}
-{% block title %}Problemas Registrados{% endblock %}
-
+{% extends 'base.html' %} {% block title %}Problemas Registrados{% endblock %}
 {% block CustomCSS %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/problemas_registrados.css') }}">
-{% endblock %}
-
-{% block body %}
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+/>
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/problemas_registrados.css') }}"
+/>
+{% endblock %} {% block body %}
 <div class="logo">
-    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+  <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo" />
 </div>
 
 <!-- Botón volver al inicio -->
@@ -20,11 +22,11 @@
   </a>
 </div>
 
-<h1> Problemas reportados por {{ usuario }}</h1>
+<h1>Problemas reportados por {{ usuario }}</h1>
 
 <div class="buscador-contenedor">
-    <input type="text" id="buscador-siembra" placeholder="Buscar...">
-  </div>
+  <input type="text" id="buscador-siembra" placeholder="Buscar..." />
+</div>
 
 <div class="problemas-container">
   <div class="row">
@@ -32,7 +34,7 @@
     <div class="col-md-4 mb-4">
       <div class="card">
         {% if p.ruta %}
-        <img src="{{ p.ruta }}" class="card-img-top" alt="Evidencia">
+        <img src="{{ p.ruta }}" class="card-img-top" alt="Evidencia" />
         {% endif %}
         <div class="card-body">
           <h5 class="card-title">{{ p.tipo }}</h5>
@@ -44,10 +46,9 @@
     {% endfor %}
   </div>
 
-<p id="no-result-siembra" class="NoResultado">
-  No se encontraron evidencias que coincidan con la búsqueda.
-</p>
-
+  <p id="no-result-siembra" class="NoResultado">
+    No se encontraron evidencias que coincidan con la búsqueda.
+  </p>
 </div>
 
 <script src="{{ url_for('static', filename='js/problemas_registrados.js') }}"></script>

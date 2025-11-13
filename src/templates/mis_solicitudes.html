@@ -1,16 +1,17 @@
-{% extends 'base.html' %}
-
-{% block title %}Mis Solicitudes{% endblock %}
-
-{% block CustomCSS %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/mis_solicitudes.css') }}">
-{% endblock %}
-
-{% block body %}
+{% extends 'base.html' %} {% block title %}Mis Solicitudes{% endblock %} {%
+block CustomCSS %}
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+/>
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/mis_solicitudes.css') }}"
+/>
+{% endblock %} {% block body %}
 
 <div class="logo">
-    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+  <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo" />
 </div>
 
 <!-- Botón volver al inicio -->
@@ -23,67 +24,86 @@
 </div>
 
 <div class="container">
+
     <h1 class="titulo-principal">Mis Solicitudes de Insumos</h1>
 
-    <div class="tabla-container">
-        <table class="tabla-solicitudes">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Tipo de Insumo</th>
-                    <th>Cantidad</th>
-                    <th>Mis Observaciones</th>
-                    <th>Respuesta Supervisor</th>
-                    <th>Fecha Solicitud</th>
-                    <th>Estado</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for solicitud in solicitudes %}
-                <tr class="solicitud-fila" data-estado="{{ solicitud[3] }}">
-                    <td>{{ solicitud[0] }}</td>
-                    <td>{{ solicitud[1] }}</td>
-                    <td>{{ solicitud[2] }}</td>
-                    <td class="observaciones">{{ solicitud[4] if solicitud[4] else 'Sin observaciones' }}</td>
-                    <td class="respuesta-supervisor">{{ solicitud[5] if solicitud[5] else 'Pendiente de revisión' }}</td>
-                    <td>{{ solicitud[6].strftime('%d/%m/%Y %H:%M') if solicitud[6] else 'N/A' }}</td>
-                    <td>
-                        <span class="estado-badge estado-{{ solicitud[3].lower() }}">
-                            {{ solicitud[3] }}
-                        </span>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="7" class="no-solicitudes">
-                        <i class="fa-solid fa-inbox"></i>
-                        <p>No has realizado ninguna solicitud</p>
-                        <a href="{{ url_for('solicitar_insumo') }}" class="btn-nueva-solicitud">
-                            Realizar primera solicitud
-                        </a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+  <h1 class="titulo-principal">Mis Solicitudes de Insumos</h1>
 
-    <!-- Botón para nueva solicitud -->
-    <div class="acciones">
-        <a href="{{ url_for('solicitar_insumo') }}" class="btn-nueva-solicitud">
-            <i class="fa-solid fa-plus"></i>
-            Nueva Solicitud
-        </a>
-    </div>
+  <!-- Filtros por estado -->
+  <div class="filtros">
+    <button class="filtro-btn active" data-estado="todas">Todas</button>
+  </div>
+
+  <div class="tabla-container">
+    <table class="tabla-solicitudes">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Tipo de Insumo</th>
+          <th>Cantidad</th>
+          <th>Mis Observaciones</th>
+          <th>Respuesta Supervisor</th>
+          <th>Fecha Solicitud</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for solicitud in solicitudes %}
+        <tr class="solicitud-fila" data-estado="{{ solicitud[3] }}">
+          <td>{{ solicitud[0] }}</td>
+          <td>{{ solicitud[1] }}</td>
+          <td>{{ solicitud[2] }}</td>
+          <td class="observaciones">
+            {{ solicitud[4] if solicitud[4] else 'Sin observaciones' }}
+          </td>
+          <td class="respuesta-supervisor">
+            {{ solicitud[5] if solicitud[5] else 'Pendiente de revisión' }}
+          </td>
+          <td>
+            {{ solicitud[6].strftime('%d/%m/%Y %H:%M') if solicitud[6] else
+            'N/A' }}
+          </td>
+          <td>
+            <span class="estado-badge estado-{{ solicitud[3].lower() }}">
+              {{ solicitud[3] }}
+            </span>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="7" class="no-solicitudes">
+            <i class="fa-solid fa-inbox"></i>
+            <p>No has realizado ninguna solicitud</p>
+            <a
+              href="{{ url_for('solicitar_insumo') }}"
+              class="btn-nueva-solicitud"
+            >
+              Realizar primera solicitud
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Botón para nueva solicitud -->
+  <div class="acciones">
+    <a href="{{ url_for('solicitar_insumo') }}" class="btn-nueva-solicitud">
+      <i class="fa-solid fa-plus"></i>
+      Nueva Solicitud
+    </a>
+  </div>
 </div>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    {% for category, message in messages %}
-      <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
-    {% endfor %}
-  {% endif %}
-{% endwith %}
+{% with messages = get_flashed_messages(with_categories=true) %} {% if messages
+%} {% for category, message in messages %}
+<div
+  id="flash-data"
+  data-icon="{{ category }}"
+  data-message="{{ message }}"
+></div>
+{% endfor %} {% endif %} {% endwith %}
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ url_for('static', filename='js/alertas_registros.js') }}"></script>

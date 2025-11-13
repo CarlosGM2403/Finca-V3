@@ -1,24 +1,24 @@
-{% extends 'base.html' %}
-
-{% block title %}Ver Fotos{% endblock %}
-
-{% block CustomCSS %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/ver_fotos.css') }}">
-{% endblock %}
-
-
-{% block body %}
+{% extends 'base.html' %} {% block title %}Ver Fotos{% endblock %} {% block
+CustomCSS %}
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+/>
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/ver_fotos.css') }}"
+/>
+{% endblock %} {% block body %}
 
 <div class="logo">
-    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+  <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo" />
 </div>
 
 <h1 class="titulo">Evidencias Registradas - {{ usuario }}</h1>
 
-  <div class="buscador-contenedor">
-    <input type="text" id="buscador-siembra" placeholder="Buscar...">
-  </div>
+<div class="buscador-contenedor">
+  <input type="text" id="buscador-siembra" placeholder="Buscar..." />
+</div>
 
 <!-- Botón volver al inicio -->
 <div class="logout-btn">
@@ -30,27 +30,27 @@
 </div>
 
 <div class="fotos-container">
-    {% if fotos %}
-        {% for foto in fotos %}
-        <div class="card">
-            <img src="{{ foto.ruta }}" alt="Evidencia">
-              <p><strong>Actividad:</strong> {{ foto.actividad }}</p>
-              <p><strong>Insumos:</strong> {{ foto.insumos }}</p>
-              <p><strong>Observaciones:</strong> {{ foto.observaciones }}</p>
-              <p><strong>Fecha subida:</strong> {{ foto.fecha }}</p>
-          </div>
+  {% if fotos %} {% for foto in fotos %}
+  <div class="card">
+    <img src="{{ foto.ruta }}" alt="Evidencia" />
+    <p><strong>Actividad:</strong> {{ foto.actividad }}</p>
+    <p><strong>Insumos:</strong> {{ foto.insumos }}</p>
+    <p><strong>Observaciones:</strong> {{ foto.observaciones }}</p>
+    <p><strong>Fecha subida:</strong> {{ foto.fecha }}</p>
+  </div>
 
-        {% endfor %}
-    {% else %}
-        <p style="color: white; text-align: center; font-size: 18px;">
-            No hay evidencias registradas aún.
-        </p>
-    {% endif %}
+  {% endfor %} {% else %}
+  <p style="color: white; text-align: center; font-size: 18px">
+    No hay evidencias registradas aún.
+  </p>
+  {% endif %}
 
-<p id="no-result-siembra" style="display: none; color: white; text-align: center;">
-  No se encontraron evidencias que coincidan con la búsqueda.
-</p>
-
+  <p
+    id="no-result-siembra"
+    style="display: none; color: white; text-align: center"
+  >
+    No se encontraron evidencias que coincidan con la búsqueda.
+  </p>
 </div>
 
 <script src="{{ url_for('static', filename='js/ver_fotos.js') }}"></script>
