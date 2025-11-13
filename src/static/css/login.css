@@ -47,7 +47,7 @@ body {
 /* Estilo de campos */
 .form-floating input {
     border-radius: 20px;
-    background-color: transparent;
+    background-color: #ffffffcb;
     border:3px solid cornsilk;
 }
 

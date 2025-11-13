@@ -372,7 +372,7 @@ def forgot_password():
                 sender="tucorreo@gmail.com",
                 recipients=[email],
             )
-            msg.body = f"Para restablecer tu contraseña haz clic en el siguiente enlace:\n{link}"
+            msg.body = f"Para restablecer tu contraseña haz clic en el siguiente enlace:\n{link}\n Recuerda que tu contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo"
             mail.send(msg)
 
             flash("Se ha enviado un enlace a tu correo.", "success")
@@ -473,7 +473,7 @@ def registrar_usuario():
                 Usuario: {username}
                 Contraseña provisional: {password_plain}
 
-                Recuerda que deberás cambiar la contraseña en tu primer acceso.
+                Recuerda que deberás cambiar la contraseña en tu primer acceso y esta debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo.
 
                 Saludos.
                 No responda este mensaje.
