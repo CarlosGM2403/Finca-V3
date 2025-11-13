@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}Inventario de Cultivos{% endblock %}
+
+{% block CustomCSS %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/inventario.css') }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% endblock %}
+
+{% block body %}
+
+<!-- Logo -->
+<div class="logo">
+    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+</div>
+
+<!-- Título -->
+<h1 class="Titulo">Inventario de Cultivos</h1>
+
+<!-- Botón volver al inicio -->
+<div class="logout-btn">
+  <a href="{{ url_for('home') }}">
+    <button title="Volver al inicio">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+  </a>
+</div>
+
+<!-- Contenedor principal -->
+<div class="containerInventario">
+
+  <!-- Buscador -->
+  <div class="buscador-contenedor">
+    <input type="text" id="buscador-inventario" placeholder="Buscar cultivos...">
+  </div>
+
+  <!-- Resumen de inventario -->
+  <div class="resumen-inventario">
+    <div class="resumen-card">
+      <i class="fa-solid fa-boxes-stacked"></i>
+      <div class="resumen-info">
+        <span class="resumen-valor" id="total-stock">0</span>
+        <span class="resumen-label">Total en Stock</span>
+      </div>
+    </div>
+    <div class="resumen-card">
+      <i class="fa-solid fa-arrow-up"></i>
+      <div class="resumen-info">
+        <span class="resumen-valor" id="total-producido">0</span>
+        <span class="resumen-label">Total Producido</span>
+      </div>
+    </div>
+    <div class="resumen-card">
+      <i class="fa-solid fa-arrow-down"></i>
+      <div class="resumen-info">
+        <span class="resumen-valor" id="total-vendido">0</span>
+        <span class="resumen-label">Total Vendido</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabla-contenedor">
+    <table class="tabla-inventario" id="tabla-inventario">
+      <thead>
+        <tr>
+          <th>Cultivo</th>
+          <th>Tipo</th>
+          <th>Total Producido</th>
+          <th>Total Vendido</th>
+          <th>Stock Actual</th>
+          <th>Última Producción</th>
+          <th>Última Venta</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in inventario %}
+        <tr data-stock="{{ item[5] }}">
+          <td><strong>{{ item[1] }}</strong></td>
+          <td>{{ item[2] }}</td>
+          <td class="numero-producido">{{ item[3] }}</td>
+          <td class="numero-vendido">{{ item[4] }}</td>
+          <td>
+            <span class="badge-stock {% if item[5] == 0 %}stock-cero{% elif item[5] < 10 %}stock-bajo{% elif item[5] < 50 %}stock-medio{% else %}stock-alto{% endif %}">
+              {{ item[5] }} bultos
+            </span>
+          </td>
+          <td>{{ item[6] if item[6] else 'Sin registro' }}</td>
+          <td>{{ item[7] if item[7] else 'Sin registro' }}</td>
+          <td>
+            <button class="btn-detalle" data-id-cultivo="{{ item[0] }}" data-nombre-cultivo="{{ item[1] }}">
+  <i class="fa-solid fa-eye"></i> Ver Historial
+</button>
+              <i class="fa-solid fa-eye"></i> Ver Historial
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p id="no-result-inventario" class="NoResultado">
+      No se encontraron cultivos que coincidan con la búsqueda.
+    </p>
+  </div>
+
+  <!-- Botones inferiores -->
+  <div class="botones">
+    <a href="{{ url_for('registrar_produccion') }}">
+      <button class="btn-accion btn-produccion">
+        <i class="fa-solid fa-plus"></i> Registrar Producción
+      </button>
+    </a>
+    <a href="{{ url_for('registrar_ventas') }}">
+      <button class="btn-accion btn-venta">
+        <i class="fa-solid fa-dollar-sign"></i> Registrar Venta
+      </button>
+    </a>
+  </div>
+</div>
+
+<!-- Modal de Detalle -->
+<div id="modal-detalle" class="modal-overlay">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modal-titulo">Historial del Cultivo</h2>
+      <button class="btn-cerrar-modal" onclick="cerrarModal()">
+        <i class="fa-solid fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <!-- Historial de Producción -->
+      <div class="historial-seccion">
+        <h3><i class="fa-solid fa-arrow-up"></i> Últimas Producciones</h3>
+        <div id="historial-produccion" class="historial-lista">
+          <p class="texto-cargando">Cargando...</p>
+        </div>
+      </div>
+      
+      <!-- Historial de Ventas -->
+      <div class="historial-seccion">
+        <h3><i class="fa-solid fa-arrow-down"></i> Últimas Ventas</h3>
+        <div id="historial-ventas" class="historial-lista">
+          <p class="texto-cargando">Cargando...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Imagen decorativa -->
+<img src="{{ url_for('static', filename='img/plantaa.png') }}" class="planta" alt="Planta decorativa">
+
+<script src="{{ url_for('static', filename='js/inventario.js') }}"></script>
+
+{% endblock %}

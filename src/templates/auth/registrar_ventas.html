@@ -32,11 +32,15 @@ block CustomCSS %}
   <form method="POST">
     <!------- Selector de cultivos ------------>
     <label for="cultivo">Cultivo</label>
-    <select name="cultivo" required>
-      {% for c in cultivos %}
-      <option value="{{ c[0] }}">{{ c[1] }}</option>
-      {% endfor %}
-    </select>
+    <!-- En la sección del select de cultivos, reemplaza por esto: -->
+<select name="cultivo" id="cultivo" required>
+  <option value="">Selecciona un cultivo</option>
+  {% for cultivo in cultivos %}
+  <option value="{{ cultivo[0] }}" data-stock="{{ cultivo[2] }}">
+    {{ cultivo[1] }} - Stock: {{ cultivo[2] }} bultos
+  </option>
+  {% endfor %}
+</select>
 
     <!------- Fecha ------------>
     <label for="fecha">Fecha de Venta</label>
@@ -75,5 +79,7 @@ block CustomCSS %}
   class="planta"
   alt="Logo"
 />
+
+<script src="{{ url_for('static', filename='js/registrar_ventas.js') }}"></script>
 
 {% endblock %}

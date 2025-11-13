@@ -715,7 +715,172 @@ def cambiar_contraseña():
 
     return render_template("auth/cambiar_contraseña.html")
 
+# ---------------------- iNVENTARIO ----------------------
 
+@app.route("/inventario")
+@login_required
+def inventario():
+    # Verificar que sea administrador
+    if session.get('rol') != 'administrador':
+        flash('No tienes permisos para ver el inventario', 'danger')
+        return redirect(url_for('home'))
+    
+    try:
+        cur = db.connection.cursor()
+        cur.execute("""
+            SELECT 
+                c.id_cultivo,
+                c.nombre as cultivo,
+                c.tipo,
+                COALESCE(i.total_producido, 0) as total_producido,
+                COALESCE(i.total_vendido, 0) as total_vendido,
+                COALESCE(i.stock_actual, 0) as stock_actual,
+                DATE_FORMAT(i.ultima_produccion, '%%d/%%m/%%Y') as ultima_produccion,
+                DATE_FORMAT(i.ultima_venta, '%%d/%%m/%%Y') as ultima_venta
+            FROM cultivos c
+            LEFT JOIN inventario i ON c.id_cultivo = i.id_cultivo
+            WHERE c.estado = 'Habilitado'
+            ORDER BY c.nombre ASC
+        """)
+        
+        inventario_data = cur.fetchall()
+        cur.close()
+        
+        return render_template("auth/inventario.html", inventario=inventario_data)
+        
+    except Exception as e:
+        flash(f"Error al cargar el inventario: {str(e)}", "danger")
+        return redirect(url_for("home"))
+
+
+@app.route("/detalle_inventario/<int:id_cultivo>")
+@login_required
+def detalle_inventario(id_cultivo):
+    # Verificar que sea administrador
+    if session.get('rol') != 'administrador':
+        return jsonify({'success': False, 'error': 'No tienes permisos'}), 403
+    
+    try:
+        cur = db.connection.cursor()
+        
+        # Obtener historial de producción
+        cur.execute("""
+            SELECT 
+                DATE_FORMAT(p.fecha, '%%d/%%m/%%Y') as fecha,
+                p.cantidad_bultos,
+                u.fullname as registrado_por
+            FROM produccion p
+            JOIN user u ON p.id_usuario = u.id
+            WHERE p.id_cultivo = %s
+            ORDER BY p.fecha DESC
+            LIMIT 10
+        """, (id_cultivo,))
+        producciones = cur.fetchall()
+        
+        # Obtener historial de ventas
+        cur.execute("""
+            SELECT 
+                DATE_FORMAT(v.fecha_venta, '%%d/%%m/%%Y') as fecha,
+                v.cantidad_bultos,
+                v.precio,
+                v.descripcion
+            FROM ventas v
+            WHERE v.cod_cultivo = %s
+            ORDER BY v.fecha_venta DESC
+            LIMIT 10
+        """, (id_cultivo,))
+        ventas = cur.fetchall()
+        
+        cur.close()
+        
+        # Convertir a listas de diccionarios
+        producciones_list = [
+            {'fecha': p[0], 'cantidad': p[1], 'registrado_por': p[2]}
+            for p in producciones
+        ]
+        
+        ventas_list = [
+            {'fecha': v[0], 'cantidad': v[1], 'precio': float(v[2]), 'descripcion': v[3]}
+            for v in ventas
+        ]
+        
+        return jsonify({
+            'success': True,
+            'producciones': producciones_list,
+            'ventas': ventas_list
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+def actualizar_inventario(id_cultivo):
+    """
+    Actualiza el inventario de un cultivo específico
+    calculando totales desde las tablas produccion y ventas
+    """
+    try:
+        cur = db.connection.cursor()
+        
+        # Calcular totales
+        cur.execute("""
+            SELECT 
+                COALESCE(SUM(p.cantidad_bultos), 0) as total_producido,
+                COALESCE(SUM(v.cantidad_bultos), 0) as total_vendido,
+                MAX(p.fecha) as ultima_produccion,
+                MAX(v.fecha_venta) as ultima_venta
+            FROM cultivos c
+            LEFT JOIN produccion p ON c.id_cultivo = p.id_cultivo
+            LEFT JOIN ventas v ON c.id_cultivo = v.cod_cultivo
+            WHERE c.id_cultivo = %s
+            GROUP BY c.id_cultivo
+        """, (id_cultivo,))
+        
+        resultado = cur.fetchone()
+        
+        if resultado:
+            total_producido = resultado[0]
+            total_vendido = resultado[1]
+            stock_actual = total_producido - total_vendido
+            ultima_produccion = resultado[2]
+            ultima_venta = resultado[3]
+            
+            # Verificar si ya existe registro en inventario
+            cur.execute("SELECT id_inventario FROM inventario WHERE id_cultivo = %s", (id_cultivo,))
+            existe = cur.fetchone()
+            
+            if existe:
+                # Actualizar registro existente
+                cur.execute("""
+                    UPDATE inventario 
+                    SET total_producido = %s,
+                        total_vendido = %s,
+                        stock_actual = %s,
+                        ultima_produccion = %s,
+                        ultima_venta = %s
+                    WHERE id_cultivo = %s
+                """, (total_producido, total_vendido, stock_actual, 
+                      ultima_produccion, ultima_venta, id_cultivo))
+            else:
+                # Insertar nuevo registro
+                cur.execute("""
+                    INSERT INTO inventario 
+                    (id_cultivo, total_producido, total_vendido, stock_actual, 
+                     ultima_produccion, ultima_venta)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, (id_cultivo, total_producido, total_vendido, stock_actual,
+                      ultima_produccion, ultima_venta))
+            
+            db.connection.commit()
+            return True
+        
+        cur.close()
+        return False
+        
+    except Exception as e:
+        db.connection.rollback()
+        print(f"Error al actualizar inventario: {str(e)}")
+        return False
+    
 # ---------------------- CULTIVOS ----------------------
 @app.route("/cultivos")
 @login_required
@@ -917,35 +1082,73 @@ def ver_fotos():
 
 
 @app.route("/registrar_ventas", methods=["GET", "POST"])
+@login_required
 def registrar_ventas():
+    # Verificar que sea administrador
+    if session.get('rol') != 'administrador':
+        flash('No tienes permisos para registrar ventas', 'danger')
+        return redirect(url_for('home'))
+    
     cur = db.connection.cursor()
 
-    # Traer cultivos para el selector
-    cur.execute("SELECT Id_cultivo, nombre FROM Cultivos")
+    # Traer cultivos con su stock disponible
+    cur.execute("""
+        SELECT c.id_cultivo, c.nombre, 
+               COALESCE(i.stock_actual, 0) as stock_disponible
+        FROM cultivos c
+        LEFT JOIN inventario i ON c.id_cultivo = i.id_cultivo
+        WHERE c.estado = 'Habilitado'
+        ORDER BY c.nombre
+    """)
     cultivos = cur.fetchall()
 
     if request.method == "POST":
         cod_cultivo = request.form["cultivo"]
         fecha = request.form["fecha"]
-        cantidad_bultos = request.form["cantidad_bultos"]
+        cantidad_bultos = int(request.form["cantidad_bultos"])
         precio = request.form["precio"]
         descripcion = request.form["descripcion"]
 
-        # Insertar en la tabla ventas
-        cur.execute(
-            """
-            INSERT INTO ventas (cod_cultivo, fecha_venta, cantidad_bultos, precio, descripcion)
-            VALUES (%s, %s, %s, %s, %s)
-        """,
-            (cod_cultivo, fecha, cantidad_bultos, precio, descripcion),
-        )
+        # Verificar stock disponible
+        cur.execute("""
+            SELECT COALESCE(stock_actual, 0) as stock
+            FROM inventario
+            WHERE id_cultivo = %s
+        """, (cod_cultivo,))
+        
+        resultado_stock = cur.fetchone()
+        stock_disponible = resultado_stock[0] if resultado_stock else 0
+        
+        if cantidad_bultos > stock_disponible:
+            flash(f'No hay suficientes unidades en stock. Disponibles: {stock_disponible} bultos', 'danger')
+            return render_template("auth/registrar_ventas.html", cultivos=cultivos)
+        
+        if stock_disponible == 0:
+            flash('No hay unidades disponibles en el stock para este cultivo', 'danger')
+            return render_template("auth/registrar_ventas.html", cultivos=cultivos)
 
-        db.connection.commit()
-        flash("Venta registrada con éxito", "success")
-        return redirect(url_for("ventas_registradas"))
+        try:
+            # Insertar en la tabla ventas
+            cur.execute(
+                """
+                INSERT INTO ventas (cod_cultivo, fecha_venta, cantidad_bultos, precio, descripcion)
+                VALUES (%s, %s, %s, %s, %s)
+            """,
+                (cod_cultivo, fecha, cantidad_bultos, precio, descripcion),
+            )
+            db.connection.commit()
+            
+            # Actualizar inventario
+            actualizar_inventario(cod_cultivo)
+            
+            flash("Venta registrada e inventario actualizado con éxito", "success")
+            return redirect(url_for("ventas_registradas"))
+            
+        except Exception as e:
+            db.connection.rollback()
+            flash(f"Error al registrar venta: {str(e)}", "danger")
 
     return render_template("auth/registrar_ventas.html", cultivos=cultivos)
-
 
 @app.route("/ventas_registradas")
 def ventas_registradas():
@@ -1642,9 +1845,14 @@ def produccion_registrada():
 @app.route("/registrar_produccion", methods=["GET", "POST"])
 @login_required
 def registrar_produccion():
+    # Verificar que sea administrador
+    if session.get('rol') != 'administrador':
+        flash('No tienes permisos para registrar producción', 'danger')
+        return redirect(url_for('home'))
+    
     cursor = db.connection.cursor()
     cursor.execute(
-        "SELECT Id_cultivo, nombre FROM Cultivos WHERE estado = 'Habilitado'"
+        "SELECT id_cultivo, nombre FROM cultivos WHERE estado = 'Habilitado'"
     )
     cultivos = cursor.fetchall()
 
@@ -1662,14 +1870,17 @@ def registrar_produccion():
                 (session["user_id"], id_cultivo, fecha, cantidad),
             )
             db.connection.commit()
-            flash("Producción registrada correctamente", "success")
+            
+            # Actualizar inventario
+            actualizar_inventario(id_cultivo)
+            
+            flash("Producción registrada e inventario actualizado correctamente", "success")
             return redirect(url_for("produccion_registrada"))
         except Exception as e:
             db.connection.rollback()
             flash(f"Error al registrar producción: {str(e)}", "danger")
 
     return render_template("registrar_produccion.html", cultivos=cultivos)
-
 
 # ---------------------- MAIN ----------------------
 if __name__ == "__main__":
