@@ -1,4 +1,3 @@
-/* --- Fondo de Perfil para Tema Oscuro --- */
 .dark-theme {
     /* Imagen específica de Perfil en modo oscuro */
     background: url("../img/fondo_forms.png") no-repeat center center fixed; 
@@ -77,6 +76,7 @@
     text-align: left;
     font-weight: 600;
     border: none;
+
 }
 
 .tabla-solicitudes td {

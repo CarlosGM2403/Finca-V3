@@ -1351,7 +1351,7 @@ def actualizar_solicitud(id, accion):
                     (nuevo_estado, observacion_supervisor, id),
                 )
             except Exception as columna_error:
-                # Si la columna no existe, crearla y luego actualizar
+
                 if "Unknown column" in str(columna_error):
                     cur.execute(
                         "ALTER TABLE solicitud_insumo ADD COLUMN observacion_supervisor TEXT"
@@ -1381,13 +1381,13 @@ def actualizar_solicitud(id, accion):
 # ---------------------- EVIDENCIAS ----------------------
 
 
-# Ruta para ver evidencias (MUCHO más simple)
+# Ruta para ver evidencias 
 @app.route("/ver_evidencias")
 @login_required
 def ver_evidencias():
     cursor = db.connection.cursor()
 
-    # Consulta simple - todo en una tabla
+    # Consulta simple 
     query = """
         SELECT a.id, a.evidencia, a.fecha, u.fullname, a.actividad, 
                a.insumos, a.observaciones, a.comentarios_admin,
@@ -1397,6 +1397,7 @@ def ver_evidencias():
         LEFT JOIN user admin ON a.admin_comentario_id = admin.id
         ORDER BY a.fecha DESC
     """
+
     cursor.execute(query)
     rows = cursor.fetchall()
 
@@ -1508,26 +1509,26 @@ def seguimiento_cultivo():
 
         try:
             # Obtener el nombre del cultivo
-            cur.execute(
-                "SELECT nombre FROM Cultivos WHERE Id_cultivo = %s", (cultivo_id,)
-            )
-            cultivo_nombre = cur.fetchone()
+            cur.execute("SELECT nombre FROM Cultivos WHERE Id_cultivo = %s", (cultivo_id,))
+            cultivo_nombre_row = cur.fetchone()
 
-            if cultivo_nombre:
-                cultivo_nombre = cultivo_nombre[0]
+            if cultivo_nombre_row:
+                cultivo_nombre = cultivo_nombre_row[0]
+                usuario_id = session.get("user_id")
 
-                # Insertar en la tabla tratamientos
+                # Insertar en la tabla tratamientos, guardando también usuario_id
                 cur.execute(
                     """
-                    INSERT INTO tratamientos (cultivo, tratamiento, problema, prioridad, insumos, fecha_registro)
-                    VALUES (%s, %s, %s, %s, %s, NOW())
-                """,
+                    INSERT INTO tratamientos (cultivo, tratamiento, problema, prioridad, insumos, fecha_registro, usuario_id)
+                    VALUES (%s, %s, %s, %s, %s, NOW(), %s)
+                    """,
                     (
                         cultivo_nombre,
                         tratamiento_str,
                         problema_str,
                         prioridad_str,
                         insumo_str,
+                        usuario_id,
                     ),
                 )
 
@@ -1544,37 +1545,51 @@ def seguimiento_cultivo():
     cur.close()
     return render_template("auth/seguimiento_cultivo.html", cultivos=cultivos)
 
-
 # ---------------------- TRATAMIENTOS REGISTRADOS ----------------------
-
-
 # Ruta para ver tratamientos con sus observaciones
 @app.route("/tratamientos_registrados")
 @login_required
 def tratamientos_registrados():
     try:
         cur = db.connection.cursor()
-
-        # Obtener tratamientos con el conteo de observaciones
-        cur.execute(
-            """
-            SELECT t.id_tratamiento, t.cultivo, t.tratamiento, t.problema, 
-                   t.prioridad, t.insumos, t.fecha_registro,
-                   COUNT(o.id_observacion) as total_observaciones
-            FROM tratamientos t
-            LEFT JOIN observaciones_tratamiento o ON t.id_tratamiento = o.id_tratamiento
-            GROUP BY t.id_tratamiento
-            ORDER BY t.fecha_registro DESC
-            """
-        )
-        tratamientos = cur.fetchall()
-
+        
         # Obtener el rol del usuario desde la sesión
         rol = session.get("rol", "")
+        user_id = session.get("user_id")
+        
+        # Si es administrador, ve TODOS los tratamientos
+        if rol == "administrador":
+            cur.execute(
+                """
+                SELECT t.id_tratamiento, t.cultivo, t.tratamiento, t.problema, 
+                       t.prioridad, t.insumos, t.fecha_registro,
+                       COUNT(o.id_observacion) as total_observaciones
+                FROM tratamientos t
+                LEFT JOIN observaciones_tratamiento o ON t.id_tratamiento = o.id_tratamiento
+                GROUP BY t.id_tratamiento
+                ORDER BY t.fecha_registro DESC
+                """
+            )
+        else:
 
+            cur.execute("""
+                            SELECT t.id_tratamiento,t.cultivo,t.tratamiento,t.problema,t.prioridad,t.insumos,t.fecha_registro,u.fullname AS usuario_nombre, COUNT(o.id_observacion) AS total_observaciones
+                            FROM tratamientos t
+                            JOIN user u ON t.usuario_id = u.id
+                            LEFT JOIN observaciones_tratamiento o 
+                                ON t.id_tratamiento = o.id_tratamiento
+                            WHERE t.usuario_id = %s
+                            GROUP BY t.id_tratamiento
+                            ORDER BY t.fecha_registro DESC
+                        """, (user_id,))
+        
+        tratamientos = cur.fetchall()
         cur.close()
+        
         return render_template(
-            "auth/tratamientos_registrados.html", tratamientos=tratamientos, rol=rol
+            "auth/tratamientos_registrados.html", 
+            tratamientos=tratamientos, 
+            rol=rol
         )
 
     except Exception as e:
