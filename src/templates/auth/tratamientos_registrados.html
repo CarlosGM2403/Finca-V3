@@ -77,6 +77,10 @@
           {% endfor %}
         </tbody>
       </table>
+      <p id="no-result-siembra" class="NoResultado" style="display: none;">
+      No se encontraron evidencias que coincidan con la búsqueda.
+    </p>
+  </div>
 
       {% if rol_usuario == 'administrador' %}
       <div style="margin-top:10px;">
@@ -84,10 +88,6 @@
       </div>
       {% endif %}
     </form>
-    <p id="no-result-siembra" class="NoResultado">
-      No se encontraron evidencias que coincidan con la búsqueda.
-    </p>
-  </div>
 
   <!-- Botón inferior -->
   <div class="botones">
