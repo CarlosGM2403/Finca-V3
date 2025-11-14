@@ -735,23 +735,42 @@ def inventario():
                 COALESCE(i.total_producido, 0) as total_producido,
                 COALESCE(i.total_vendido, 0) as total_vendido,
                 COALESCE(i.stock_actual, 0) as stock_actual,
-                DATE_FORMAT(i.ultima_produccion, '%%d/%%m/%%Y') as ultima_produccion,
-                DATE_FORMAT(i.ultima_venta, '%%d/%%m/%%Y') as ultima_venta
+                i.ultima_produccion,
+                i.ultima_venta
             FROM cultivos c
             LEFT JOIN inventario i ON c.id_cultivo = i.id_cultivo
             WHERE c.estado = 'Habilitado'
             ORDER BY c.nombre ASC
         """)
         
-        inventario_data = cur.fetchall()
+        resultados = cur.fetchall()
         cur.close()
+        
+        # Formatear las fechas en Python
+        inventario_data = []
+        for row in resultados:
+            # Formatear ultima_produccion
+            ultima_prod = row[6].strftime('%d/%m/%Y') if row[6] else 'Sin registro'
+            # Formatear ultima_venta
+            ultima_venta = row[7].strftime('%d/%m/%Y') if row[7] else 'Sin registro'
+            
+            # Crear nueva tupla con fechas formateadas
+            inventario_data.append((
+                row[0],  # id_cultivo
+                row[1],  # nombre
+                row[2],  # tipo
+                row[3],  # total_producido
+                row[4],  # total_vendido
+                row[5],  # stock_actual
+                ultima_prod,  # ultima_produccion formateada
+                ultima_venta  # ultima_venta formateada
+            ))
         
         return render_template("auth/inventario.html", inventario=inventario_data)
         
     except Exception as e:
         flash(f"Error al cargar el inventario: {str(e)}", "danger")
         return redirect(url_for("home"))
-
 
 @app.route("/detalle_inventario/<int:id_cultivo>")
 @login_required
@@ -821,64 +840,89 @@ def actualizar_inventario(id_cultivo):
     try:
         cur = db.connection.cursor()
         
-        # Calcular totales
+        # Calcular total producido
         cur.execute("""
-            SELECT 
-                COALESCE(SUM(p.cantidad_bultos), 0) as total_producido,
-                COALESCE(SUM(v.cantidad_bultos), 0) as total_vendido,
-                MAX(p.fecha) as ultima_produccion,
-                MAX(v.fecha_venta) as ultima_venta
-            FROM cultivos c
-            LEFT JOIN produccion p ON c.id_cultivo = p.id_cultivo
-            LEFT JOIN ventas v ON c.id_cultivo = v.cod_cultivo
-            WHERE c.id_cultivo = %s
-            GROUP BY c.id_cultivo
+            SELECT COALESCE(SUM(cantidad_bultos), 0) 
+            FROM produccion 
+            WHERE id_cultivo = %s
         """, (id_cultivo,))
+        total_producido = int(cur.fetchone()[0])
         
-        resultado = cur.fetchone()
+        # Calcular total vendido
+        cur.execute("""
+            SELECT COALESCE(SUM(cantidad_bultos), 0) 
+            FROM ventas 
+            WHERE cod_cultivo = %s
+        """, (id_cultivo,))
+        total_vendido = int(cur.fetchone()[0])
         
-        if resultado:
-            total_producido = resultado[0]
-            total_vendido = resultado[1]
-            stock_actual = total_producido - total_vendido
-            ultima_produccion = resultado[2]
-            ultima_venta = resultado[3]
+        # Calcular stock actual (RESTA, no suma)
+        stock_actual = total_producido - total_vendido
+        
+        # Obtener última fecha de producción
+        cur.execute("""
+            SELECT MAX(fecha) 
+            FROM produccion 
+            WHERE id_cultivo = %s
+        """, (id_cultivo,))
+        ultima_produccion = cur.fetchone()[0]
+        
+        # Obtener última fecha de venta
+        cur.execute("""
+            SELECT MAX(fecha_venta) 
+            FROM ventas 
+            WHERE cod_cultivo = %s
+        """, (id_cultivo,))
+        ultima_venta = cur.fetchone()[0]
+        
+        # Verificar si ya existe registro en inventario
+        cur.execute("SELECT id_inventario FROM inventario WHERE id_cultivo = %s", (id_cultivo,))
+        existe = cur.fetchone()
+        
+        if existe:
+            # Actualizar registro existente
+            cur.execute("""
+                UPDATE inventario 
+                SET total_producido = %s,
+                    total_vendido = %s,
+                    stock_actual = %s,
+                    ultima_produccion = %s,
+                    ultima_venta = %s
+                WHERE id_cultivo = %s
+            """, (total_producido, total_vendido, stock_actual, 
+                  ultima_produccion, ultima_venta, id_cultivo))
             
-            # Verificar si ya existe registro en inventario
-            cur.execute("SELECT id_inventario FROM inventario WHERE id_cultivo = %s", (id_cultivo,))
-            existe = cur.fetchone()
+            print(f"✓ INVENTARIO ACTUALIZADO")
+        else:
+            # Insertar nuevo registro
+            cur.execute("""
+                INSERT INTO inventario 
+                (id_cultivo, total_producido, total_vendido, stock_actual, 
+                 ultima_produccion, ultima_venta)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (id_cultivo, total_producido, total_vendido, stock_actual,
+                  ultima_produccion, ultima_venta))
             
-            if existe:
-                # Actualizar registro existente
-                cur.execute("""
-                    UPDATE inventario 
-                    SET total_producido = %s,
-                        total_vendido = %s,
-                        stock_actual = %s,
-                        ultima_produccion = %s,
-                        ultima_venta = %s
-                    WHERE id_cultivo = %s
-                """, (total_producido, total_vendido, stock_actual, 
-                      ultima_produccion, ultima_venta, id_cultivo))
-            else:
-                # Insertar nuevo registro
-                cur.execute("""
-                    INSERT INTO inventario 
-                    (id_cultivo, total_producido, total_vendido, stock_actual, 
-                     ultima_produccion, ultima_venta)
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                """, (id_cultivo, total_producido, total_vendido, stock_actual,
-                      ultima_produccion, ultima_venta))
-            
-            db.connection.commit()
-            return True
+            print(f"✓ INVENTARIO CREADO")
+        
+        db.connection.commit()
+        
+        # IMPRIMIR VALORES (estos son los prints de los que hablaba)
+        print(f"=====================================")
+        print(f"CULTIVO ID: {id_cultivo}")
+        print(f"Total Producido: {total_producido}")
+        print(f"Total Vendido: {total_vendido}")
+        print(f"Stock Actual: {stock_actual} (debe ser {total_producido} - {total_vendido})")
+        print(f"=====================================")
         
         cur.close()
-        return False
+        return True
         
     except Exception as e:
         db.connection.rollback()
-        print(f"Error al actualizar inventario: {str(e)}")
+        print(f"✗ ERROR al actualizar inventario: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return False
     
 # ---------------------- CULTIVOS ----------------------
@@ -1167,10 +1211,34 @@ def ventas_registradas():
 
 
 @app.route("/eliminar_venta/<int:id>")
+@login_required
 def eliminar_venta(id):
+    # Verificar que sea administrador
+    if session.get('rol') != 'administrador':
+        flash('No tienes permisos para eliminar ventas', 'danger')
+        return redirect(url_for('home'))
+    
     cur = db.connection.cursor()
-    cur.execute("DELETE FROM ventas WHERE id_venta = %s", (id,))
-    db.connection.commit()
+    
+    # Obtener el id_cultivo antes de eliminar
+    cur.execute("SELECT cod_cultivo FROM ventas WHERE id_venta = %s", (id,))
+    resultado = cur.fetchone()
+    
+    if resultado:
+        cod_cultivo = resultado[0]
+        
+        # Eliminar la venta
+        cur.execute("DELETE FROM ventas WHERE id_venta = %s", (id,))
+        db.connection.commit()
+        
+        # Actualizar inventario
+        actualizar_inventario(cod_cultivo)
+        
+        flash("Venta eliminada e inventario actualizado", "success")
+    else:
+        flash("Venta no encontrada", "danger")
+    
+    cur.close()
     return redirect(url_for("ventas_registradas"))
 
 
