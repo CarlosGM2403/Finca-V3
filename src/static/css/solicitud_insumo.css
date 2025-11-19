@@ -1,24 +1,19 @@
 /* --- Fondo de Perfil para Tema Oscuro --- */
 .dark-theme {
-    /* Imagen específica de Perfil en modo oscuro */
     background: url("../img/fondo_forms.png") no-repeat center center fixed; 
     background-size: cover;
 }
 
 /* --- Fondo de Perfil para Tema Claro --- */
 .light-theme {
-    /* Imagen específica de Perfil en modo claro */
     background: url("../img/fondo_claro_forms.png") no-repeat center center fixed; 
     background-size: cover;
 }
-
-
 
 body {
   font-family: 'Poppins', sans-serif;
   margin: 0;
   padding: 0;
-  repeat: no-repeat;
   background-size: cover;
   background-repeat: no-repeat;
 }
@@ -28,7 +23,7 @@ body {
     position: absolute; 
     top: 10px; 
     left: 10px; 
-    width: 50px ; 
+    width: 50px; 
     height: auto; 
 }
 
@@ -85,80 +80,270 @@ textarea {
   flex: 2;
 }
 
-.form-row  {
+.form-image {
   flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
 }
-
-.form-image{
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
 
 .form-row .form-image img {
   max-width: 120px;
   height: auto;
 }
 
-/* File input estilo caja */
-.file-input {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border: 1px solid #ccc;
-  padding: 8px;
-  border-radius: 10px;
-  background-color: #111;
-  margin-bottom: 15px;
+/* Inputs generales con fondo oscuro */
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+textarea,
+select {
+    background-color: #1e1e1e;  
+    color: #ffffff;             
+    border: 1px solid #444;     
+    border-radius: 6px;         
+    padding: 8px 12px;          
+    outline: none;              
+    transition: all 0.3s ease;  
 }
 
-.file-input i {
-  font-size: 20px;
-  cursor: pointer;
+.planta {
+  position: fixed;      
+  bottom: -4rem;                
+  right: 15rem;                  
+  max-width: 200px !important;          
+  height: auto !important;              
+  z-index: -1;
+  display: block;
+  pointer-events: none;
 }
 
-.delete-icon {
-  color: red;
-  margin-left: 10px;
-}
-
-/* Botón flotante arriba a la derecha */
-.btn-top-right {
-  position: fixed;
+/* Botón volver */
+.logout-btn {
+  position: absolute;
   top: 20px;
   right: 20px;
-  z-index: 1000;
 }
 
-.btn-home {
-  font-size: 20px;
-  background: #2d6a4f;
-  color: #fff;
-  text-decoration: none;
-  padding: 10px 14px;
+.logout-btn button {
+  background: #111;
+  color: white;
+  border: 2px solid #00ff88;
   border-radius: 50%;
+  width: 50px;
+  height: 50px;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  cursor: pointer;
   transition: 0.3s;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 
-.btn-home:hover {
-  background: #1b4332;
+.logout-btn button:hover {
+  background: #00ff88;
+  color: black;
 }
 
-/* Botones abajo */
-.form-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 15px;
-  margin-top: 10px;
+/* Botón agregar seleccionados */
+.btn-agregar {
+    margin-top: 15px;
+    padding: 10px 20px;
+    background-color: #1e1e1e;
+    color: white;
+    border: 2px solid #00ff88;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-agregar:hover {
+    background-color: #00ff88;
+    color: #1e1e1e;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+}
+
+.btn-agregar i {
+    font-size: 14px;
+}
+
+/* Contenedor de insumos seleccionados */
+.insumos-seleccionados {
+    margin: 25px 0;
+}
+
+.lista-insumos {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.lista-insumos h3 {
+    color: #00ff88;
+    margin: 0 0 20px 0;
+    font-size: 20px;
+    font-weight: 600;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Cada item de insumo */
+.insumo-item {
+    background-color: rgba(30, 30, 30, 0.8);
+    border: 1px solid #444;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+    animation: slideIn 0.3s ease-out;
+}
+
+.insumo-item:hover {
+    border-color: #00ff88;
+    box-shadow: 0 4px 12px rgba(0, 255, 136, 0.15);
+    transform: translateY(-2px);
+}
+
+.insumo-nombre {
+    margin-bottom: 15px;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 600;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #444;
+}
+
+/* ========== CONTROLES EN LÍNEA (CANTIDAD Y UNIDAD) ========== */
+.insumo-controles {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 15px;
+    align-items: end;
+}
+
+.cantidad,
+.unidad {
+    
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.cantidad label,
+.unidad label {
+    font-size: 14px;
+    color: #00ff88;
+    font-weight: 500;
+    text-align: left;
+    margin: 0;
+    display: block;
+}
+
+.input-cantidad,
+.select-unidad {
+    padding: 10px 12px;
+    background-color: #1e1e1e;
+    color: #ffffff;
+    border: 1px solid #444;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+    height: 45px;
+}
+
+.input-cantidad:focus,
+.select-unidad:focus {
+    border-color: #00ff88;
+    box-shadow: 0 0 8px rgba(0, 255, 136, 0.3);
+}
+
+.input-cantidad::placeholder {
+    color: #666;
+}
+
+/* Botón eliminar */
+.btn-eliminar {
+    padding: 10px 15px;
+    background-color: #1e1e1e;
+    color: white;
+    border: 2px solid #ff4444;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    height: 45px;
+    flex-shrink: 0;
+}
+
+.btn-eliminar:hover {
+    background-color: #ff4444;
+    color: #1e1e1e;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 68, 68, 0.3);
+}
+
+.btn-eliminar i {
+    font-size: 16px;
+}
+
+/* Grupo de observaciones */
+.observaciones-group {
+    margin-top: 10px;
+    width: 100%;
+}
+
+.observaciones-group label {
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #00ff88;
+    font-weight: 500;
+    text-align: left;
+    display: block;
+}
+
+.textarea-observaciones {
+    width: 100%;
+    padding: 10px;
+    background-color: #1e1e1e;
+    color: #ffffff;
+    border: 1px solid #444;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.3s ease;
+    resize: vertical;
+    font-family: 'Poppins', sans-serif;
+    box-sizing: border-box;
+}
+
+.textarea-observaciones:focus {
+    border-color: #00ff88;
+    box-shadow: 0 0 8px rgba(0, 255, 136, 0.3);
+}
+
+.textarea-observaciones::placeholder {
+    color: #666;
+}
+
+/* Botón solicitar */
+.acciones-derecha {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
 }
 
 .btn-solicitar {
@@ -179,72 +364,55 @@ textarea {
   border-color: #14532d;
 }
 
-
-
-
-/* Inputs generales con fondo oscuro */
-input[type="text"],
-input[type="password"],
-input[type="email"],
-input[type="number"],
-textarea,
-select {
-    background-color: #1e1e1e;  
-    color: #ffffff;             
-    border: 1px solid #444;     
-    border-radius: 6px;         
-    padding: 8px 12px;          
-    outline: none;              
-    transition: all 0.3s ease;  
+/* Mejorar el select múltiple */
+#tipo_insumo {
+    min-height: 150px;
+    cursor: pointer;
 }
 
-
-.planta {
-  position: fixed;      
-  bottom: -4rem;                
-  right: 15rem;                  
-  max-width: 200px !important;          
-  height: auto !important;              
-  z-index: -1;
-  display: block;
-  pointer-events: none;
+#tipo_insumo option {
+    padding: 8px;
+    cursor: pointer;
 }
 
-/* Textbox */
-.text-box{
-  background-color: #1e1e1e;  
-  color: #ffffff;             
-  border: 1px solid #444;     
-  border-radius: 6px;         
-  padding: 8px 12px;          
-  outline: none;              
-  transition: all 0.3s ease;
-  display: block;
-  margin-top: 10px;
-  margin-bottom: 10px;
-  align-items: left;
+#tipo_insumo option:hover {
+    background-color: rgba(0, 255, 136, 0.2);
 }
 
-/* Botón volver */
-.logout-btn {
-  position: absolute;
-  top: 20px;
-  right: 20px;
+/* Animación */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
-.logout-btn button {
-  background: #111;
-  color: white;
-  border: 2px solid #00ff88;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: 0.3s;
-}
-.logout-btn button:hover {
-  background: #00ff88;
-  color: black;
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+    .insumo-controles {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .btn-eliminar {
+        width: 100%;
+        justify-self: stretch;
+    }
+
+    .form-row {
+        flex-direction: column;
+    }
+
+    .form-row .form-image {
+        order: -1;
+        margin-bottom: 20px;
+    }
+
+    .form-row .form-image img {
+        max-width: 100px;
+    }
 }

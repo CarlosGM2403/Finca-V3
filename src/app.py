@@ -1285,7 +1285,6 @@ def siembra_registrada():
 
 # ---------------------- SOLICITUD DE INSUMO ----------------------
 
-
 @app.route("/solicitar_insumo", methods=["GET", "POST"])
 @login_required
 def solicitar_insumo():
@@ -1293,36 +1292,59 @@ def solicitar_insumo():
         return redirect(url_for("login"))
 
     if request.method == "POST":
-        # getlist() para campos con selección múltiple
-        tipos_insumo = request.form.getlist("tipo_insumo")
-        cantidad = request.form.get("cantidad")
-        observaciones = request.form.get("observaciones")
-
-        # Convertir la lista a texto separado por comas
-        tipo_insumo_str = ", ".join(tipos_insumo) if tipos_insumo else None
-
         try:
+            # Obtener los datos del formulario
+            insumos_values = request.form.getlist("insumo_value[]")
+            insumos_nombres = request.form.getlist("insumo_nombre[]")
+            
+            # Validar que haya al menos un insumo
+            if not insumos_values:
+                flash("Debes agregar al menos un insumo para hacer la solicitud", "error")
+                return redirect(url_for("solicitar_insumo"))
+            
             cur = db.connection.cursor()
-            cur.execute(
-                """
-                INSERT INTO solicitud_insumo (usuario_id, tipo_insumo, cantidad, observaciones, fecha_solicitud, estado)
-                VALUES (%s, %s, %s, %s, NOW(), 'Pendiente')
-            """,
-                (session["user_id"], tipo_insumo_str, cantidad, observaciones),
-            )
-
+            
+            # Recorrer cada insumo seleccionado
+            for i, insumo_value in enumerate(insumos_values):
+                cantidad = request.form.get(f"cantidad_{insumo_value}")
+                unidad = request.form.get(f"unidad_{insumo_value}")
+                observaciones = request.form.get(f"observaciones_{insumo_value}")  # Observación específica
+                insumo_nombre = insumos_nombres[i]
+                
+                # Validar que tenga cantidad y unidad
+                if not cantidad or not unidad:
+                    flash(f"El insumo {insumo_nombre} requiere cantidad y unidad", "error")
+                    continue
+                
+                # Formatear el tipo de insumo y cantidad
+                tipo_insumo_completo = f"{insumo_nombre}"
+                cantidad_completa = f"{cantidad} {unidad}"
+                
+                # Si no hay observaciones, usar un texto por defecto
+                obs_final = observaciones if observaciones and observaciones.strip() else "Sin observaciones"
+                
+                # Insertar cada insumo como una solicitud separada
+                cur.execute(
+                    """
+                    INSERT INTO solicitud_insumo (usuario_id, tipo_insumo, cantidad, observaciones, fecha_solicitud, estado)
+                    VALUES (%s, %s, %s, %s, NOW(), 'Pendiente')
+                    """,
+                    (session["user_id"], tipo_insumo_completo, cantidad_completa, obs_final)
+                )
+            
             db.connection.commit()
             cur.close()
-
-            flash("Solicitud de insumo registrada con éxito", "success")
+            
+            flash("Solicitud de insumos registrada con éxito", "success")
             return redirect(url_for("solicitar_insumo"))
-
+            
         except Exception as e:
             db.connection.rollback()
             flash(f"Error al registrar la solicitud: {str(e)}", "error")
             return redirect(url_for("solicitar_insumo"))
 
     return render_template("solicitud_insumo.html")
+
 
 
 # ---------------------- SOLICITUDES REALIZADAS ----------------------
