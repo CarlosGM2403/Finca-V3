@@ -2118,4 +2118,4 @@ if __name__ == "__main__":
     app.config.from_object(config["development"])
     app.register_error_handler(401, status_401)
     app.register_error_handler(404, status_404)
-    app.run()
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
