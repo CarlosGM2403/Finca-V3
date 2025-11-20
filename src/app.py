@@ -318,31 +318,28 @@ def logout():
 @app.route("/home")
 @login_required
 def home():
-    print("Accediendo a /home con sesión activa")
-    rol = session.get("rol")
-    nombre = session.get("fullname")
-
     if "user_id" not in session:
         return redirect(url_for("login"))
-
-    # Obtener foto de perfil del usuario
+    
     cur = db.connection.cursor()
-    cur.execute("SELECT foto_perfil FROM user WHERE id=%s", (session["user_id"],))
-    resultado = cur.fetchone()
-    cur.close()
-
-    # Construir URL de la foto de perfil
-    if resultado and resultado[0]:  # Si tiene foto en la base de datos
-        foto_perfil_url = url_for("static", filename="uploads/" + resultado[0])
-    else:  # Si no tiene foto, usar la por defecto
-        foto_perfil_url = url_for("static", filename="img/perfil.png")
-
-    print(f"Foto de perfil URL: {foto_perfil_url}")
-
-    return render_template(
-        "home.html", rol=rol, nombre=nombre, foto_perfil_url=foto_perfil_url
+    
+    # Obtener el rol del usuario
+    cur.execute("SELECT rol FROM user WHERE id = %s", (session["user_id"],))
+    user = cur.fetchone()
+    rol = user[0] if user else None
+    
+    # Obtener foto de perfil
+    cur.execute("SELECT foto_perfil FROM user WHERE id = %s", (session["user_id"],))
+    foto = cur.fetchone()
+    foto_perfil_url = (
+        url_for("static", filename="uploads/" + foto[0])
+        if foto and foto[0]
+        else url_for("static", filename="img/default_profile.png")
     )
-
+    
+    cur.close()
+    
+    return render_template("home.html", rol=rol, foto_perfil_url=foto_perfil_url)
 
 # ---------------------- ERRORES ----------------------
 def status_401(error):
@@ -1417,6 +1414,7 @@ def ver_solicitudes():
 def actualizar_solicitud(id, accion):
     """
     Actualiza el estado de la solicitud: 'Aceptada' o 'Rechazada' con observaciones del supervisor
+    y crea una notificación para el usuario
     """
     observacion_supervisor = request.form.get("observacion_supervisor", "")
     nuevo_estado = None
@@ -1441,7 +1439,6 @@ def actualizar_solicitud(id, accion):
                     (nuevo_estado, observacion_supervisor, id),
                 )
             except Exception as columna_error:
-
                 if "Unknown column" in str(columna_error):
                     cur.execute(
                         "ALTER TABLE solicitud_insumo ADD COLUMN observacion_supervisor TEXT"
@@ -1457,6 +1454,42 @@ def actualizar_solicitud(id, accion):
                 else:
                     raise columna_error
 
+            # Obtener información de la solicitud para crear la notificación
+            cur.execute(
+                """
+                SELECT usuario_id, tipo_insumo, cantidad
+                FROM solicitud_insumo
+                WHERE id = %s
+            """,
+                (id,),
+            )
+            solicitud_info = cur.fetchone()
+
+            if solicitud_info:
+                usuario_id, tipo_insumo, cantidad = solicitud_info
+
+                # Crear el mensaje de notificación
+                if nuevo_estado == "Aceptada":
+                    mensaje = f"Tu solicitud de {tipo_insumo} (Cantidad: {cantidad}) ha sido ACEPTADA."
+                    if observacion_supervisor:
+                        mensaje += f" Observaciones: {observacion_supervisor}"
+                    tipo_notif = "aceptada"
+                else:
+                    mensaje = f"Tu solicitud de {tipo_insumo} (Cantidad: {cantidad}) ha sido RECHAZADA."
+                    if observacion_supervisor:
+                        mensaje += f" Motivo: {observacion_supervisor}"
+                    tipo_notif = "rechazada"
+
+                # Insertar notificación
+                cur.execute(
+                    """
+                    INSERT INTO notificaciones 
+                    (solicitud_id, usuario_id, tipo_insumo, cantidad, mensaje, tipo, leida)
+                    VALUES (%s, %s, %s, %s, %s, %s, 0)
+                """,
+                    (id, usuario_id, tipo_insumo, cantidad, mensaje, tipo_notif),
+                )
+
             db.connection.commit()
             cur.close()
             flash(f"Solicitud {nuevo_estado.lower()} correctamente", "success")
@@ -1466,7 +1499,6 @@ def actualizar_solicitud(id, accion):
             flash(f"Error al actualizar la solicitud: {str(e)}", "danger")
 
     return redirect(url_for("ver_solicitudes"))
-
 
 # ---------------------- EVIDENCIAS ----------------------
 
@@ -1986,6 +2018,100 @@ def registrar_produccion():
             flash(f"Error al registrar producción: {str(e)}", "danger")
 
     return render_template("registrar_produccion.html", cultivos=cultivos)
+
+# ---------------------- NOTIFICACIONES ----------------------
+
+@app.route("/mis_notificaciones")
+@login_required
+def mis_notificaciones():
+    """
+    Muestra todas las notificaciones del usuario actual
+    """
+    cur = db.connection.cursor()
+    
+    # Obtener notificaciones del usuario ordenadas por más recientes
+    cur.execute(
+        """
+        SELECT id, solicitud_id, tipo_insumo, cantidad, mensaje, tipo, leida, fecha_creacion
+        FROM notificaciones
+        WHERE usuario_id = %s
+        ORDER BY fecha_creacion DESC
+    """,
+        (session["user_id"],),
+    )
+    
+    notificaciones = cur.fetchall()
+    
+    # Contar notificaciones no leídas
+    cur.execute(
+        """
+        SELECT COUNT(*) 
+        FROM notificaciones 
+        WHERE usuario_id = %s AND leida = 0
+    """,
+        (session["user_id"],),
+    )
+    
+    no_leidas = cur.fetchone()[0]
+    cur.close()
+    
+    return render_template(
+        "mis_notificaciones.html", 
+        notificaciones=notificaciones,
+        no_leidas=no_leidas
+    )
+
+
+@app.route("/marcar_notificacion_leida/<int:id>", methods=["POST"])
+@login_required
+def marcar_notificacion_leida(id):
+    """
+    Marca una notificación como leída cuando el usuario presiona 'Sí, lo recibí'
+    """
+    try:
+        cur = db.connection.cursor()
+        
+        # Verificar que la notificación pertenece al usuario actual
+        cur.execute(
+            """
+            UPDATE notificaciones
+            SET leida = 1
+            WHERE id = %s AND usuario_id = %s
+        """,
+            (id, session["user_id"]),
+        )
+        
+        db.connection.commit()
+        cur.close()
+        
+        flash("Notificación marcada como leída", "success")
+    except Exception as e:
+        db.connection.rollback()
+        flash(f"Error al marcar la notificación: {str(e)}", "danger")
+    
+    return redirect(url_for("mis_notificaciones"))
+
+
+@app.route("/contar_notificaciones_pendientes")
+@login_required
+def contar_notificaciones_pendientes():
+    """
+    Retorna el número de notificaciones no leídas (para badges en el menú)
+    """
+    cur = db.connection.cursor()
+    cur.execute(
+        """
+        SELECT COUNT(*) 
+        FROM notificaciones 
+        WHERE usuario_id = %s AND leida = 0
+    """,
+        (session["user_id"],),
+    )
+    
+    count = cur.fetchone()[0]
+    cur.close()
+    
+    return {"count": count}
 
 # ---------------------- MAIN ----------------------
 if __name__ == "__main__":

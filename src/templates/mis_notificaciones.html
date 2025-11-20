@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+
+{% block title %}Mis Notificaciones{% endblock %}
+
+{% block CustomCSS %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/mis_notificaciones.css') }}">
+{% endblock %}
+
+{% block body %}
+
+<div class="logo">
+    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+</div>
+
+<div class="logout-btn">
+    <a href="{{ url_for('home') }}">
+        <button title="Volver al inicio">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+    </a>
+</div>
+
+<div class="container">
+    <div class="header-notificaciones">
+        <h1>
+            <i class="fa-solid fa-bell"></i>
+            Mis Notificaciones
+            {% if no_leidas > 0 %}
+            <span class="badge-contador">{{ no_leidas }} nueva{{ 's' if no_leidas > 1 else '' }}</span>
+            {% endif %}
+        </h1>
+        
+        <div class="filtros-notificaciones">
+            <button class="btn-filtro active" data-filtro="todas">
+                <i class="fa-solid fa-list"></i> Todas
+            </button>
+            <button class="btn-filtro" data-filtro="aceptada">
+                <i class="fa-solid fa-check-circle"></i> Aceptadas
+            </button>
+            <button class="btn-filtro" data-filtro="rechazada">
+                <i class="fa-solid fa-times-circle"></i> Rechazadas
+            </button>
+            <button class="btn-filtro" data-filtro="no-leidas">
+                <i class="fa-solid fa-envelope"></i> No leídas
+            </button>
+        </div>
+    </div>
+
+    <div class="notificaciones-grid">
+        {% if notificaciones %}
+            {% for notif in notificaciones %}
+            <div class="notificacion-card {{ notif[5] }} {% if notif[6] == 1 %}leida{% endif %}" 
+                 data-tipo="{{ notif[5] }}" 
+                 data-leida="{{ notif[6] }}">
+                <div class="notificacion-header">
+                    <span class="tipo-badge {{ notif[5] }}">
+                        {% if notif[5] == 'aceptada' %}
+                        <i class="fa-solid fa-check-circle"></i> Aceptada
+                        {% else %}
+                        <i class="fa-solid fa-times-circle"></i> Rechazada
+                        {% endif %}
+                    </span>
+                    <span class="fecha">
+                        <i class="fa-regular fa-clock"></i>
+                        {{ notif[7].strftime('%d/%m/%Y %H:%M') }}
+                    </span>
+                </div>
+
+                <div class="notificacion-body">
+                    <div class="insumo-info">
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="fa-solid fa-box"></i> Tipo de Insumo
+                            </div>
+                            <div class="info-value">{{ notif[2] }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="fa-solid fa-calculator"></i> Cantidad
+                            </div>
+                            <div class="info-value">{{ notif[3] }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">
+                                <i class="fa-solid fa-hashtag"></i> Solicitud
+                            </div>
+                            <div class="info-value">#{{ notif[1] }}</div>
+                        </div>
+                    </div>
+
+                    <div class="mensaje">
+                        {{ notif[4] }}
+                    </div>
+                </div>
+
+                <div class="notificacion-footer">
+                    {% if notif[6] == 0 and notif[5] == 'aceptada' %}
+                    <form method="POST" action="{{ url_for('marcar_notificacion_leida', id=notif[0]) }}" style="width: 100%; max-width: 300px;">
+                        <button type="submit" class="btn-confirmar">
+                            <i class="fa-solid fa-check"></i> Sí, lo recibí
+                        </button>
+                    </form>
+                    {% elif notif[6] == 1 %}
+                    <span class="estado-leida">
+                        <i class="fa-solid fa-check-double"></i> Confirmada
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="sin-notificaciones">
+            <i class="fa-regular fa-bell-slash"></i>
+            <h3>No tienes notificaciones</h3>
+            <p>Aquí aparecerán las respuestas a tus solicitudes de insumos</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // Mostrar alertas de SweetAlert si hay mensajes flash
+    const flashData = document.getElementById('flash-data');
+    if (flashData) {
+        const icon = flashData.getAttribute('data-icon');
+        const message = flashData.getAttribute('data-message');
+        Swal.fire({
+            icon: icon,
+            title: icon === 'success' ? '¡Éxito!' : 'Error',
+            text: message,
+            confirmButtonColor: '#667eea',
+            timer: 3000,
+            timerProgressBar: true
+        });
+    }
+
+    // Sistema de filtros
+    const filtros = document.querySelectorAll('.btn-filtro');
+    const notificaciones = document.querySelectorAll('.notificacion-card');
+
+    filtros.forEach(filtro => {
+        filtro.addEventListener('click', function() {
+            // Remover clase active de todos
+            filtros.forEach(f => f.classList.remove('active'));
+            // Agregar clase active al clickeado
+            this.classList.add('active');
+
+            const filtroSeleccionado = this.getAttribute('data-filtro');
+
+            notificaciones.forEach(notif => {
+                const tipo = notif.getAttribute('data-tipo');
+                const leida = notif.getAttribute('data-leida');
+
+                if (filtroSeleccionado === 'todas') {
+                    notif.style.display = 'block';
+                } else if (filtroSeleccionado === 'no-leidas') {
+                    notif.style.display = leida === '0' ? 'block' : 'none';
+                } else {
+                    notif.style.display = tipo === filtroSeleccionado ? 'block' : 'none';
+                }
+            });
+        });
+    });
+
+    // Animación de entrada
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.animation = 'fadeInUp 0.6s ease-out';
+            }
+        });
+    });
+
+    notificaciones.forEach(notif => observer.observe(notif));
+</script>
+
+{% endblock %}
