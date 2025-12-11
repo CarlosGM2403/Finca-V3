@@ -1,15 +1,15 @@
 import os
 
 class Config:
-    SECRET_KEY = os.environ.get("SECRET_KEY", "clave_por_defecto")
+    SECRET_KEY = "B!1weNAt1T^%kvhUI*s^"
+
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    MYSQL_HOST = os.environ.get("MYSQL_HOST")
-    MYSQL_USER = os.environ.get("MYSQL_USER")
-    MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD")
-    MYSQL_DB = os.environ.get("MYSQL_DB")
+    MYSQL_HOST = "localhost"
+    MYSQL_USER = "root"
+    MYSQL_PASSWORD = ""
+    MYSQL_DB = "flask_login"
 
-config = {
-    "development": DevelopmentConfig
-}
+
+config = {"development": DevelopmentConfig}

@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+
+{% block title %}Productividad de Empleados{% endblock %}
+
+{% block CustomCSS %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/productividad_empleados.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="logo">
+    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+</div>
+
+<!-- Botón volver al inicio -->
+<div class="logout-btn">
+  <a href="{{ url_for('home') }}">
+    <button title="Volver al inicio">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+  </a>
+</div>
+
+<div class="productividad-container">
+  <h1><i class="fas fa-chart-line"></i> Productividad de Empleados</h1>
+  <p class="periodo-info">
+    Período: <strong>{{ periodo_inicio.strftime('%d/%m/%Y') }}</strong> al 
+    <strong>{{ periodo_fin.strftime('%d/%m/%Y') }}</strong>
+  </p>
+
+  <!-- Cards de resumen -->
+  <div class="resumen-cards">
+    <div class="card-resumen card-primary">
+      <div class="card-icon">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="card-content">
+        <h3>Total Empleados</h3>
+        <p class="numero">{{ empleados|length }}</p>
+      </div>
+    </div>
+
+    <div class="card-resumen card-success">
+      <div class="card-icon">
+        <i class="fas fa-calendar-alt"></i>
+      </div>
+      <div class="card-content">
+        <h3>Próximo Reporte</h3>
+        {% if proxima_fecha %}
+          <p class="numero">{{ dias_restantes }} días</p>
+          <small>{{ proxima_fecha.strftime('%d/%m/%Y') }}</small>
+        {% else %}
+          <p class="numero-small">Sin reporte</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card-resumen card-info">
+      <div class="card-icon">
+        <i class="fas fa-cogs"></i>
+      </div>
+      <div class="card-content">
+        <h3>Acciones</h3>
+        <div class="acciones-buttons">
+          <form method="POST" action="{{ url_for('calcular_productividad') }}" style="display: inline;">
+            <button type="submit" class="btn-accion btn-recalcular">
+              <i class="fas fa-calculator"></i> Recalcular
+            </button>
+          </form>
+          <a href="{{ url_for('descargar_reporte_productividad') }}" class="btn-accion btn-descargar">
+            <i class="fas fa-file-pdf"></i> PDF
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de productividad -->
+  <div class="tabla-container">
+    <div class="tabla-header">
+      <h2><i class="fas fa-trophy"></i> Ranking de Productividad</h2>
+      <div class="tabla-controles">
+        <input type="text" id="buscarEmpleado" placeholder="Buscar empleado..." class="input-buscar">
+        <select id="filtroRol" class="filtro-select">
+          <option value="">Todos los roles</option>
+          <option value="supervisor">Supervisor</option>
+          <option value="empleado">Empleado</option>
+          <option value="cuidador">Cuidador</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="tabla-wrapper">
+      <table class="tabla-productividad" id="tablaProductividad">
+        <thead>
+          <tr>
+            <th class="th-ranking">#</th>
+            <th class="th-empleado">Empleado</th>
+            <th class="th-rol">Rol</th>
+            <th class="th-numero">Actividades</th>
+            <th class="th-numero">Evidencias</th>
+            <th class="th-numero">Problemas</th>
+            <th class="th-numero">Solicitudes</th>
+            <th class="th-numero">Tratamientos</th>
+            <th class="th-numero">Siembras</th>
+            <th class="th-puntuacion">Puntuación</th>
+            <th class="th-acciones">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for empleado in empleados %}
+          <tr class="fila-empleado" data-rol="{{ empleado[2] }}">
+            <td class="td-ranking">
+              {% if loop.index == 1 %}
+                <span class="medalla medalla-oro"><i class="fas fa-trophy"></i></span>
+              {% elif loop.index == 2 %}
+                <span class="medalla medalla-plata"><i class="fas fa-medal"></i></span>
+              {% elif loop.index == 3 %}
+                <span class="medalla medalla-bronce"><i class="fas fa-medal"></i></span>
+              {% else %}
+                <span class="numero-ranking">{{ loop.index }}</span>
+              {% endif %}
+            </td>
+            <td class="td-empleado">
+              <div class="empleado-info">
+                <div class="empleado-avatar">
+                  {{ empleado[1][0]|upper }}
+                </div>
+                <strong>{{ empleado[1] }}</strong>
+              </div>
+            </td>
+            <td class="td-rol">
+              {% if empleado[2] == 'supervisor' %}
+                <span class="badge badge-primary">{{ empleado[2]|capitalize }}</span>
+              {% elif empleado[2] == 'empleado' %}
+                <span class="badge badge-secondary">{{ empleado[2]|capitalize }}</span>
+              {% else %}
+                <span class="badge badge-info">{{ empleado[2]|capitalize }}</span>
+              {% endif %}
+            </td>
+            <td class="td-numero">
+              <span class="metrica-valor">{{ empleado[3] }}</span>
+            </td>
+            <td class="td-numero">
+              <span class="metrica-valor">{{ empleado[4] }}</span>
+            </td>
+            <td class="td-numero">
+              <span class="metrica-valor">{{ empleado[5] }}</span>
+            </td>
+            <td class="td-numero">
+              <span class="metrica-valor">{{ empleado[6] }}</span>
+            </td>
+            <td class="td-numero">
+              <span class="metrica-valor">{{ empleado[7] }}</span>
+            </td>
+            <td class="td-numero">
+              <span class="metrica-valor">{{ empleado[8] }}</span>
+            </td>
+            <td class="td-puntuacion">
+  {% set puntuacion = empleado[9] %}
+  <div class="puntuacion-container">
+
+    {% if puntuacion >= 80 %}
+      <span class="badge-puntuacion badge-excelente">{{ puntuacion|round(1) }}</span>
+    {% elif puntuacion >= 60 %}
+      <span class="badge-puntuacion badge-bueno">{{ puntuacion|round(1) }}</span>
+    {% elif puntuacion >= 40 %}
+      <span class="badge-puntuacion badge-regular">{{ puntuacion|round(1) }}</span>
+    {% else %}
+      <span class="badge-puntuacion badge-bajo">{{ puntuacion|round(1) }}</span>
+    {% endif %}
+
+    <div class="barra-progreso">
+      {% set clase_progreso =
+          'progreso-excelente' if puntuacion >= 80 else
+          'progreso-bueno' if puntuacion >= 60 else
+          'progreso-regular' if puntuacion >= 40 else
+          'progreso-bajo'
+      %}
+      <div class="progreso-fill {{ clase_progreso }}" style="--ancho: {{ puntuacion|int }}%;"></div>
+    </div>
+
+  </div>
+</td>
+
+<td class="td-acciones">
+  <button class="btn-ver-detalle" onclick="verDetalle('{{ empleado[0] }}', '{{ empleado[1] }}')">
+    <i class="fas fa-eye"></i> Ver
+  </button>
+</td>
+
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if empleados|length == 0 %}
+    <div class="sin-datos">
+      <i class="fas fa-inbox"></i>
+      <p>No hay datos de productividad disponibles</p>
+      <form method="POST" action="{{ url_for('calcular_productividad') }}">
+        <button type="submit" class="btn-calcular-inicial">
+          <i class="fas fa-calculator"></i> Calcular Productividad
+        </button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modal para ver detalles -->
+<div class="modal-overlay" id="modalDetalle">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modalDetalleLabel"><i class="fas fa-user-chart"></i> Detalle de Productividad</h3>
+      <button class="modal-close" onclick="cerrarModal()">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body" id="modalDetalleContenido">
+      <div class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i>
+        <p>Cargando información...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="planta">
+    <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta">
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
+    {% endfor %}
+  {% endif %}
+
+  
+{% endwith %}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/productividad_empleados.js') }}"></script>
+
+{% endblock %}
