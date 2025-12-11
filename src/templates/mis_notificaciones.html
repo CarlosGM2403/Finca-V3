@@ -95,15 +95,15 @@
                 </div>
 
                 <div class="notificacion-footer">
-                    {% if notif[6] == 0 and notif[5] == 'aceptada' %}
+                    {% if notif[6] == 0 %}
                     <form method="POST" action="{{ url_for('marcar_notificacion_leida', id=notif[0]) }}" style="width: 100%; max-width: 300px;">
                         <button type="submit" class="btn-confirmar">
-                            <i class="fa-solid fa-check"></i> Sí, lo recibí
+                            <i class="fa-solid fa-check"></i> Marcar como leída
                         </button>
                     </form>
-                    {% elif notif[6] == 1 %}
+                    {% else %}
                     <span class="estado-leida">
-                        <i class="fa-solid fa-check-double"></i> Confirmada
+                        <i class="fa-solid fa-check-double"></i> Leída
                     </span>
                     {% endif %}
                 </div>
@@ -138,7 +138,7 @@
             icon: icon,
             title: icon === 'success' ? '¡Éxito!' : 'Error',
             text: message,
-            confirmButtonColor: '#667eea',
+            confirmButtonColor: '#00ff88',
             timer: 3000,
             timerProgressBar: true
         });
@@ -150,9 +150,7 @@
 
     filtros.forEach(filtro => {
         filtro.addEventListener('click', function() {
-            // Remover clase active de todos
             filtros.forEach(f => f.classList.remove('active'));
-            // Agregar clase active al clickeado
             this.classList.add('active');
 
             const filtroSeleccionado = this.getAttribute('data-filtro');

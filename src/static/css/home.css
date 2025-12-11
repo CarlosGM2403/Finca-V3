@@ -579,6 +579,57 @@ body {
   display: flex;
 }
 
+/* ========== DESPLEGABLE BOTÓN SOLICITUDES ========== */
+.btn-wrapper-solicitudes {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3;
+}
+
+/* Menú desplegable hacia arriba */
+#solicitudes-dropdown {
+    position: absolute;
+    bottom: 70px; /* Ajusta según la altura del botón */
+    left: 50%;
+    transform: translateX(-50%);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    z-index: 3;
+}
+
+/* Botón de despliegue */
+.solicitudes-drop-btn {
+    width: 220px;
+    height: 40px;
+    border-radius: 30px;
+    background: #7aaa87;
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    transition: background 0.3s, transform 0.3s;
+    cursor: pointer;
+    border: none;
+}
+
+.solicitudes-drop-btn:hover {
+    background: #699276;
+    transform: scale(1.05);
+}
+
+/* Mostrar menú con animación */
+#solicitudes-dropdown.show {
+    display: flex;
+    animation: fadeIn 0.4s ease forwards;
+}
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translate(-50%, 20px); }
     to { opacity: 1; transform: translate(-50%, 0); }

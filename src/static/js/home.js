@@ -76,3 +76,44 @@ document.addEventListener('click', function(event) {
         dropdownContent.classList.remove('show');
     }
 });
+
+// DESPLEGABLE BOTON SOLICITUDES
+const solicitudesBtn = document.getElementById('solicitudes-btn');
+const solicitudesDropdown = document.getElementById('solicitudes-dropdown');
+
+if (solicitudesBtn && solicitudesDropdown) {
+    solicitudesBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        solicitudesDropdown.classList.toggle('show');
+    });
+
+    // Cierra si haces clic fuera del botón o sub-botones
+    window.addEventListener('click', function(e) {
+        if (!e.target.closest('.btn-wrapper-solicitudes')) {
+            solicitudesDropdown.classList.remove('show');
+        }
+    });
+}
+
+// Actualizar el evento de click global para incluir solicitudes
+document.addEventListener('click', function(event) {
+    // Cerrar menú hamburguesa
+    if (menu && !event.target.closest('#menu') && !event.target.closest('#menu-toggle')) {
+        menu.classList.remove('show');
+    }
+    
+    // Cerrar dropdown de usuarios
+    if (usuariosDropdown && !event.target.closest('.btn-wrapper-usuarios')) {
+        usuariosDropdown.classList.remove('show');
+    }
+    
+    // Cerrar dropdown de solicitudes
+    if (solicitudesDropdown && !event.target.closest('.btn-wrapper-solicitudes')) {
+        solicitudesDropdown.classList.remove('show');
+    }
+    
+    // Cerrar dropdown de cultivos
+    if (dropdownContent && !event.target.closest('.btn-wrapper')) {
+        dropdownContent.classList.remove('show');
+    }
+});

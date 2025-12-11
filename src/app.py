@@ -1376,7 +1376,7 @@ def ver_solicitudes():
 
     cur = db.connection.cursor()
 
-    # Solicitudes pendientes
+    # Solo solicitudes pendientes
     cur.execute(
         """
         SELECT s.id, u.fullname, s.tipo_insumo, s.cantidad, s.observaciones, s.fecha_solicitud, s.estado
@@ -1387,26 +1387,12 @@ def ver_solicitudes():
     """
     )
     solicitudes_pendientes = cur.fetchall()
-
-    # Solicitudes procesadas (aceptadas o rechazadas) - AGREGAR observacion_supervisor
-    cur.execute(
-        """
-        SELECT s.id, u.fullname, s.tipo_insumo, s.cantidad, s.observaciones, s.fecha_solicitud, s.estado, s.observacion_supervisor
-        FROM solicitud_insumo s
-        JOIN user u ON s.usuario_id = u.id
-        WHERE s.estado IN ('Aceptada', 'Rechazada')
-        ORDER BY s.fecha_solicitud DESC
-    """
-    )
-    solicitudes_procesadas = cur.fetchall()
     cur.close()
 
     return render_template(
         "ver_solicitudes.html",
-        solicitudes_pendientes=solicitudes_pendientes,
-        solicitudes_procesadas=solicitudes_procesadas,
+        solicitudes_pendientes=solicitudes_pendientes
     )
-
 
 # ---------------------- ACTUALIZAR SOLICITUD CON OBSERVACIONES ----------------------
 @app.route("/actualizar_solicitud/<int:id>/<string:accion>", methods=["POST"])
@@ -1499,6 +1485,111 @@ def actualizar_solicitud(id, accion):
             flash(f"Error al actualizar la solicitud: {str(e)}", "danger")
 
     return redirect(url_for("ver_solicitudes"))
+
+
+# ---------------------- SOLICITUDES PROCESADAS ----------------------
+@app.route("/solicitudes_procesadas", methods=["GET", "POST"])
+@login_required
+def solicitudes_procesadas():
+    """
+    Muestra las solicitudes Aceptadas y Rechazadas
+    Permite buscar por número de solicitud y marcar como Entregada
+    """
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    cur = db.connection.cursor()
+    
+    # Variable para almacenar la solicitud buscada
+    solicitud_buscada = None
+    numero_busqueda = None
+
+    # Si es una búsqueda POST
+    if request.method == "POST":
+        numero_busqueda = request.form.get("numero_solicitud", "").strip()
+        
+        if numero_busqueda:
+            cur.execute(
+                """
+                SELECT s.id, u.fullname, s.tipo_insumo, s.cantidad, 
+                       s.observaciones, s.fecha_solicitud, s.estado, 
+                       s.observacion_supervisor
+                FROM solicitud_insumo s
+                JOIN user u ON s.usuario_id = u.id
+                WHERE s.id = %s AND s.estado IN ('Aceptada', 'Rechazada', 'Entregada')
+            """,
+                (numero_busqueda,),
+            )
+            solicitud_buscada = cur.fetchone()
+
+    # Todas las solicitudes procesadas
+    cur.execute(
+        """
+        SELECT s.id, u.fullname, s.tipo_insumo, s.cantidad, s.observaciones, 
+               s.fecha_solicitud, s.estado, s.observacion_supervisor
+        FROM solicitud_insumo s
+        JOIN user u ON s.usuario_id = u.id
+        WHERE s.estado IN ('Aceptada', 'Rechazada', 'Entregada')
+        ORDER BY s.fecha_solicitud DESC
+    """
+    )
+    solicitudes_procesadas = cur.fetchall()
+    cur.close()
+
+    return render_template(
+        "solicitudes_procesadas.html",
+        solicitudes_procesadas=solicitudes_procesadas,
+        solicitud_buscada=solicitud_buscada,
+        numero_busqueda=numero_busqueda,
+    )
+
+
+@app.route("/marcar_entregada/<int:id>", methods=["POST"])
+@login_required
+def marcar_entregada(id):
+    """
+    Marca una solicitud Aceptada como Entregada
+    """
+    try:
+        cur = db.connection.cursor()
+
+        # Verificar que la solicitud esté en estado "Aceptada"
+        cur.execute(
+            "SELECT estado FROM solicitud_insumo WHERE id = %s", (id,)
+        )
+        solicitud = cur.fetchone()
+
+        if not solicitud:
+            flash("Solicitud no encontrada", "error")
+            return redirect(url_for("solicitudes_procesadas"))
+
+        if solicitud[0] != "Aceptada":
+            flash(
+                "Solo se pueden marcar como entregadas las solicitudes aceptadas",
+                "error",
+            )
+            return redirect(url_for("solicitudes_procesadas"))
+
+        # Actualizar estado a "Entregada"
+        cur.execute(
+            """
+            UPDATE solicitud_insumo
+            SET estado = 'Entregada'
+            WHERE id = %s
+        """,
+            (id,),
+        )
+
+        db.connection.commit()
+        cur.close()
+
+        flash(f"Solicitud #{id} marcada como entregada correctamente", "success")
+
+    except Exception as e:
+        db.connection.rollback()
+        flash(f"Error al marcar como entregada: {str(e)}", "error")
+
+    return redirect(url_for("solicitudes_procesadas"))
 
 # ---------------------- EVIDENCIAS ----------------------
 

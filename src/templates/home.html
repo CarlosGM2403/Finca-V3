@@ -266,13 +266,25 @@
   
   {% if rol == 'administrador' or rol == 'supervisor' %}
   <a href="{{ url_for('ver_solicitudes') }}">
-    <button class="btn-normal">Solicitudes</button>
-  </a>
-  {% else %}
-  <a href="{{ url_for('registrar_siembra') }}">
-    <button class="btn-normal">Registra Siembra</button>
-  </a>
-  {% endif %}
+    <div class="btn-wrapper-solicitudes">
+  <button class="btn-normal" id="solicitudes-btn">Solicitudes</button>
+
+  <!-- Contenedor desplegable -->
+  <div class="dropdown-content" id="solicitudes-dropdown">
+    <a href="{{ url_for('ver_solicitudes') }}">
+      <button class="solicitudes-drop-btn">Solicitudes Pendientes</button>
+    </a>
+    <a href="{{ url_for('solicitudes_procesadas') }}">
+      <button class="solicitudes-drop-btn">Solicitudes Procesadas</button>
+    </a>
+  </div>
+</div>
+
+{% else %}
+<a href="{{ url_for('registrar_siembra') }}">
+  <button class="btn-normal">Registra Siembra</button>
+</a>
+{% endif %}
 </div>
 
 <div class="theme-btn">
