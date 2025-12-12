@@ -1,129 +1,193 @@
-{% extends 'base.html' %} {% block title %}Registrar Actividad{% endblock %} {%
-block CustomCSS %}
-<link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-/>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/registrar_actividad.css') }}"
-/>
-{% endblock %} {% block body %}
+{% extends 'base.html' %}
+
+{% block title %}Registrar Actividad{% endblock %}
+
+{% block CustomCSS %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/registrar_actividad.css') }}">
+{% endblock %}
+
+{% block body %}
 <div class="logo">
-  <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo" />
+    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
 </div>
 
-<!-- Botón volver al inicio -->
+<!-- Botón volver -->
 <div class="logout-btn">
-  <a href="{{ url_for('home') }}">
-    <button title="Volver al inicio">
-      <i class="fa-solid fa-arrow-left"></i>
-    </button>
-  </a>
+    <a href="{{ url_for('home') }}">
+        <button title="Volver al inicio">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+    </a>
 </div>
 
 <div class="actividad-container">
-  <h1>¡Registrar Mi Actividad!</h1>
-
-  <form method="POST" enctype="multipart/form-data">
-    <!-- Fila de selects + imagen -->
-    <div class="form-row">
-      <div class="form-inputs">
-        <!-- Tipo de actividad -->
-        <label for="actividad" align="left">Tipo de actividad</label>
-        <select name="actividad" id="actividad" required>
-          <option value="cosecha cafe">Cosecha de café</option>
-          <option value="cosecha limon">Cosecha de limón</option>
-          <option value="cosecha mani">Cosecha de maní</option>
-          <option value="fumigacion">Fumigación</option>
-        </select>
-
-        <!-- Insumos -->
-        <label for="insumos" align="left">Insumos utilizados</label>
-        <select name="insumos" id="insumos" multiple required>
-          <optgroup label="Fertilizantes">
-            <option value="abono_organico">Abono orgánico</option>
-            <option value="fertilizante_quimico">Fertilizante químico</option>
-            <option value="cal">Cal agrícola</option>
-          </optgroup>
-
-          <optgroup label="Control de Plagas">
-            <option value="insecticida">Insecticida</option>
-            <option value="aceite_neem">Aceite de neem</option>
-          </optgroup>
-
-          <optgroup label="Control de Hongos">
-            <option value="fungicida">Fungicida</option>
-            <option value="trichoderma">Trichoderma</option>
-          </optgroup>
-
-          <optgroup label="Mejoradores de Suelo">
-            <option value="compost">Compost</option>
-            <option value="estiércol">Estiércol</option>
-          </optgroup>
-        </select>
-
-        <!-- Observaciones -->
-        <label for="observaciones" align="left">Observaciones</label>
-        <textarea
-          name="observaciones"
-          id="observaciones"
-          rows="4"
-          required
-        ></textarea>
-      </div>
-
-      <!-- Imagen/ícono a la derecha -->
-      <div class="form-image">
-        <img
-          src="{{ url_for('static', filename='img/agricultor.png') }}"
-          alt="Actividad"
-        />
-      </div>
+    <div class="header-actividad">
+        <i class="fas fa-clipboard-check"></i>
+        <h1>Registrar Actividad Diaria</h1>
     </div>
 
-    <!-- Cámara / Evidencia -->
-    <div class="camera-box">
-      <video id="video" autoplay playsinline></video>
-      <canvas id="canvas" style="display: none"></canvas>
-      <img id="preview" class="preview" style="display: none" />
+    <form method="POST" enctype="multipart/form-data">
+        <!-- Grid de formulario -->
+        <div class="form-grid">
+            <!-- Columna izquierda: Formulario -->
+            <div class="form-column">
+                <!-- Cultivo -->
+                <div class="form-group">
+                    <label for="cultivo">
+                        <i class="fas fa-seedling"></i> Cultivo
+                    </label>
+                    <select name="cultivo" id="cultivo" required>
+                        <option value="">Selecciona un cultivo</option>
+                        {% for cultivo in cultivos %}
+                            <option value="{{ cultivo[0] }}">{{ cultivo[1] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-      <!-- Botones cámara -->
-      <div class="camera-buttons">
-        <button type="button" id="tomarFoto" class="btn-cam">Tomar Foto</button>
-        <button type="button" id="borrarFoto" class="btn-delete">Borrar</button>
-        <a href="{{ url_for('ver_fotos') }}" class="btn-fotos"> Ver Fotos</a>
-      </div>
+                <!-- Tipo de actividad -->
+                <div class="form-group">
+                    <label for="actividad">
+                        <i class="fas fa-tasks"></i> Tipo de Actividad
+                    </label>
+                    <select name="actividad" id="actividad" required>
+                        <option value="">Selecciona una actividad</option>
+                        <option value="Cosecha"> Cosecha</option>
+                        <option value="Fumigación"> Fumigación</option>
+                        <option value="Riego"> Riego</option>
+                        <option value="Fertilización"> Fertilización</option>
+                        <option value="Poda"> Poda</option>
+                        <option value="Control de plagas"> Control de plagas</option>
+                        <option value="Limpieza"> Limpieza del terreno</option>
+                        <option value="Mantenimiento"> Mantenimiento</option>
+                        <option value="Otro"> Otro</option>
+                    </select>
+                </div>
 
-      <!-- input oculto que viaja a Flask -->
-      <input type="hidden" id="evidenciaInput" name="evidencia" />
-    </div>
+                <!-- Insumos -->
+                <div class="form-group">
+                    <label for="insumos">
+                        <i class="fas fa-boxes"></i> Insumos Utilizados
+                        <span class="label-helper">(Mantén presionado Ctrl para seleccionar varios)</span>
+                    </label>
+                    <select name="insumos" id="insumos" multiple required size="8">
+                        <optgroup label="🌿 Fertilizantes">
+                            <option value="Abono orgánico">Abono orgánico</option>
+                            <option value="Fertilizante químico">Fertilizante químico</option>
+                            <option value="Cal agrícola">Cal agrícola</option>
+                            <option value="Urea">Urea</option>
+                        </optgroup>
+                        <optgroup label="🐛 Control de Plagas">
+                            <option value="Insecticida">Insecticida</option>
+                            <option value="Aceite de neem">Aceite de neem</option>
+                            <option value="Trampa para insectos">Trampa para insectos</option>
+                        </optgroup>
+                        <optgroup label="🍄 Control de Hongos">
+                            <option value="Fungicida">Fungicida</option>
+                            <option value="Trichoderma">Trichoderma</option>
+                            <option value="Caldo bordelés">Caldo bordelés</option>
+                        </optgroup>
+                        <optgroup label="🌱 Mejoradores de Suelo">
+                            <option value="Compost">Compost</option>
+                            <option value="Estiércol">Estiércol</option>
+                            <option value="Humus">Humus</option>
+                        </optgroup>
+                        <optgroup label="💧 Riego">
+                            <option value="Agua">Agua</option>
+                            <option value="Sistema de riego">Sistema de riego</option>
+                        </optgroup>
+                        <optgroup label="🔧 Herramientas">
+                            <option value="Azadón">Azadón</option>
+                            <option value="Machete">Machete</option>
+                            <option value="Tijeras de podar">Tijeras de podar</option>
+                            <option value="Fumigadora">Fumigadora</option>
+                        </optgroup>
+                    </select>
+                    <small class="form-hint">
+                        <i class="fas fa-info-circle"></i> 
+                        Seleccionados: <span id="insumos-count">0</span>
+                    </small>
+                </div>
 
-    <!-- Botones -->
-    <div class="acciones-derecha">
-      <button type="submit" class="btn-guardar">Guardar</button>
-    </div>
-  </form>
+                <!-- Observaciones -->
+                <div class="form-group">
+                    <label for="observaciones">
+                        <i class="fas fa-comment-alt"></i> Observaciones
+                    </label>
+                    <textarea
+                        name="observaciones"
+                        id="observaciones"
+                        rows="5"
+                        placeholder="Describe los detalles de la actividad realizada..."
+                        required
+                    ></textarea>
+                    <small class="form-hint">
+                        <i class="fas fa-info-circle"></i> 
+                        Caracteres: <span id="char-count">0</span>/500
+                    </small>
+                </div>
+            </div>
+
+            <!-- Columna derecha: Evidencia fotográfica -->
+            <div class="evidencia-column">
+                <div class="evidencia-card">
+                    <div class="evidencia-header">
+                        <i class="fas fa-camera"></i>
+                        <h3>Evidencia Fotográfica</h3>
+                    </div>
+
+                    <div class="camera-box">
+                        <video id="video" autoplay playsinline></video>
+                        <canvas id="canvas" style="display: none"></canvas>
+                        <img id="preview" class="preview" style="display: none" />
+                    </div>
+
+                    <div class="camera-buttons">
+                        <button type="button" id="tomarFoto" class="btn-camera">
+                            <i class="fas fa-camera"></i> Tomar Foto
+                        </button>
+                        <button type="button" id="borrarFoto" class="btn-delete">
+                            <i class="fas fa-trash"></i> Borrar
+                        </button>
+                    </div>
+
+                    <a href="{{ url_for('ver_fotos') }}" class="btn-ver-fotos">
+                        <i class="fas fa-images"></i> Ver Mis Fotos
+                    </a>
+
+                    <input type="hidden" id="evidenciaInput" name="evidencia" />
+                </div>
+
+                <!-- Info adicional -->
+                <div class="info-box">
+                    <i class="fas fa-lightbulb"></i>
+                    <p><strong>Tip:</strong> La evidencia fotográfica aumenta tu puntuación de productividad</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Botón de envío -->
+        <div class="form-footer">
+            <button type="submit" class="btn-guardar">
+                <i class="fas fa-save"></i> Guardar Actividad
+            </button>
+        </div>
+    </form>
 </div>
 
 <div class="planta">
-  <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta" />
+    <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta">
 </div>
 
-<script src="{{ url_for('static', filename='js/registrar_actividad.js') }}"></script>
-
-{% with messages = get_flashed_messages(with_categories=true) %} {% if messages
-%} {% for category, message in messages %}
-<div
-  id="flash-data"
-  data-icon="{{ category }}"
-  data-message="{{ message }}"
-></div>
-{% endfor %} {% endif %} {% endwith %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<script src="{{ url_for('static', filename='js/alertas_registros.js') }}"></script>
+<script src="{{ url_for('static', filename='js/registrar_actividad.js') }}"></script>
 
 {% endblock %}

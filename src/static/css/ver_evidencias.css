@@ -1,337 +1,217 @@
-/* --- Fondo de Perfil para Tema Oscuro --- */
-.dark-theme {
-    /* Imagen específica de Perfil en modo oscuro */
-    background: url("../img/fondo_forms.png") no-repeat center center fixed; 
-    background-size: cover;
-}
-
-/* --- Fondo de Perfil para Tema Claro --- */
-.light-theme {
-    /* Imagen específica de Perfil en modo claro */
-    background: url("../img/fondo_claro_forms.png") no-repeat center center fixed; 
-    background-size: cover;
-}
-
-/* Fondo general */
+/* ==================== FONDO TEMA OSCURO ==================== */
 body {
-  font-family: 'Poppins', sans-serif;
-  margin: 0;
-  padding: 0;
-  background-repeat: no-repeat;
-  background-size: cover;
+    background: url("../img/fondo_forms.png") no-repeat center center fixed;
+    background-size: cover;
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
 }
 
-/* Contenedor */
-.container {
-  background: rgba(0, 0, 0, 0.6) !important;
-  border-radius: 16px;
-  padding: 25px;
-  color: white !important;
-  text-align: center;
-  max-width: 1100px; /* Más ancho para acomodar 3 cards */
-  margin: 50px auto;
-  box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.5);
-}
-
-/* Logo */
+/* ==================== LOGO Y BOTÓN VOLVER ==================== */
 .logo {
-  position: absolute;
-  top: 15px;
-  left: 15px;
-  width: 200px; /* Ajuste para que no se vea gigante */
-  height: auto;
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    width: 55px;
+    z-index: 1000;
 }
 
 .logo img {
-  width: 100%;
-  height: auto;
-  object-fit: contain;
+    width: 100%;
+    filter: drop-shadow(0 2px 8px rgba(0,255,136,0.4));
 }
 
-/* Título */
-.titulo {
-  text-align: center;
-  color: #ffffff;
-  font-size: 28px;
-  margin-bottom: 20px;
-  font-weight: bold;
-}
-
-/* --- Contenedor principal de las cards --- */
-.fotos-container {
-  display: grid; /* GRID ACTIVO */
-  grid-template-columns: repeat(3, 1fr); /* EXACTAMENTE 3 columnas */
-  gap: 30px; /* Espacio entre las cards */
-  justify-items: center; /* Centrar cards dentro de cada columna */
-  padding: 20px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* --- Card individual --- */
-.card {
-  background: rgba(0, 0, 0, 0.7); 
-  border-radius: 15px;
-  overflow: hidden;
-  width: 230px; 
-  text-align: center;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8);
-}
-
-/* --- Imagen dentro de la card --- */
-.card img {
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
-  display: block;
-}
-
-/* Cuando no hay imagen */
-.no-image {
-  width: 100%;
-  height: 180px;
-  background: rgba(128, 128, 128, 0.5); /* Gris más claro */
-  color: #ffffff; /* Texto blanco */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-/* Contenido de la card */
-.card-content {
-  padding: 15px;
-}
-
-/* Nombre del usuario */
-.card h3 {
-  font-size: 18px;
-  margin: 10px 0 5px;
-  color: #000000; /* Texto blanco */
-}
-
-/* Texto general en las cards */
-.card p {
-  font-size: 14px;
-  color: #000000; /* Texto blanco */
-  margin: 5px 0;
-  text-align: left;
-}
-
-/* Fecha */
-.fecha {
-  font-size: 12px;
-  color: #000000; /* Gris claro para fecha */
-  margin-top: 10px;
-  text-align: center;
-}
-
-/* Sección de comentarios */
-.comentario-admin-section {
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.comentario-admin h4 {
-  color: #000000; /* Texto blanco */
-  margin-bottom: 10px;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  justify-content: center;
-}
-
-.comentario-contenido {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 10px;
-  border-radius: 8px;
-  border-left: 3px solid #4c9677;
-}
-
-.comentario-contenido p {
-  margin-bottom: 8px;
-  color: #000000; /* Texto blanco */
-  text-align: left;
-}
-
-.comentario-info small {
-  color: #000000; /* Gris claro */
-  font-size: 0.8rem;
-}
-
-.sin-comentario {
-  background: rgba(0, 0, 0, 0.1);
-  padding: 10px;
-  border-radius: 8px;
-  text-align: center;
-  color: #000000; /* Gris claro */
-  font-style: italic;
-  border: 1px dashed rgba(255, 255, 255, 0.3);
-}
-
-/* Botones */
-.acciones {
-  margin-top: 15px;
-}
-
-.btn-comentar {
-  background: #4c9677;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 auto;
-  font-size: 12px;
-}
-
-.btn-comentar:hover {
-  background: #3a7a5f;
-  transform: translateY(-2px);
-}
-
-/* Mensaje cuando no hay evidencias */
-.sin-evidencias {
-  text-align: center;
-  color: #000000; /* Gris claro */
-  font-size: 16px;
-  margin-top: 20px;
-}
-
-/* Botón volver */
 .logout-btn {
-  position: absolute;
-  top: 20px;
-  right: 20px;
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
 }
 
 .logout-btn button {
-  background: #111;
-  color: rgb(255, 255, 255);
-  border: 2px solid #00ff88;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: 0.3s;
+    background: rgba(30,30,30,0.9);
+    border: 2px solid #00ff88;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    color: white;
+    font-size: 18px;
+    transition: .3s;
+    cursor: pointer;
 }
 
 .logout-btn button:hover {
-  background: #00ff88;
-  color: black;
+    background: #00ff88;
+    color: #1e1e1e;
+    transform: rotate(-180deg);
 }
 
-
-/* Modales personalizados */
-.modal-content {
-  background: rgba(128, 128, 128, 0.9); /* Gris transparente */
-  color: rgb(0, 0, 0);
-  border-radius: 15px;
-  border: 1px solid #4c9677;
+/* ==================== CONTENEDOR PRINCIPAL ==================== */
+.evidencias-container {
+    max-width: 1400px;
+    margin: 100px auto 40px;
+    padding: 35px;
+    background: rgba(30,30,30,0.92);
+    border-radius: 20px;
+    border: 1px solid rgba(0,255,136,0.1);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
 }
 
-.modal-header {
-  background: #4c9677;
-  color: rgb(0, 0, 0);
-  border-bottom: 1px solid #3a7a5f;
-  border-radius: 15px 15px 0 0;
+/* ==================== CABECERA ==================== */
+.header-evidencias {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 25px;
 }
 
-.modal-body .form-control {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: rgb(0, 0, 0);
+.header-evidencias i {
+    font-size: 45px;
+    color: #00ff88;
+    text-shadow: 0 0 15px rgba(0,255,136,0.5);
 }
 
-.modal-body .form-control:focus {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: #4c9677;
-  color: rgb(0, 0, 0);
-  box-shadow: 0 0 0 0.2rem rgba(76, 150, 119, 0.25);
+.header-evidencias h1 {
+    font-size: 32px;
+    color: #00ff88;
 }
 
-.modal-body .form-label {
-  color: #ffffff; /* Texto blanco */
+/* ==================== BUSCADOR ==================== */
+.buscador-box {
+    position: relative;
+    margin-bottom: 25px;
 }
 
-.info-evidencia {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-}
-
-.info-evidencia p {
-  margin: 5px 0;
-  color: #000000; /* Texto blanco */
-}
-
-/* Filtro */
-.buscador-contenedor {
-    margin-bottom: 20px;
-    text-align: center;
-}
-
-#buscador-siembra {
-    width: 80%;
-    max-width: 400px;
-    padding: 10px 40px 10px 15px; /* espacio para ícono */
-    border-radius: 25px;
-    border: 2px solid #4db856;
-    background-color: rgba(49, 49, 49, 0.8);
+.buscador-box input {
+    width: 100%;
+    padding: 12px 45px;
+    border-radius: 12px;
+    border: 2px solid #555;
+    background: rgba(40,40,40,0.85);
     color: #fff;
-    font-size: 16px;
     outline: none;
-    transition: all 0.3s ease;
-    background-image: url('data:image/svg+xml;utf8,<svg fill="white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>');
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    background-size: 20px;
+    font-size: 15px;
+    transition: .3s;
 }
 
-#buscador-siembra::placeholder {
+.buscador-box input:focus {
+    border-color: #00ff88;
+    box-shadow: 0 0 12px rgba(0,255,136,0.3);
+}
+
+.buscador-box i {
+    position: absolute;
+    top: 12px;
+    left: 15px;
+    font-size: 18px;
+    color: #00ff88;
+}
+
+/* ==================== NO RESULTS ==================== */
+.no-results {
+    display: none;
+    text-align: center;
+    color: #ffc107;
+    font-size: 15px;
+    padding: 10px;
+}
+
+.no-results i {
+    margin-right: 8px;
+}
+
+/* ==================== GRID ==================== */
+.grid-evidencias {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    gap: 25px;
+}
+
+/* ==================== TARJETAS ==================== */
+.evidencia-card {
+    background: rgba(20,20,20,0.85);
+    border-radius: 16px;
+    border: 2px solid rgba(0,255,136,0.15);
+    overflow: hidden;
+    box-shadow: 0 0 12px rgba(0,255,136,0.15);
+    transition: .3s;
+}
+
+.evidencia-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 20px rgba(0,255,136,0.4);
+}
+
+/* ==================== IMAGEN ==================== */
+.evidencia-img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-bottom: 1px solid rgba(0,255,136,0.2);
+}
+
+.no-image {
+    height: 220px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #777;
+    border-bottom: 1px solid rgba(0,255,136,0.2);
+}
+
+.no-image i {
+    font-size: 40px;
+    margin-bottom: 8px;
+}
+
+/* ==================== CUERPO ==================== */
+.evidencia-body {
+    padding: 18px;
+}
+
+.evidencia-body h3 {
+    color: #00ff88;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.evidencia-body p {
+    margin: 5px 0;
     color: #ccc;
 }
 
-#buscador-siembra:focus {
-    border-color: #54c55a;
-    box-shadow: 0 0 10px rgba(82, 175, 82, 0.5);
-    background-color: rgba(49, 49, 49, 0.95);
+.evidencia-body i {
+    color: #00ff88;
+    width: 22px;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .fotos-container {
-      grid-template-columns: repeat(2, 1fr); /* 2 columnas en móvil */
-      gap: 20px;
-  }
-  
-  .container {
-      padding: 15px;
-      margin: 20px auto;
-  }
-  
-  .card {
-      padding: 10px;
-      width: 200px;
-  }
+.obs {
+    font-style: italic;
 }
 
+/* ==================== COMENTARIO ADMIN ==================== */
+.comentario-admin {
+    margin-top: 15px;
+    padding: 12px;
+    background: rgba(23,162,184,0.1);
+    border-left: 4px solid #17a2b8;
+    border-radius: 8px;
+}
+
+.comentario-admin p {
+    margin: 3px 0;
+}
+
+.comentario-admin small {
+    color: #aaa;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media(max-width: 768px) {
+    .evidencias-container {
+        padding: 20px;
+        margin: 70px 15px 30px;
+    }
+}

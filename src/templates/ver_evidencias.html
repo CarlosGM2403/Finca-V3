@@ -1,195 +1,95 @@
-{% extends 'base.html' %} {% block title %}Evidencias Registradas{% endblock %}
+{% extends 'base.html' %}
+
+{% block title %}Evidencias Registradas{% endblock %}
+
 {% block CustomCSS %}
-<link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/ver_evidencias.css') }}"
-/>
-<link
-  href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"
-  rel="stylesheet"
-/>
-{% endblock %} {% block body %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ver_evidencias.css') }}">
+{% endblock %}
 
+{% block body %}
+
+<!-- Logo -->
 <div class="logo">
-  <img
-    src="{{ url_for('static', filename='img/Logo_principal.png') }}"
-    alt="Logo"
-  />
+    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
 </div>
 
+<!-- Botón volver -->
 <div class="logout-btn">
-  <a href="{{ url_for('home') }}">
-    <button title="Volver al inicio">
-      <i class="fa-solid fa-arrow-left"></i>
-    </button>
-  </a>
-</div>
-
-<div class="container">
-  <h1 class="titulo">Evidencias Registradas</h1>
-
-  <div class="buscador-contenedor">
-    <input type="text" id="buscador-siembra" placeholder="Buscar..." />
-  </div>
-
-  <div class="fotos-container">
-    {% for evidencia in evidencias %}
-    <div class="card">
-      <!-- Imagen -->
-      {% if evidencia.ruta %}
-      <img
-        src="{{ evidencia.ruta }}"
-        alt="Evidencia de {{ evidencia.actividad }}"
-      />
-      {% else %}
-      <div class="no-image">
-        <i class="fa-solid fa-image"></i>
-        <p>Sin imagen</p>
-      </div>
-      {% endif %}
-
-      <!-- Información de la actividad -->
-      <div class="info-actividad">
-        <h3>{{ evidencia.usuario }}</h3>
-        <p><strong>Actividad:</strong> {{ evidencia.actividad }}</p>
-        <p><strong>Insumos:</strong> {{ evidencia.insumos }}</p>
-        <p><strong>Observaciones:</strong> {{ evidencia.observaciones }}</p>
-        <p class="fecha"><strong>Fecha:</strong> {{ evidencia.fecha }}</p>
-      </div>
-
-      <!-- Comentario del administrador -->
-      <div class="comentario-admin-section">
-        {% if evidencia.comentario_admin %}
-        <div class="comentario-admin">
-          <h4>
-            <i class="fa-solid fa-user-shield"></i> Comentario del Supervisor
-          </h4>
-          <div class="comentario-contenido">
-            <p>{{ evidencia.comentario_admin }}</p>
-            <div class="comentario-info">
-              <small>
-                Por: {{ evidencia.admin_nombre }} {% if
-                evidencia.fecha_comentario %} | {{ evidencia.fecha_comentario }}
-                {% endif %}
-              </small>
-            </div>
-          </div>
-        </div>
-        {% else %}
-        <div class="sin-comentario">
-          <p>
-            <i class="fa-solid fa-info-circle"></i> Sin comentarios del
-            supervisor
-          </p>
-        </div>
-        {% endif %}
-      </div>
-
-      <!-- Botón para agregar/editar comentario -->
-      <div class="acciones">
-        <button
-          type="button"
-          class="btn-comentar"
-          data-bs-toggle="modal"
-          data-bs-target="#modalComentar{{ evidencia.id }}"
-        >
-          <i class="fa-solid fa-edit"></i>
-          {% if evidencia.comentario_admin %}Editar{% else %}Agregar{% endif %}
-          Comentario
+    <a href="{{ url_for('home') }}">
+        <button title="Volver al inicio">
+            <i class="fa-solid fa-arrow-left"></i>
         </button>
-      </div>
-    </div>
-
-    <!-- Modal para comentar -->
-    <div
-      class="modal fade"
-      id="modalComentar{{ evidencia.id }}"
-      tabindex="-1"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">
-              <i class="fa-solid fa-comment"></i>
-              {% if evidencia.comentario_admin %}Editar{% else %}Agregar{% endif
-              %} Comentario
-            </h5>
-            <button
-              type="button"
-              class="btn-close"
-              data-bs-dismiss="modal"
-            ></button>
-          </div>
-          <form
-            method="POST"
-            action="{{ url_for('comentar_evidencia', actividad_id=evidencia.id) }}"
-          >
-            <div class="modal-body">
-              <div class="info-evidencia">
-                <p><strong>Actividad:</strong> {{ evidencia.actividad }}</p>
-                <p><strong>Usuario:</strong> {{ evidencia.usuario }}</p>
-                <p><strong>Fecha:</strong> {{ evidencia.fecha }}</p>
-              </div>
-              <div class="mb-3">
-                <label class="form-label">Comentario del supervisor:</label>
-                <textarea
-                  class="form-control"
-                  name="comentario"
-                  rows="4"
-                  placeholder="Escribe tu comentario sobre esta evidencia..."
-                  required
-                  maxlength="500"
-                >
-{% if evidencia.comentario_admin %}{{ evidencia.comentario_admin }}{% endif %}</textarea
-                >
-                <div class="form-text">Máximo 500 caracteres</div>
-              </div>
-            </div>
-            <div class="modal-footer">
-              <button
-                type="button"
-                class="btn btn-secondary"
-                data-bs-dismiss="modal"
-              >
-                <i class="fa-solid fa-times"></i> Cancelar
-              </button>
-              <button type="submit" class="btn btn-primary">
-                <i class="fa-solid fa-paper-plane"></i>
-                {% if evidencia.comentario_admin %}Actualizar{% else
-                %}Publicar{% endif %} Comentario
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-
-  {% if evidencias|length == 0 %}
-  <div class="buscador-contenedor">
-    <input type="text" id="buscador-siembra" placeholder="Buscar..." />
-  </div>
-  {% endif %}
+    </a>
 </div>
 
-<!-- Bootstrap JS para los modales -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<div class="evidencias-container">
 
-{% with messages = get_flashed_messages(with_categories=true) %} {% if messages
-%} {% for category, message in messages %}
-<div
-  id="flash-data"
-  data-icon="{{ category }}"
-  data-message="{{ message }}"
-></div>
-{% endfor %} {% endif %} {% endwith %}
+    <div class="header-evidencias">
+        <i class="fas fa-images"></i>
+        <h1>Registro de Evidencias</h1>
+    </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="{{ url_for('static', filename='js/alertas_registros.js') }}"></script>
+    <!-- Buscador -->
+    <div class="buscador-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="buscador-siembra" placeholder="Buscar por usuario, actividad, fecha, insumos...">
+    </div>
+
+    <div id="no-result-evidencia" class="no-results">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        No se encontraron coincidencias.
+    </div>
+
+    <div class="grid-evidencias">
+
+        {% for e in evidencias %}
+        <div class="evidencia-card">
+
+            {% if e.ruta %}
+            <img src="{{ e.ruta }}" class="evidencia-img">
+            {% else %}
+            <div class="no-image">
+                <i class="fa-solid fa-image"></i>
+                <p>Sin evidencia</p>
+            </div>
+            {% endif %}
+
+            <div class="evidencia-body">
+                <h3><i class="fa-solid fa-clipboard-list"></i> {{ e.actividad }}</h3>
+
+                <p><i class="fa-solid fa-user"></i> <strong>{{ e.usuario }}</strong></p>
+
+                <p><i class="fa-solid fa-calendar-day"></i> {{ e.fecha }}</p>
+
+                <p>
+                    <i class="fa-solid fa-boxes-packing"></i>
+                    <strong>Insumos:</strong> {{ e.insumos }}
+                </p>
+
+                {% if e.observaciones %}
+                <p class="obs">
+                    <i class="fa-solid fa-comment"></i>
+                    {{ e.observaciones }}
+                </p>
+                {% endif %}
+
+                {% if e.comentario_admin %}
+                <div class="comentario-admin">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <strong>{{ e.admin_nombre }}:</strong>
+                    <p>{{ e.comentario_admin }}</p>
+                    <small>{{ e.fecha_comentario }}</small>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+        {% endfor %}
+
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/ver_evidencias.js') }}"></script>
+
 {% endblock %}

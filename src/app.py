@@ -1130,16 +1130,33 @@ def registrar_cultivo():
 @app.route("/registrar_actividad", methods=["GET", "POST"])
 @login_required
 def registrar_actividad():
+    # Obtener cultivos habilitados
+    cur = db.connection.cursor()
+    cur.execute("""
+        SELECT id_cultivo, nombre 
+        FROM cultivos 
+        WHERE estado = 'Habilitado' 
+        ORDER BY nombre
+    """)
+    cultivos = cur.fetchall()
+    cur.close()
+    
     if request.method == "POST":
+        id_cultivo = request.form.get("cultivo")
         actividad = request.form.get("actividad")
         insumos_lista = request.form.getlist("insumos")
         insumos_str = ", ".join(insumos_lista) if insumos_lista else None
         observaciones = request.form.get("observaciones")
         evidencia_base64 = request.form.get("evidencia")
 
+        # Validaciones
+        if not id_cultivo:
+            flash("Debes seleccionar un cultivo.", "danger")
+            return render_template("registrar_actividad.html", cultivos=cultivos)
+        
         if not insumos_str:
             flash("Debes seleccionar al menos un insumo.", "danger")
-            return redirect(url_for("registrar_actividad"))
+            return render_template("registrar_actividad.html", cultivos=cultivos)
 
         filename = None
         if evidencia_base64:
@@ -1153,16 +1170,16 @@ def registrar_actividad():
                     f.write(image_data)
             except Exception as e:
                 flash(f"Error al guardar la imagen: {str(e)}", "danger")
-                return redirect(url_for("registrar_actividad"))
+                return render_template("registrar_actividad.html", cultivos=cultivos)
 
         try:
             cursor = db.connection.cursor()
             
-            # Insertar actividad
+            # Insertar actividad con id_cultivo
             cursor.execute("""
-                INSERT INTO actividades (id_usuario, actividad, insumos, observaciones, evidencia, fecha)
-                VALUES (%s, %s, %s, %s, %s, NOW())
-            """, (session["user_id"], actividad, insumos_str, observaciones, filename))
+                INSERT INTO actividades (id_usuario, id_cultivo, actividad, insumos, observaciones, evidencia, fecha)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW())
+            """, (session["user_id"], id_cultivo, actividad, insumos_str, observaciones, filename))
             
             actividad_id = cursor.lastrowid
             
@@ -1185,14 +1202,16 @@ def registrar_actividad():
             
             cursor.close()
             flash("Actividad registrada correctamente", "success")
-            return render_template("registrar_actividad.html")
+            return render_template("registrar_actividad.html", cultivos=cultivos)
 
         except Exception as e:
             db.connection.rollback()
+            import traceback
+            traceback.print_exc()
             flash(f"Error al registrar actividad: {str(e)}", "danger")
-            return render_template("registrar_actividad.html")
+            return render_template("registrar_actividad.html", cultivos=cultivos)
 
-    return render_template("registrar_actividad.html")
+    return render_template("registrar_actividad.html", cultivos=cultivos)
 
 
 
@@ -3907,10 +3926,6 @@ def productividad_empleados():
 @app.route("/calcular_productividad", methods=["POST"])
 @login_required
 def calcular_productividad():
-    """
-    Guarda un snapshot de las métricas actuales en la tabla metricas_productividad
-    y registra el reporte
-    """
     rol = session.get("rol", "")
     
     if rol not in ["administrador", "supervisor"]:
