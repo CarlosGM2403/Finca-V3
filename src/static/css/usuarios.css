@@ -1,221 +1,509 @@
-/* --- Fondo de Perfil para Tema Oscuro --- */
+/* ==================== TEMA OSCURO/CLARO ==================== */
 .dark-theme {
-    /* Imagen específica de Perfil en modo oscuro */
     background: url("../img/fondo_forms.png") no-repeat center center fixed; 
     background-size: cover;
 }
 
-/* --- Fondo de Perfil para Tema Claro --- */
 .light-theme {
-    /* Imagen específica de Perfil en modo claro */
     background: url("../img/fondo_claro_forms.png") no-repeat center center fixed; 
     background-size: cover;
 }
 
-
-
+/* ==================== ESTILOS GENERALES ==================== */
 body {
-    background-size: cover;
-    background-position: center;
-    font-family: Arial, sans-serif;
+    font-family: 'Poppins', sans-serif;
     margin: 0;
     padding: 0;
-    height: 85vh;
-    background-size: cover;
+    min-height: 100vh;
+    color: white;
 }
 
-/* Título */
-.titulo-principal {
-    text-align: center;
-    color: #fff;
-    margin: 40px 0 20px 0;
-    text-shadow: 1px 1px 5px rgba(0,0,0,0.7);
+.logo {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    width: 55px;
+    height: auto;
+    z-index: 1000;
 }
 
-/* Cuadro de la tabla */
-.cuadro-usuarios {
-    background-color: rgba(30,30,30,0.9); /* fondo oscuro semi-transparente */
-    margin: 0 auto 50px auto;
-    padding: 20px;
-    width: 90%;
-    max-width: 1000px;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-}
-
-/* Contenedor con scroll solo para la tabla */
-.tabla-contenedor {
-    max-height: 700px;   /* Ajusta el alto que quieras */
-    overflow-y: auto;    /* Scroll vertical */
-    margin-top: 15px;
-}
-
-a {
-    display: block;
-    margin-top: 15px;
-    font-size: 13px;
-    color: #7cc58e;
-    text-decoration: none;
-    }
-
-a:hover {
-    text-decoration: underline;
-    }
-
-
-/* Tabla */
-.tabla-usuarios {
+.logo img {
     width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
+    height: auto;
+    filter: drop-shadow(0 2px 8px rgba(0, 255, 136, 0.4));
 }
 
-.tabla-usuarios th, .tabla-usuarios td {
-    border: 1px solid #fff; /* borde blanco */
-    padding: 12px;
-    text-align: center;
-    color: #fff;
+/* ==================== BOTÓN VOLVER ==================== */
+.logout-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
 }
 
-.tabla-usuarios th {
-    background-color: #222;
-}
-
-/* Botones grandes */
-.btn-normal {
-    padding: 10px 20px;
-    border-radius: 25px;
-    border: 2px solid transparent;
-    font-size: 16px;
-    font-weight: bold;
+.logout-btn button {
+    background: rgba(30, 30, 30, 0.9);
+    color: white;
+    border: 2px solid #00ff88;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    margin: 10px 5px 0 5px;
     transition: all 0.3s ease;
+    font-size: 18px;
 }
 
-/* Botón verde */
-.btn-registrar {
-    background-color: transparent;
-    color: #0f0;
-    border-color: #0f0;
+.logout-btn button:hover {
+    background: #00ff88;
+    color: #1e1e1e;
+    transform: rotate(-180deg);
 }
 
-.btn-registrar:hover {
-    background-color: #0f0;
-    color: #000;
+/* ==================== CONTENEDOR PRINCIPAL ==================== */
+.usuarios-container {
+    max-width: 1400px;
+    margin: 80px auto 40px;
+    padding: 30px;
+    background: rgba(30, 30, 30, 0.92);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(0, 255, 136, 0.1);
 }
 
-/* Botón rojo */
-.btn-estado {
-    background-color: transparent;
-    color: #f00;
-    border-color: #f00;
+.usuarios-container h1 {
+    text-align: center;
+    color: #00ff88;
+    font-size: 36px;
+    margin-bottom: 30px;
+    text-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
 }
 
-.btn-estado:hover {
-    background-color: #f00;
-    color: #fff;
+.usuarios-container h1 i {
+    margin-right: 12px;
+}
+
+/* ==================== CARDS DE ESTADÍSTICAS ==================== */
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: rgba(20, 20, 20, 0.8);
+    border: 2px solid #444;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    transition: width 0.3s ease;
+    z-index: -1;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.stat-card:hover::before {
+    width: 100%;
+    opacity: 0.1;
+}
+
+.card-total { border-color: #00ff88; }
+.card-total::before { background: #00ff88; }
+.card-total .stat-icon { color: #00ff88; }
+
+.card-habilitados { border-color: #28a745; }
+.card-habilitados::before { background: #28a745; }
+.card-habilitados .stat-icon { color: #28a745; }
+
+.card-inhabilitados { border-color: #dc3545; }
+.card-inhabilitados::before { background: #dc3545; }
+.card-inhabilitados .stat-icon { color: #dc3545; }
+
+.card-roles { border-color: #17a2b8; }
+.card-roles::before { background: #17a2b8; }
+.card-roles .stat-icon { color: #17a2b8; }
+
+.stat-icon {
+    font-size: 42px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+}
+
+.stat-content {
+    flex: 1;
+    position: relative;
+    z-index: 2;
+}
+
+.stat-content h3 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #ccc;
+}
+
+.stat-numero {
+    font-size: 28px;
+    font-weight: bold;
+    color: white;
+    margin: 0;
+}
+
+/* ==================== CONTROLES ==================== */
+.controles-usuarios {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
 }
 
 .buscador-contenedor {
-    margin-bottom: 20px;
-    text-align: center;
+    flex: 1;
+    min-width: 250px;
 }
 
 #buscador {
-    width: 80%;
-    max-width: 400px;
-    padding: 10px 40px 10px 15px; /* espacio para el ícono */
+    width: 100%;
+    padding: 12px 45px 12px 15px;
     border-radius: 25px;
-    border: 2px solid #4db856;
-    background-color: rgba(49, 49, 49, 0.8);
+    border: 2px solid #00ff88;
+    background-color: rgba(40, 40, 40, 0.8);
     color: #fff;
-    font-size: 16px;
+    font-size: 15px;
     outline: none;
     transition: all 0.3s ease;
     background-image: url('data:image/svg+xml;utf8,<svg fill="white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>');
     background-repeat: no-repeat;
-    background-position: right 10px center;
+    background-position: right 15px center;
     background-size: 20px;
 }
 
 #buscador::placeholder {
-    color: #ccc;
+    color: #aaa;
 }
 
 #buscador:focus {
-    border-color: #54c55a;
-    box-shadow: 0 0 10px rgba(82, 175, 82, 0.5);
-    background-color: rgba(49, 49, 49, 0.95);
+    border-color: #00ff88;
+    box-shadow: 0 0 12px rgba(0, 255, 136, 0.3);
+    background-color: rgba(40, 40, 40, 0.95);
 }
 
-/* Botón volver */
-.logout-btn {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-}
-.logout-btn button {
-  background: #111;
-  color: white;
-  border: 2px solid #00ff88;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: 0.3s;
-}
-.logout-btn button:hover {
-  background: #00ff88;
-  color: black;
+.filtros-contenedor {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
 }
 
+.select-filtro {
+    padding: 10px 15px;
+    border-radius: 10px;
+    border: 2px solid #17a2b8;
+    background-color: rgba(40, 40, 40, 0.8);
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 160px;
+}
 
-/* 🔹 Responsive para pantallas pequeñas */
-@media screen and (max-width: 768px) {
-  body {
-    height: auto; /* Evita que corte contenido */
-    padding: 10px;
-  }
+.select-filtro:hover {
+    border-color: #20c9e6;
+    background-color: rgba(40, 40, 40, 0.95);
+}
 
-  /* Ajuste del título */
-  .titulo-principal {
-    font-size: 1.5rem;
-    margin: 20px 0 10px 0;
-  }
+.btn-nuevo-usuario {
+    padding: 12px 24px;
+    background: rgba(0, 255, 136, 0.2);
+    color: white;
+    border: 2px solid #00ff88;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
 
-  /* Cuadro de la tabla más compacto */
-  .cuadro-usuarios {
+.btn-nuevo-usuario:hover {
+    background: #00ff88;
+    color: #1e1e1e;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 255, 136, 0.4);
+}
+
+/* ==================== TABLA ==================== */
+.tabla-contenedor {
+    overflow-x: auto;
+    border-radius: 12px;
+    background: rgba(20, 20, 20, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+#tabla-usuarios {
     width: 100%;
-    padding: 15px;
-    margin-bottom: 30px;
-  }
+    border-collapse: collapse;
+    color: white;
+}
 
-  /* Contenedor con scroll horizontal en móviles */
-  .tabla-contenedor {
-    max-height: none; /* sin límite fijo */
-    overflow-x: auto; /* scroll horizontal si se necesita */
-  }
+#tabla-usuarios thead {
+    background: rgba(0, 0, 0, 0.6);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
 
-  /* Tabla compacta */
-  .tabla-usuarios th, .tabla-usuarios td {
-    padding: 8px;
-    font-size: 0.85rem;
-  }
-
-  /* Botones más pequeños */
-  .btn-normal {
-    padding: 8px 14px;
-    font-size: 0.9rem;
-    margin: 8px 3px 0 3px;
-  }
-
-  /* Enlaces más pequeños */
-  a {
-    font-size: 12px;
+#tabla-usuarios th {
+    padding: 15px 12px;
     text-align: center;
-  }
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #00ff88;
+    color: #00ff88;
+}
+
+#tabla-usuarios th i {
+    margin-right: 6px;
+}
+
+#tabla-usuarios tbody tr {
+    transition: all 0.2s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+#tabla-usuarios tbody tr:hover {
+    background: rgba(0, 255, 136, 0.08);
+    transform: scale(1.01);
+}
+
+#tabla-usuarios td {
+    padding: 14px 12px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.usuario-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    justify-content: center;
+}
+
+.usuario-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00ff88, #00cc6f);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
+    color: #1e1e1e;
+    box-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
+}
+
+.badge-rol {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-administrador {
+    background: rgba(0, 255, 136, 0.2);
+    color: #00ff88;
+    border: 1px solid #00ff88;
+}
+
+.badge-supervisor {
+    background: rgba(23, 162, 184, 0.2);
+    color: #17a2b8;
+    border: 1px solid #17a2b8;
+}
+
+.badge-empleado {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+    border: 1px solid #ffc107;
+}
+
+.badge-cuidador {
+    background: rgba(40, 167, 69, 0.2);
+    color: #28a745;
+    border: 1px solid #28a745;
+}
+
+.badge-estado {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.badge-habilitado {
+    background: rgba(40, 167, 69, 0.2);
+    color: #28a745;
+    border: 1px solid #28a745;
+}
+
+.badge-inhabilitado {
+    background: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+    border: 1px solid #dc3545;
+}
+
+.fecha-registro {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: #aaa;
+}
+
+.fecha-registro i {
+    color: #17a2b8;
+}
+
+.btn-editar {
+    padding: 8px 16px;
+    background: rgba(0, 255, 136, 0.2);
+    color: #00ff88;
+    border: 2px solid #00ff88;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+}
+
+.btn-editar:hover {
+    background: #00ff88;
+    color: #1e1e1e;
+    transform: scale(1.05);
+}
+
+/* ==================== FOOTER DE TABLA ==================== */
+.tabla-footer {
+    margin-top: 20px;
+    text-align: center;
+    color: #999;
+    font-size: 14px;
+}
+
+.tabla-footer span {
+    color: #00ff88;
+    font-weight: 600;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 1024px) {
+    .stats-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .logo {
+        width: 45px;
+    }
+
+    .usuarios-container {
+        margin: 60px 15px 20px;
+        padding: 20px;
+    }
+
+    .usuarios-container h1 {
+        font-size: 26px;
+    }
+
+    .stats-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .controles-usuarios {
+        flex-direction: column;
+    }
+
+    .filtros-contenedor {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .select-filtro,
+    .btn-nuevo-usuario {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .tabla-contenedor {
+        max-height: 500px;
+    }
+
+    #tabla-usuarios th,
+    #tabla-usuarios td {
+        padding: 10px 8px;
+        font-size: 12px;
+    }
+
+    .usuario-info {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .usuario-avatar {
+        width: 35px;
+        height: 35px;
+        font-size: 16px;
+    }
+
+    .badge-rol,
+    .badge-estado {
+        font-size: 10px;
+        padding: 4px 10px;
+    }
 }

@@ -7,7 +7,6 @@
 {% endblock %}
 
 {% block body %}
-<!-- Logo consistente con otros templates -->
 <div class="logo">
     <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
 </div>
@@ -21,44 +20,199 @@
   </a>
 </div>
 
-<!-- Título seguro -->
-<h1 class="titulo-principal">
-    Producción registrada{% if registros and registros[0] and registros[0][3] %} por {{ registros[0][3] }}{% endif %}
-</h1>
+<div class="produccion-container">
+    <h1><i class="fas fa-seedling"></i> Producción Total del Sistema</h1>
+    
+    <!-- Cards de estadísticas -->
+    <div class="stats-cards">
+        <div class="stat-card card-registros">
+            <div class="stat-icon">
+                <i class="fas fa-list-alt"></i>
+            </div>
+            <div class="stat-content">
+                <h3>Total Registros</h3>
+                <p class="stat-numero">{{ stats[0] or 0 }}</p>
+            </div>
+        </div>
 
-<div class="contenedor-Pregistrada">
+        <div class="stat-card card-bultos">
+            <div class="stat-icon">
+                <i class="fas fa-boxes"></i>
+            </div>
+            <div class="stat-content">
+                <h3>Bultos Producidos</h3>
+                <p class="stat-numero">{{ stats[1] or 0 }}</p>
+            </div>
+        </div>
 
-<div class="buscador-produccion">
-    <input type="text" id="buscador-siembra" placeholder="Buscar...">
-  </div>
+        <div class="stat-card card-cultivos">
+            <div class="stat-icon">
+                <i class="fas fa-leaf"></i>
+            </div>
+            <div class="stat-content">
+                <h3>Cultivos Diferentes</h3>
+                <p class="stat-numero">{{ stats[2] or 0 }}</p>
+            </div>
+        </div>
+    </div>
 
-  {% if registros %}
-    <table class="tabla-produccion">
-      <table id="tabla-siembra" class="tabla-produccion">
-      <thead class="table-dark">
-        <tr>
-          <th>Fecha</th>
-          <th>Cultivo</th>
-          <th>Cantidad de Bultos</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for r in registros %}
-        <tr>
-          <td>{{ r[0] }}</td>
-          <td>{{ r[2] }}</td>
-          <td>{{ r[1] }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
- 
-  <p id="no-result-siembra" style="display: none; color: white; text-align: center;">
-       No se encontraron evidencias que coincidan con la búsqueda.
-  </p>
-  {% endif %}
+    <!-- Controles -->
+    <div class="controles-produccion">
+        <div class="buscador-contenedor">
+            <input 
+                type="text" 
+                id="buscador-produccion" 
+                placeholder="Buscar por cultivo, fecha o empleado..."
+                autocomplete="off"
+            >
+        </div>
+
+        <div class="controles-derecha">
+            <select id="filtro-usuario" class="filtro-select">
+                <option value="">Todos los empleados</option>
+                {% set empleados = [] %}
+                {% for r in registros %}
+                    {% if r[4] not in empleados %}
+                        {% set _ = empleados.append(r[4]) %}
+                    {% endif %}
+                {% endfor %}
+                {% for empleado in empleados %}
+                    <option value="{{ empleado }}">{{ empleado }}</option>
+                {% endfor %}
+            </select>
+
+            {% if session.rol in ['administrador', 'supervisor'] %}
+            <button class="btn-reporte" onclick="mostrarModalReporte()">
+                <i class="fas fa-file-pdf"></i> Generar Reporte
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tabla de producción -->
+    <div class="tabla-contenedor">
+        <table id="tabla-produccion">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Fecha</th>
+                    <th>Cultivo</th>
+                    <th>Cantidad (Bultos)</th>
+                    <th>Registrado Por</th>
+                    <th>Rol</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if registros %}
+                    {% for r in registros %}
+                    <tr data-empleado="{{ r[4] }}">
+                        <td>{{ r[0] }}</td>
+                        <td>{{ r[1].strftime('%d/%m/%Y') if r[1] else 'Sin fecha' }}</td>
+                        <td><span class="badge-cultivo">{{ r[3] }}</span></td>
+                        <td><strong class="cantidad-bultos">{{ r[2] }}</strong></td>
+                        <td>
+                            <div class="empleado-info">
+                                <div class="empleado-avatar-small">
+                                    {{ r[4][0]|upper }}
+                                </div>
+                                {{ r[4] }}
+                            </div>
+                        </td>
+                        <td>
+                            {% if r[5] == 'administrador' %}
+                                <span class="badge-rol badge-admin">Administrador</span>
+                            {% elif r[5] == 'supervisor' %}
+                                <span class="badge-rol badge-supervisor">Supervisor</span>
+                            {% elif r[5] == 'cuidador' %}
+                                <span class="badge-rol badge-cuidador">Cuidador</span>
+                            {% else %}
+                                <span class="badge-rol badge-empleado">Empleado</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr id="no-produccion">
+                        <td colspan="6" style="text-align: center; padding: 40px;">
+                            <i class="fas fa-inbox" style="font-size: 48px; color: #666; margin-bottom: 15px;"></i>
+                            <p style="color: #999;">No hay producción registrada</p>
+                        </td>
+                    </tr>
+                {% endif %}
+                
+                <tr id="no-result-produccion" style="display: none;">
+                    <td colspan="6" style="text-align: center; padding: 30px; color: #999;">
+                        <i class="fas fa-search"></i> No se encontraron resultados
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
+<!-- Modal para generar reporte -->
+<div class="modal-overlay" id="modalReporte">
+    <div class="modal-content modal-reporte">
+        <div class="modal-header">
+            <h3><i class="fas fa-calendar-alt"></i> Generar Reporte de Producción</h3>
+            <button class="modal-close" onclick="cerrarModalReporte()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form method="POST" action="{{ url_for('generar_reporte_produccion') }}">
+                <div class="form-group-modal">
+                    <label for="fecha_inicio">
+                        <i class="fas fa-calendar-day"></i> Fecha Inicio
+                    </label>
+                    <input 
+                        type="date" 
+                        id="fecha_inicio" 
+                        name="fecha_inicio" 
+                        class="input-fecha"
+                        required
+                    >
+                </div>
+
+                <div class="form-group-modal">
+                    <label for="fecha_fin">
+                        <i class="fas fa-calendar-day"></i> Fecha Fin
+                    </label>
+                    <input 
+                        type="date" 
+                        id="fecha_fin" 
+                        name="fecha_fin" 
+                        class="input-fecha"
+                        required
+                    >
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancelar" onclick="cerrarModalReporte()">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-generar">
+                        <i class="fas fa-download"></i> Generar PDF
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="planta">
+    <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta">
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ url_for('static', filename='js/produccion_registrada.js') }}"></script>
 
 {% endblock %}

@@ -1344,6 +1344,8 @@ def registrar_ventas():
 @app.route("/ventas_registradas")
 def ventas_registradas():
     cur = db.connection.cursor()
+    
+    # Obtener todas las ventas
     cur.execute(
         """
         SELECT v.id_venta, c.nombre AS cultivo, v.fecha_venta, 
@@ -1354,7 +1356,218 @@ def ventas_registradas():
     """
     )
     ventas = cur.fetchall()
-    return render_template("auth/ventas_registradas.html", ventas=ventas)
+    
+    # Calcular estadísticas
+    cur.execute("""
+        SELECT 
+            COUNT(*) as total_ventas,
+            SUM(cantidad_bultos) as total_bultos,
+            SUM(precio * cantidad_bultos) as ingresos_totales
+        FROM ventas
+    """)
+    stats = cur.fetchone()
+    
+    cur.close()
+    
+    return render_template(
+        "auth/ventas_registradas.html", 
+        ventas=ventas,
+        stats=stats
+    )
+
+
+@app.route("/generar_reporte_ventas", methods=["POST"])
+@login_required
+def generar_reporte_ventas():
+    """
+    Genera un reporte PDF de ventas según el rango de fechas seleccionado
+    """
+    if session.get('rol') not in ['administrador', 'supervisor']:
+        flash('No tienes permisos para generar reportes', 'danger')
+        return redirect(url_for('ventas_registradas'))
+    
+    if not REPORTLAB_AVAILABLE:
+        flash("ReportLab no está instalado. Contacta al administrador.", "danger")
+        return redirect(url_for("ventas_registradas"))
+    
+    try:
+        # Obtener fechas del formulario
+        fecha_inicio = request.form.get('fecha_inicio')
+        fecha_fin = request.form.get('fecha_fin')
+        
+        # Si no se especifican fechas, usar últimos 30 días
+        if not fecha_inicio or not fecha_fin:
+            fecha_fin = datetime.now().date()
+            fecha_inicio = fecha_fin - timedelta(days=30)
+        else:
+            fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
+            fecha_fin = datetime.strptime(fecha_fin, '%Y-%m-%d').date()
+        
+        cur = db.connection.cursor()
+        
+        # Obtener ventas del período
+        cur.execute("""
+            SELECT 
+                v.id_venta,
+                c.nombre AS cultivo,
+                DATE_FORMAT(v.fecha_venta, '%%d/%%m/%%Y') as fecha,
+                v.cantidad_bultos,
+                v.precio,
+                (v.cantidad_bultos * v.precio) as total,
+                v.descripcion
+            FROM ventas v
+            JOIN cultivos c ON v.cod_cultivo = c.id_cultivo
+            WHERE v.fecha_venta BETWEEN %s AND %s
+            ORDER BY v.fecha_venta DESC
+        """, (fecha_inicio, fecha_fin))
+        
+        ventas = cur.fetchall()
+        
+        # Calcular totales
+        cur.execute("""
+            SELECT 
+                COUNT(*) as total_ventas,
+                SUM(cantidad_bultos) as total_bultos,
+                SUM(precio * cantidad_bultos) as ingresos_totales
+            FROM ventas
+            WHERE fecha_venta BETWEEN %s AND %s
+        """, (fecha_inicio, fecha_fin))
+        
+        totales = cur.fetchone()
+        cur.close()
+        
+        # Crear PDF en memoria
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch)
+        elementos = []
+        
+        # Estilos
+        styles = getSampleStyleSheet()
+        titulo_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=20,
+            textColor=colors.HexColor('#1e7e34'),
+            spaceAfter=20,
+            alignment=1,
+            fontName='Helvetica-Bold'
+        )
+        
+        subtitulo_style = ParagraphStyle(
+            'Subtitle',
+            parent=styles['Normal'],
+            fontSize=12,
+            textColor=colors.HexColor('#333'),
+            spaceAfter=20,
+            alignment=1
+        )
+        
+        # Título
+        titulo = Paragraph(
+            "<b>📊 REPORTE DE VENTAS</b>",
+            titulo_style
+        )
+        elementos.append(titulo)
+        
+        # Período
+        periodo = Paragraph(
+            f"Período: <b>{fecha_inicio.strftime('%d/%m/%Y')}</b> al <b>{fecha_fin.strftime('%d/%m/%Y')}</b>",
+            subtitulo_style
+        )
+        elementos.append(periodo)
+        elementos.append(Spacer(1, 0.2*inch))
+        
+        # Resumen de estadísticas
+        stats_data = [
+            ['RESUMEN DEL PERÍODO'],
+            ['Total de Ventas', str(totales[0] or 0)],
+            ['Bultos Vendidos', str(totales[1] or 0)],
+            ['Ingresos Totales', f"${float(totales[2] or 0):,.2f}"]
+        ]
+        
+        stats_table = Table(stats_data, colWidths=[3*inch, 2*inch])
+        stats_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#28a745')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f8f9fa')),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('FONTNAME', (0, 1), (0, -1), 'Helvetica-Bold'),
+        ]))
+        
+        elementos.append(stats_table)
+        elementos.append(Spacer(1, 0.3*inch))
+        
+        # Título de tabla de ventas
+        detalle_titulo = Paragraph("<b>DETALLE DE VENTAS</b>", subtitulo_style)
+        elementos.append(detalle_titulo)
+        elementos.append(Spacer(1, 0.1*inch))
+        
+        # Tabla de ventas
+        datos_tabla = [
+            ['#', 'Cultivo', 'Fecha', 'Cantidad', 'Precio Unit.', 'Total', 'Descripción']
+        ]
+        
+        for venta in ventas:
+            datos_tabla.append([
+                str(venta[0]),  # ID
+                str(venta[1])[:15],  # Cultivo (limitado)
+                str(venta[2]),  # Fecha
+                str(venta[3]),  # Cantidad
+                f"${float(venta[4]):,.2f}",  # Precio
+                f"${float(venta[5]):,.2f}",  # Total
+                str(venta[6])[:20] if venta[6] else '-'  # Descripción
+            ])
+        
+        ventas_table = Table(
+            datos_tabla, 
+            colWidths=[0.4*inch, 1.2*inch, 0.9*inch, 0.7*inch, 0.9*inch, 0.9*inch, 1.5*inch]
+        )
+        
+        ventas_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#343a40')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')]),
+        ]))
+        
+        elementos.append(ventas_table)
+        
+        # Pie de página
+        elementos.append(Spacer(1, 0.3*inch))
+        pie = Paragraph(
+            f"<i>Reporte generado el {datetime.now().strftime('%d/%m/%Y a las %H:%M')}</i><br/>"
+            f"<i>Generado por: {session.get('fullname', 'Sistema')}</i>",
+            styles['Normal']
+        )
+        elementos.append(pie)
+        
+        # Construir PDF
+        doc.build(elementos)
+        buffer.seek(0)
+        
+        return send_file(
+            buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'reporte_ventas_{fecha_inicio}_{fecha_fin}.pdf'
+        )
+        
+    except Exception as e:
+        flash(f"Error al generar reporte: {str(e)}", "danger")
+        import traceback
+        traceback.print_exc()
+        return redirect(url_for("ventas_registradas"))
 
 
 @app.route("/eliminar_venta/<int:id>")
@@ -1986,6 +2199,460 @@ def tratamientos_registrados():
         flash(f"Error al cargar los tratamientos: {str(e)}", "danger")
         return redirect(url_for("home"))
 
+# ---------------------- GENERAR REPORTE PDF DE TRATAMIENTOS ----------------------
+
+@app.route("/generar_reporte_tratamientos", methods=["POST"])
+@login_required
+def generar_reporte_tratamientos():
+    """
+    Genera un reporte PDF de tratamientos según filtros seleccionados
+    """
+    if session.get('rol') not in ['administrador', 'supervisor']:
+        flash('No tienes permisos para generar reportes', 'danger')
+        return redirect(url_for('tratamientos_registrados'))
+    
+    if not REPORTLAB_AVAILABLE:
+        flash("ReportLab no está instalado. Contacta al administrador.", "danger")
+        return redirect(url_for("tratamientos_registrados"))
+    
+    try:
+        # Obtener filtros del formulario
+        fecha_inicio = request.form.get('fecha_inicio')
+        fecha_fin = request.form.get('fecha_fin')
+        cultivo_filtro = request.form.get('cultivo_filtro', '')
+        prioridad_filtro = request.form.get('prioridad_filtro', '')
+        problema_filtro = request.form.get('problema_filtro', '')
+        
+        # Si no se especifican fechas, usar últimos 30 días
+        if not fecha_inicio or not fecha_fin:
+            fecha_fin = datetime.now().date()
+            fecha_inicio = fecha_fin - timedelta(days=30)
+        else:
+            fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
+            fecha_fin = datetime.strptime(fecha_fin, '%Y-%m-%d').date()
+        
+        cur = db.connection.cursor()
+        
+        # Construir consulta dinámica según filtros
+        query_base = """
+            SELECT 
+                t.id_tratamiento,
+                DATE_FORMAT(t.fecha_registro, '%%d/%%m/%%Y') as fecha,
+                t.cultivo,
+                t.tratamiento,
+                t.problema,
+                t.prioridad,
+                t.insumos,
+                u.fullname as registrado_por,
+                u.rol as rol_usuario,
+                COUNT(o.id_observacion) as num_observaciones
+            FROM tratamientos t
+            JOIN user u ON t.usuario_id = u.id
+            LEFT JOIN observaciones_tratamiento o ON t.id_tratamiento = o.id_tratamiento
+            WHERE DATE(t.fecha_registro) BETWEEN %s AND %s
+        """
+        
+        params = [fecha_inicio, fecha_fin]
+        
+        # Agregar filtros adicionales
+        if cultivo_filtro:
+            query_base += " AND t.cultivo = %s"
+            params.append(cultivo_filtro)
+        
+        if prioridad_filtro:
+            query_base += " AND t.prioridad = %s"
+            params.append(prioridad_filtro)
+        
+        if problema_filtro:
+            query_base += " AND t.problema LIKE %s"
+            params.append(f"%{problema_filtro}%")
+        
+        query_base += """
+            GROUP BY t.id_tratamiento
+            ORDER BY t.fecha_registro DESC
+        """
+        
+        cur.execute(query_base, params)
+        tratamientos = cur.fetchall()
+        
+        # Calcular estadísticas del período
+        stats_query = """
+            SELECT 
+                COUNT(DISTINCT t.id_tratamiento) as total_tratamientos,
+                COUNT(DISTINCT t.cultivo) as cultivos_afectados,
+                COUNT(DISTINCT t.usuario_id) as empleados_participantes,
+                SUM(CASE WHEN t.prioridad = 'Alta' THEN 1 ELSE 0 END) as tratamientos_alta,
+                SUM(CASE WHEN t.prioridad = 'Media' THEN 1 ELSE 0 END) as tratamientos_media,
+                SUM(CASE WHEN t.prioridad = 'Baja' THEN 1 ELSE 0 END) as tratamientos_baja
+            FROM tratamientos t
+            WHERE DATE(t.fecha_registro) BETWEEN %s AND %s
+        """
+        
+        stats_params = [fecha_inicio, fecha_fin]
+        
+        if cultivo_filtro:
+            stats_query += " AND t.cultivo = %s"
+            stats_params.append(cultivo_filtro)
+        
+        if prioridad_filtro:
+            stats_query += " AND t.prioridad = %s"
+            stats_params.append(prioridad_filtro)
+        
+        if problema_filtro:
+            stats_query += " AND t.problema LIKE %s"
+            stats_params.append(f"%{problema_filtro}%")
+        
+        cur.execute(stats_query, stats_params)
+        stats = cur.fetchone()
+        
+        # Top 5 problemas más frecuentes
+        top_problemas_query = """
+            SELECT 
+                t.problema,
+                COUNT(*) as total
+            FROM tratamientos t
+            WHERE DATE(t.fecha_registro) BETWEEN %s AND %s
+        """
+        
+        top_params = [fecha_inicio, fecha_fin]
+        
+        if cultivo_filtro:
+            top_problemas_query += " AND t.cultivo = %s"
+            top_params.append(cultivo_filtro)
+        
+        top_problemas_query += """
+            GROUP BY t.problema
+            ORDER BY total DESC
+            LIMIT 5
+        """
+        
+        cur.execute(top_problemas_query, top_params)
+        top_problemas = cur.fetchall()
+        
+        # Top 5 cultivos con más tratamientos
+        top_cultivos_query = """
+            SELECT 
+                t.cultivo,
+                COUNT(*) as total
+            FROM tratamientos t
+            WHERE DATE(t.fecha_registro) BETWEEN %s AND %s
+        """
+        
+        top_cultivos_params = [fecha_inicio, fecha_fin]
+        
+        if cultivo_filtro:
+            top_cultivos_query += " AND t.cultivo = %s"
+            top_cultivos_params.append(cultivo_filtro)
+        
+        top_cultivos_query += """
+            GROUP BY t.cultivo
+            ORDER BY total DESC
+            LIMIT 5
+        """
+        
+        cur.execute(top_cultivos_query, top_cultivos_params)
+        top_cultivos = cur.fetchall()
+        
+        cur.close()
+        
+        # Crear PDF en memoria
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch)
+        elementos = []
+        
+        # Estilos
+        styles = getSampleStyleSheet()
+        titulo_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=20,
+            textColor=colors.HexColor('#4db856'),
+            spaceAfter=20,
+            alignment=1,
+            fontName='Helvetica-Bold'
+        )
+        
+        subtitulo_style = ParagraphStyle(
+            'Subtitle',
+            parent=styles['Normal'],
+            fontSize=12,
+            textColor=colors.HexColor('#333'),
+            spaceAfter=20,
+            alignment=1
+        )
+        
+        # Título principal
+        titulo = Paragraph(
+            "<b>🌿 REPORTE DE TRATAMIENTOS AGRÍCOLAS</b>",
+            titulo_style
+        )
+        elementos.append(titulo)
+        
+        # Período y filtros
+        filtros_texto = f"Período: <b>{fecha_inicio.strftime('%d/%m/%Y')}</b> al <b>{fecha_fin.strftime('%d/%m/%Y')}</b>"
+        
+        if cultivo_filtro:
+            filtros_texto += f"<br/>Cultivo: <b>{cultivo_filtro}</b>"
+        if prioridad_filtro:
+            filtros_texto += f"<br/>Prioridad: <b>{prioridad_filtro}</b>"
+        if problema_filtro:
+            filtros_texto += f"<br/>Problema: <b>{problema_filtro}</b>"
+        
+        periodo = Paragraph(filtros_texto, subtitulo_style)
+        elementos.append(periodo)
+        elementos.append(Spacer(1, 0.2*inch))
+        
+        # Resumen de estadísticas
+        stats_data = [
+            ['RESUMEN DEL PERÍODO'],
+            ['Total Tratamientos', str(stats[0] or 0)],
+            ['Cultivos Afectados', str(stats[1] or 0)],
+            ['Empleados Participantes', str(stats[2] or 0)]
+        ]
+        
+        stats_table = Table(stats_data, colWidths=[3*inch, 2*inch])
+        stats_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4db856')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f8f9fa')),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('FONTNAME', (0, 1), (0, -1), 'Helvetica-Bold'),
+        ]))
+        
+        elementos.append(stats_table)
+        elementos.append(Spacer(1, 0.2*inch))
+        
+        # Distribución por prioridad
+        prioridad_data = [
+            ['DISTRIBUCIÓN POR PRIORIDAD'],
+            ['Alta', f"{stats[3] or 0} ({round((stats[3] or 0) / (stats[0] or 1) * 100, 1)}%)"],
+            ['Media', f"{stats[4] or 0} ({round((stats[4] or 0) / (stats[0] or 1) * 100, 1)}%)"],
+            ['Baja', f"{stats[5] or 0} ({round((stats[5] or 0) / (stats[0] or 1) * 100, 1)}%)"]
+        ]
+        
+        prioridad_table = Table(prioridad_data, colWidths=[3*inch, 2*inch])
+        prioridad_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#ff9800')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#fff3e0')),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('FONTNAME', (0, 1), (0, -1), 'Helvetica-Bold'),
+        ]))
+        
+        elementos.append(prioridad_table)
+        elementos.append(Spacer(1, 0.3*inch))
+        
+        # Top 5 problemas más frecuentes
+        if top_problemas:
+            top_titulo = Paragraph("<b>TOP 5 PROBLEMAS MÁS FRECUENTES</b>", subtitulo_style)
+            elementos.append(top_titulo)
+            elementos.append(Spacer(1, 0.1*inch))
+            
+            top_data = [['Problema', 'Frecuencia']]
+            for problema in top_problemas:
+                top_data.append([
+                    str(problema[0])[:40],  # Limitar longitud
+                    str(problema[1])
+                ])
+            
+            top_table = Table(top_data, colWidths=[4*inch, 1.5*inch])
+            top_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#dc3545')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 11),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')]),
+            ]))
+            
+            elementos.append(top_table)
+            elementos.append(Spacer(1, 0.3*inch))
+        
+        # Top 5 cultivos con más tratamientos
+        if top_cultivos:
+            cultivos_titulo = Paragraph("<b>TOP 5 CULTIVOS CON MÁS TRATAMIENTOS</b>", subtitulo_style)
+            elementos.append(cultivos_titulo)
+            elementos.append(Spacer(1, 0.1*inch))
+            
+            cultivos_data = [['Cultivo', 'Tratamientos']]
+            for cultivo in top_cultivos:
+                cultivos_data.append([
+                    str(cultivo[0]),
+                    str(cultivo[1])
+                ])
+            
+            cultivos_table = Table(cultivos_data, colWidths=[3*inch, 2*inch])
+            cultivos_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#17a2b8')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 11),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')]),
+            ]))
+            
+            elementos.append(cultivos_table)
+            elementos.append(PageBreak())  # Nueva página para el detalle
+        
+        # Título de tabla detallada
+        detalle_titulo = Paragraph("<b>DETALLE DE TRATAMIENTOS</b>", subtitulo_style)
+        elementos.append(detalle_titulo)
+        elementos.append(Spacer(1, 0.1*inch))
+        
+        # Tabla de tratamientos detallada
+        datos_tabla = [
+            ['#', 'Fecha', 'Cultivo', 'Problema', 'Tratamiento', 'Prioridad', 'Registrado Por', 'Obs.']
+        ]
+        
+        for trat in tratamientos:
+            # Acortar textos largos
+            cultivo = str(trat[2])[:12]
+            problema = str(trat[4])[:15]
+            tratamiento = str(trat[3])[:18]
+            empleado = str(trat[7])[:15]
+            
+            # Color de prioridad
+            prioridad = str(trat[5])
+            
+            datos_tabla.append([
+                str(trat[0]),  # ID
+                str(trat[1]),  # Fecha
+                cultivo,
+                problema,
+                tratamiento,
+                prioridad,
+                empleado,
+                str(trat[9])  # Num observaciones
+            ])
+        
+        tratamientos_table = Table(
+            datos_tabla,
+            colWidths=[0.3*inch, 0.8*inch, 1*inch, 1.2*inch, 1.4*inch, 0.7*inch, 1.1*inch, 0.4*inch]
+        )
+        
+        # Estilo base
+        estilo_tabla = [
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#343a40')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('FONTSIZE', (0, 1), (-1, -1), 7),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')]),
+        ]
+        
+        # Colorear prioridades (filas)
+        for i, trat in enumerate(tratamientos, start=1):
+            prioridad = str(trat[5])
+            if prioridad == 'Alta':
+                estilo_tabla.append(('BACKGROUND', (5, i), (5, i), colors.HexColor('#ffcccc')))
+                estilo_tabla.append(('TEXTCOLOR', (5, i), (5, i), colors.HexColor('#cc0000')))
+            elif prioridad == 'Media':
+                estilo_tabla.append(('BACKGROUND', (5, i), (5, i), colors.HexColor('#fff3cd')))
+                estilo_tabla.append(('TEXTCOLOR', (5, i), (5, i), colors.HexColor('#856404')))
+            else:
+                estilo_tabla.append(('BACKGROUND', (5, i), (5, i), colors.HexColor('#d4edda')))
+                estilo_tabla.append(('TEXTCOLOR', (5, i), (5, i), colors.HexColor('#155724')))
+        
+        tratamientos_table.setStyle(TableStyle(estilo_tabla))
+        elementos.append(tratamientos_table)
+        
+        # Pie de página
+        elementos.append(Spacer(1, 0.3*inch))
+        pie = Paragraph(
+            f"<i>Reporte generado el {datetime.now().strftime('%d/%m/%Y a las %H:%M')}</i><br/>"
+            f"<i>Generado por: {session.get('fullname', 'Sistema')}</i>",
+            styles['Normal']
+        )
+        elementos.append(pie)
+        
+        # Construir PDF
+        doc.build(elementos)
+        buffer.seek(0)
+        
+        # Nombre del archivo según filtros
+        nombre_archivo = f'reporte_tratamientos_{fecha_inicio}_{fecha_fin}'
+        if cultivo_filtro:
+            nombre_archivo += f'_{cultivo_filtro}'
+        if prioridad_filtro:
+            nombre_archivo += f'_{prioridad_filtro}'
+        nombre_archivo += '.pdf'
+        
+        return send_file(
+            buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=nombre_archivo
+        )
+        
+    except Exception as e:
+        flash(f"Error al generar reporte: {str(e)}", "danger")
+        import traceback
+        traceback.print_exc()
+        return redirect(url_for("tratamientos_registrados"))
+
+
+# ---------------------- OBTENER LISTAS PARA FILTROS ----------------------
+
+@app.route("/obtener_filtros_tratamientos")
+@login_required
+def obtener_filtros_tratamientos():
+    """
+    Devuelve listas de cultivos, prioridades y problemas para los filtros
+    """
+    try:
+        cur = db.connection.cursor()
+        
+        # Obtener cultivos únicos
+        cur.execute("""
+            SELECT DISTINCT cultivo 
+            FROM tratamientos 
+            ORDER BY cultivo
+        """)
+        cultivos = [row[0] for row in cur.fetchall()]
+        
+        # Obtener problemas únicos
+        cur.execute("""
+            SELECT DISTINCT problema 
+            FROM tratamientos 
+            ORDER BY problema
+            LIMIT 20
+        """)
+        problemas = [row[0] for row in cur.fetchall()]
+        
+        cur.close()
+        
+        return jsonify({
+            "success": True,
+            "cultivos": cultivos,
+            "prioridades": ["Alta", "Media", "Baja"],
+            "problemas": problemas
+        })
+        
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
 
 # Ruta para obtener observaciones de un tratamiento (AJAX)
 @app.route("/obtener_observaciones/<int:id_tratamiento>")
@@ -2188,38 +2855,743 @@ def registrar_problema():
 
 
 # ---------------------- PROBLEMAS REGISTRADOS ----------------------
+# ---------------------- PROBLEMAS REGISTRADOS ----------------------
+
 @app.route("/problemas_registrados")
 @login_required
 def problemas_registrados():
-    cursor = db.connection.cursor()
-    query = """
-        SELECT p.evidencia, p.fecha_registro, u.fullname, p.tipo_problema, p.descripcion
-        FROM problemas_cultivo p
-        JOIN user u ON p.id_usuario = u.id
-        WHERE u.id = %s
     """
-    cursor.execute(query, (session["user_id"],))
-    resultados = cursor.fetchall()
+    Muestra los problemas registrados según el rol del usuario
+    Admin/Supervisor: todos los problemas
+    Otros roles: solo sus problemas
+    """
+    try:
+        cursor = db.connection.cursor()
+        rol = session.get("rol", "")
+        user_id = session.get("user_id")
+        
+        # Si es administrador o supervisor, ve TODOS los problemas
+        if rol in ["administrador", "supervisor"]:
+            query = """
+                SELECT 
+                    p.id_problema,
+                    p.evidencia, 
+                    p.fecha_registro, 
+                    u.fullname, 
+                    p.tipo_problema, 
+                    p.descripcion,
+                    u.rol
+                FROM problemas_cultivo p
+                JOIN user u ON p.id_usuario = u.id
+                ORDER BY p.fecha_registro DESC
+            """
+            cursor.execute(query)
+        else:
+            # Usuarios normales solo ven sus propios problemas
+            query = """
+                SELECT 
+                    p.id_problema,
+                    p.evidencia, 
+                    p.fecha_registro, 
+                    u.fullname, 
+                    p.tipo_problema, 
+                    p.descripcion,
+                    u.rol
+                FROM problemas_cultivo p
+                JOIN user u ON p.id_usuario = u.id
+                WHERE u.id = %s
+                ORDER BY p.fecha_registro DESC
+            """
+            cursor.execute(query, (user_id,))
+        
+        resultados = cursor.fetchall()
 
-    problemas = []
-    for row in resultados:
-        ruta = url_for("static", filename="uploads/" + row[0]) if row[0] else None
-        problemas.append(
-            {
+        problemas = []
+        for row in resultados:
+            ruta = url_for("static", filename="uploads/" + row[1]) if row[1] else None
+            problemas.append({
+                "id": row[0],
                 "ruta": ruta,
-                "fecha": row[1],
-                "usuario": row[2],
-                "tipo": row[3],
-                "descripcion": row[4],
-            }
+                "fecha": row[2],
+                "usuario": row[3],
+                "tipo": row[4],
+                "descripcion": row[5],
+                "rol_usuario": row[6]
+            })
+
+        # Calcular estadísticas
+        cursor.execute("""
+            SELECT 
+                COUNT(DISTINCT id_problema) as total,
+                COUNT(DISTINCT tipo_problema) as tipos_diferentes,
+                COUNT(DISTINCT id_usuario) as usuarios_reportaron
+            FROM problemas_cultivo
+            {} 
+        """.format("WHERE id_usuario = %s" if rol not in ["administrador", "supervisor"] else ""),
+        (user_id,) if rol not in ["administrador", "supervisor"] else ())
+        
+        stats = cursor.fetchone()
+        
+        usuario = problemas[0]["usuario"] if problemas else session.get("fullname", "Sin registros")
+        cursor.close()
+
+        return render_template(
+            "problemas_registrados.html", 
+            problemas=problemas, 
+            usuario=usuario,
+            rol=rol,
+            stats=stats
         )
+        
+    except Exception as e:
+        flash(f"Error al cargar problemas: {str(e)}", "danger")
+        return redirect(url_for("home"))
 
-    usuario = problemas[0]["usuario"] if problemas else "Sin registros"
-    cursor.close()
 
-    return render_template(
-        "problemas_registrados.html", problemas=problemas, usuario=usuario
-    )
+# ---------------------- GENERAR REPORTE PDF DE PROBLEMAS ----------------------
+
+@app.route("/generar_reporte_problemas", methods=["POST"])
+@login_required
+def generar_reporte_problemas():
+    """
+    Genera un reporte PDF de problemas de cultivo según filtros seleccionados
+    """
+    if session.get('rol') not in ['administrador', 'supervisor']:
+        flash('No tienes permisos para generar reportes', 'danger')
+        return redirect(url_for('problemas_registrados'))
+    
+    if not REPORTLAB_AVAILABLE:
+        flash("ReportLab no está instalado. Contacta al administrador.", "danger")
+        return redirect(url_for("problemas_registrados"))
+    
+    try:
+        # Obtener filtros del formulario
+        fecha_inicio = request.form.get('fecha_inicio')
+        fecha_fin = request.form.get('fecha_fin')
+        tipo_filtro = request.form.get('tipo_filtro', '')
+        usuario_filtro = request.form.get('usuario_filtro', '')
+        
+        # Si no se especifican fechas, usar últimos 30 días
+        if not fecha_inicio or not fecha_fin:
+            fecha_fin = datetime.now().date()
+            fecha_inicio = fecha_fin - timedelta(days=30)
+        else:
+            fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
+            fecha_fin = datetime.strptime(fecha_fin, '%Y-%m-%d').date()
+        
+        cur = db.connection.cursor()
+        
+        # Construir consulta dinámica según filtros
+        query_base = """
+            SELECT 
+                p.id_problema,
+                DATE_FORMAT(p.fecha_registro, '%%d/%%m/%%Y') as fecha,
+                u.fullname as usuario,
+                u.rol,
+                p.tipo_problema,
+                p.descripcion,
+                CASE WHEN p.evidencia IS NOT NULL AND p.evidencia != '' 
+                     THEN 'Sí' ELSE 'No' END as tiene_evidencia
+            FROM problemas_cultivo p
+            JOIN user u ON p.id_usuario = u.id
+            WHERE DATE(p.fecha_registro) BETWEEN %s AND %s
+        """
+        
+        params = [fecha_inicio, fecha_fin]
+        
+        # Agregar filtros adicionales
+        if tipo_filtro:
+            query_base += " AND p.tipo_problema = %s"
+            params.append(tipo_filtro)
+        
+        if usuario_filtro:
+            query_base += " AND p.id_usuario = %s"
+            params.append(usuario_filtro)
+        
+        query_base += " ORDER BY p.fecha_registro DESC"
+        
+        cur.execute(query_base, params)
+        problemas = cur.fetchall()
+        
+        # Calcular estadísticas del período
+        stats_query = """
+            SELECT 
+                COUNT(DISTINCT p.id_problema) as total_problemas,
+                COUNT(DISTINCT p.tipo_problema) as tipos_diferentes,
+                COUNT(DISTINCT p.id_usuario) as usuarios_reportaron,
+                SUM(CASE WHEN p.evidencia IS NOT NULL AND p.evidencia != '' THEN 1 ELSE 0 END) as con_evidencia
+            FROM problemas_cultivo p
+            WHERE DATE(p.fecha_registro) BETWEEN %s AND %s
+        """
+        
+        stats_params = [fecha_inicio, fecha_fin]
+        
+        if tipo_filtro:
+            stats_query += " AND p.tipo_problema = %s"
+            stats_params.append(tipo_filtro)
+        
+        if usuario_filtro:
+            stats_query += " AND p.id_usuario = %s"
+            stats_params.append(usuario_filtro)
+        
+        cur.execute(stats_query, stats_params)
+        stats = cur.fetchone()
+        
+        # Top 5 tipos de problemas más frecuentes
+        top_tipos_query = """
+            SELECT 
+                p.tipo_problema,
+                COUNT(*) as total
+            FROM problemas_cultivo p
+            WHERE DATE(p.fecha_registro) BETWEEN %s AND %s
+        """
+        
+        top_params = [fecha_inicio, fecha_fin]
+        
+        if tipo_filtro:
+            top_tipos_query += " AND p.tipo_problema = %s"
+            top_params.append(tipo_filtro)
+        
+        if usuario_filtro:
+            top_tipos_query += " AND p.id_usuario = %s"
+            top_params.append(usuario_filtro)
+        
+        top_tipos_query += """
+            GROUP BY p.tipo_problema
+            ORDER BY total DESC
+            LIMIT 5
+        """
+        
+        cur.execute(top_tipos_query, top_params)
+        top_tipos = cur.fetchall()
+        
+        # Top usuarios que más reportan
+        top_usuarios_query = """
+            SELECT 
+                u.fullname,
+                COUNT(*) as total
+            FROM problemas_cultivo p
+            JOIN user u ON p.id_usuario = u.id
+            WHERE DATE(p.fecha_registro) BETWEEN %s AND %s
+        """
+        
+        top_usuarios_params = [fecha_inicio, fecha_fin]
+        
+        if tipo_filtro:
+            top_usuarios_query += " AND p.tipo_problema = %s"
+            top_usuarios_params.append(tipo_filtro)
+        
+        top_usuarios_query += """
+            GROUP BY u.fullname
+            ORDER BY total DESC
+            LIMIT 5
+        """
+        
+        cur.execute(top_usuarios_query, top_usuarios_params)
+        top_usuarios = cur.fetchall()
+        
+        cur.close()
+        
+        # Crear PDF en memoria
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch)
+        elementos = []
+        
+        # Estilos
+        styles = getSampleStyleSheet()
+        titulo_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=20,
+            textColor=colors.HexColor('#dc3545'),
+            spaceAfter=20,
+            alignment=1,
+            fontName='Helvetica-Bold'
+        )
+        
+        subtitulo_style = ParagraphStyle(
+            'Subtitle',
+            parent=styles['Normal'],
+            fontSize=12,
+            textColor=colors.HexColor('#333'),
+            spaceAfter=20,
+            alignment=1
+        )
+        
+        # Título principal
+        titulo = Paragraph(
+            "<b>🐛 REPORTE DE PROBLEMAS DE CULTIVO</b>",
+            titulo_style
+        )
+        elementos.append(titulo)
+        
+        # Período y filtros
+        filtros_texto = f"Período: <b>{fecha_inicio.strftime('%d/%m/%Y')}</b> al <b>{fecha_fin.strftime('%d/%m/%Y')}</b>"
+        
+        if tipo_filtro:
+            filtros_texto += f"<br/>Tipo de problema: <b>{tipo_filtro}</b>"
+        if usuario_filtro:
+            # Obtener nombre del usuario
+            cur = db.connection.cursor()
+            cur.execute("SELECT fullname FROM user WHERE id = %s", (usuario_filtro,))
+            usuario_row = cur.fetchone()
+            if usuario_row:
+                filtros_texto += f"<br/>Usuario: <b>{usuario_row[0]}</b>"
+            cur.close()
+        
+        periodo = Paragraph(filtros_texto, subtitulo_style)
+        elementos.append(periodo)
+        elementos.append(Spacer(1, 0.2*inch))
+        
+        # Resumen de estadísticas
+        stats_data = [
+            ['RESUMEN DEL PERÍODO'],
+            ['Total de Problemas', str(stats[0] or 0)],
+            ['Tipos Diferentes', str(stats[1] or 0)],
+            ['Usuarios que Reportaron', str(stats[2] or 0)],
+            ['Problemas con Evidencia', f"{stats[3] or 0} ({round((stats[3] or 0) / (stats[0] or 1) * 100, 1)}%)"]
+        ]
+        
+        stats_table = Table(stats_data, colWidths=[3*inch, 2.5*inch])
+        stats_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#dc3545')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f8f9fa')),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('FONTNAME', (0, 1), (0, -1), 'Helvetica-Bold'),
+        ]))
+        
+        elementos.append(stats_table)
+        elementos.append(Spacer(1, 0.3*inch))
+        
+        # Top 5 tipos de problemas más frecuentes
+        if top_tipos:
+            top_titulo = Paragraph("<b>TOP 5 PROBLEMAS MÁS FRECUENTES</b>", subtitulo_style)
+            elementos.append(top_titulo)
+            elementos.append(Spacer(1, 0.1*inch))
+            
+            top_data = [['Tipo de Problema', 'Frecuencia', 'Porcentaje']]
+            for tipo in top_tipos:
+                porcentaje = round((tipo[1] / (stats[0] or 1)) * 100, 1)
+                top_data.append([
+                    str(tipo[0]),
+                    str(tipo[1]),
+                    f"{porcentaje}%"
+                ])
+            
+            top_table = Table(top_data, colWidths=[3*inch, 1.3*inch, 1.2*inch])
+            top_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#ffc107')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 11),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')]),
+            ]))
+            
+            elementos.append(top_table)
+            elementos.append(Spacer(1, 0.3*inch))
+        
+        # Top usuarios que más reportan
+        if top_usuarios:
+            usuarios_titulo = Paragraph("<b>TOP 5 USUARIOS CON MÁS REPORTES</b>", subtitulo_style)
+            elementos.append(usuarios_titulo)
+            elementos.append(Spacer(1, 0.1*inch))
+            
+            usuarios_data = [['Usuario', 'Total Reportes']]
+            for usuario in top_usuarios:
+                usuarios_data.append([
+                    str(usuario[0]),
+                    str(usuario[1])
+                ])
+            
+            usuarios_table = Table(usuarios_data, colWidths=[3.5*inch, 2*inch])
+            usuarios_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#17a2b8')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 11),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')]),
+            ]))
+            
+            elementos.append(usuarios_table)
+            elementos.append(PageBreak())
+        
+        # Título de tabla detallada
+        detalle_titulo = Paragraph("<b>DETALLE DE PROBLEMAS REPORTADOS</b>", subtitulo_style)
+        elementos.append(detalle_titulo)
+        elementos.append(Spacer(1, 0.1*inch))
+        
+        # Tabla de problemas detallada
+        datos_tabla = [
+            ['#', 'Fecha', 'Usuario', 'Tipo', 'Descripción', 'Evidencia']
+        ]
+        
+        for prob in problemas:
+            # Acortar textos largos
+            usuario = str(prob[2])[:15]
+            tipo = str(prob[4])[:18]
+            descripcion = str(prob[5])[:30] + '...' if len(str(prob[5])) > 30 else str(prob[5])
+            
+            datos_tabla.append([
+                str(prob[0]),  # ID
+                str(prob[1]),  # Fecha
+                usuario,
+                tipo,
+                descripcion,
+                str(prob[6])  # Tiene evidencia
+            ])
+        
+        problemas_table = Table(
+            datos_tabla,
+            colWidths=[0.4*inch, 0.9*inch, 1.2*inch, 1.4*inch, 2.2*inch, 0.8*inch]
+        )
+        
+        problemas_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#343a40')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('FONTSIZE', (0, 1), (-1, -1), 7),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')]),
+        ]))
+        
+        elementos.append(problemas_table)
+        
+        # Pie de página
+        elementos.append(Spacer(1, 0.3*inch))
+        pie = Paragraph(
+            f"<i>Reporte generado el {datetime.now().strftime('%d/%m/%Y a las %H:%M')}</i><br/>"
+            f"<i>Generado por: {session.get('fullname', 'Sistema')}</i>",
+            styles['Normal']
+        )
+        elementos.append(pie)
+        
+        # Construir PDF
+        doc.build(elementos)
+        buffer.seek(0)
+        
+        # Nombre del archivo según filtros
+        nombre_archivo = f'reporte_problemas_{fecha_inicio}_{fecha_fin}'
+        if tipo_filtro:
+            nombre_archivo += f'_{tipo_filtro.replace(" ", "_")}'
+        nombre_archivo += '.pdf'
+        
+        return send_file(
+            buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=nombre_archivo
+        )
+        
+    except Exception as e:
+        flash(f"Error al generar reporte: {str(e)}", "danger")
+        import traceback
+        traceback.print_exc()
+        return redirect(url_for("problemas_registrados"))
+
+
+# ---------------------- OBTENER FILTROS PARA PROBLEMAS ----------------------
+
+@app.route("/obtener_filtros_problemas")
+@login_required
+def obtener_filtros_problemas():
+    """
+    Devuelve listas de tipos de problemas y usuarios para los filtros
+    """
+    try:
+        cur = db.connection.cursor()
+        
+        # Obtener tipos únicos
+        cur.execute("""
+            SELECT DISTINCT tipo_problema 
+            FROM problemas_cultivo 
+            ORDER BY tipo_problema
+        """)
+        tipos = [row[0] for row in cur.fetchall()]
+        
+        # Obtener usuarios que han reportado problemas
+        cur.execute("""
+            SELECT DISTINCT u.id, u.fullname
+            FROM user u
+            INNER JOIN problemas_cultivo p ON u.id = p.id_usuario
+            ORDER BY u.fullname
+        """)
+        usuarios = [{"id": row[0], "nombre": row[1]} for row in cur.fetchall()]
+        
+        cur.close()
+        
+        return jsonify({
+            "success": True,
+            "tipos": tipos,
+            "usuarios": usuarios
+        })
+        
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route("/generar_reporte_produccion", methods=["POST"])
+@login_required
+def generar_reporte_produccion():
+    """
+    Genera un reporte PDF de producción según el rango de fechas seleccionado
+    """
+    if session.get('rol') not in ['administrador', 'supervisor']:
+        flash('No tienes permisos para generar reportes', 'danger')
+        return redirect(url_for('produccion_registrada'))
+    
+    if not REPORTLAB_AVAILABLE:
+        flash("ReportLab no está instalado. Contacta al administrador.", "danger")
+        return redirect(url_for("produccion_registrada"))
+    
+    try:
+        # Obtener fechas del formulario
+        fecha_inicio = request.form.get('fecha_inicio')
+        fecha_fin = request.form.get('fecha_fin')
+        
+        # Si no se especifican fechas, usar últimos 30 días
+        if not fecha_inicio or not fecha_fin:
+            fecha_fin = datetime.now().date()
+            fecha_inicio = fecha_fin - timedelta(days=30)
+        else:
+            fecha_inicio = datetime.strptime(fecha_inicio, '%Y-%m-%d').date()
+            fecha_fin = datetime.strptime(fecha_fin, '%Y-%m-%d').date()
+        
+        cur = db.connection.cursor()
+        
+        # Obtener producción del período
+        cur.execute("""
+            SELECT 
+                p.id_produccion,
+                DATE_FORMAT(p.fecha, '%%d/%%m/%%Y') as fecha,
+                c.nombre AS cultivo,
+                p.cantidad_bultos,
+                u.fullname as registrado_por,
+                u.rol as rol_usuario
+            FROM produccion p
+            JOIN cultivos c ON p.id_cultivo = c.id_cultivo
+            JOIN user u ON p.id_usuario = u.id
+            WHERE p.fecha BETWEEN %s AND %s
+            ORDER BY p.fecha DESC
+        """, (fecha_inicio, fecha_fin))
+        
+        produccion = cur.fetchall()
+        
+        # Calcular totales del período
+        cur.execute("""
+            SELECT 
+                COUNT(*) as total_registros,
+                SUM(cantidad_bultos) as total_bultos,
+                COUNT(DISTINCT id_cultivo) as cultivos_diferentes,
+                COUNT(DISTINCT id_usuario) as empleados_participantes
+            FROM produccion
+            WHERE fecha BETWEEN %s AND %s
+        """, (fecha_inicio, fecha_fin))
+        
+        totales = cur.fetchone()
+        
+        # Obtener producción por cultivo
+        cur.execute("""
+            SELECT 
+                c.nombre,
+                SUM(p.cantidad_bultos) as total
+            FROM produccion p
+            JOIN cultivos c ON p.id_cultivo = c.id_cultivo
+            WHERE p.fecha BETWEEN %s AND %s
+            GROUP BY c.nombre
+            ORDER BY total DESC
+            LIMIT 5
+        """, (fecha_inicio, fecha_fin))
+        
+        top_cultivos = cur.fetchall()
+        
+        cur.close()
+        
+        # Crear PDF en memoria
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch)
+        elementos = []
+        
+        # Estilos
+        styles = getSampleStyleSheet()
+        titulo_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=20,
+            textColor=colors.HexColor('#28a745'),
+            spaceAfter=20,
+            alignment=1,
+            fontName='Helvetica-Bold'
+        )
+        
+        subtitulo_style = ParagraphStyle(
+            'Subtitle',
+            parent=styles['Normal'],
+            fontSize=12,
+            textColor=colors.HexColor('#333'),
+            spaceAfter=20,
+            alignment=1
+        )
+        
+        # Título
+        titulo = Paragraph(
+            "<b>🌱 REPORTE DE PRODUCCIÓN AGRÍCOLA</b>",
+            titulo_style
+        )
+        elementos.append(titulo)
+        
+        # Período
+        periodo = Paragraph(
+            f"Período: <b>{fecha_inicio.strftime('%d/%m/%Y')}</b> al <b>{fecha_fin.strftime('%d/%m/%Y')}</b>",
+            subtitulo_style
+        )
+        elementos.append(periodo)
+        elementos.append(Spacer(1, 0.2*inch))
+        
+        # Resumen de estadísticas
+        stats_data = [
+            ['RESUMEN DEL PERÍODO'],
+            ['Total de Registros', str(totales[0] or 0)],
+            ['Bultos Producidos', str(totales[1] or 0)],
+            ['Cultivos Diferentes', str(totales[2] or 0)],
+            ['Empleados Participantes', str(totales[3] or 0)]
+        ]
+        
+        stats_table = Table(stats_data, colWidths=[3*inch, 2*inch])
+        stats_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#28a745')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f8f9fa')),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('FONTNAME', (0, 1), (0, -1), 'Helvetica-Bold'),
+        ]))
+        
+        elementos.append(stats_table)
+        elementos.append(Spacer(1, 0.3*inch))
+        
+        # Top 5 cultivos
+        if top_cultivos:
+            top_titulo = Paragraph("<b>TOP 5 CULTIVOS MÁS PRODUCIDOS</b>", subtitulo_style)
+            elementos.append(top_titulo)
+            elementos.append(Spacer(1, 0.1*inch))
+            
+            top_data = [['Cultivo', 'Bultos Producidos']]
+            for cultivo in top_cultivos:
+                top_data.append([
+                    str(cultivo[0]),
+                    str(cultivo[1])
+                ])
+            
+            top_table = Table(top_data, colWidths=[3*inch, 2*inch])
+            top_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#ffc107')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 11),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')]),
+            ]))
+            
+            elementos.append(top_table)
+            elementos.append(Spacer(1, 0.3*inch))
+        
+        # Título de tabla de producción
+        detalle_titulo = Paragraph("<b>DETALLE DE PRODUCCIÓN</b>", subtitulo_style)
+        elementos.append(detalle_titulo)
+        elementos.append(Spacer(1, 0.1*inch))
+        
+        # Tabla de producción
+        datos_tabla = [
+            ['#', 'Fecha', 'Cultivo', 'Cantidad', 'Registrado Por', 'Rol']
+        ]
+        
+        for prod in produccion:
+            # Acortar nombres si son muy largos
+            cultivo = str(prod[2])[:20]
+            empleado = str(prod[4])[:18]
+            rol = str(prod[5])[:12]
+            
+            datos_tabla.append([
+                str(prod[0]),  # ID
+                str(prod[1]),  # Fecha
+                cultivo,  # Cultivo
+                str(prod[3]),  # Cantidad
+                empleado,  # Empleado
+                rol.capitalize()  # Rol
+            ])
+        
+        produccion_table = Table(
+            datos_tabla, 
+            colWidths=[0.4*inch, 0.9*inch, 1.5*inch, 0.8*inch, 1.5*inch, 1.1*inch]
+        )
+        
+        produccion_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#343a40')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('FONTSIZE', (0, 1), (-1, -1), 8),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8f9fa')]),
+        ]))
+        
+        elementos.append(produccion_table)
+        
+        # Pie de página
+        elementos.append(Spacer(1, 0.3*inch))
+        pie = Paragraph(
+            f"<i>Reporte generado el {datetime.now().strftime('%d/%m/%Y a las %H:%M')}</i><br/>"
+            f"<i>Generado por: {session.get('fullname', 'Sistema')}</i>",
+            styles['Normal']
+        )
+        elementos.append(pie)
+        
+        # Construir PDF
+        doc.build(elementos)
+        buffer.seek(0)
+        
+        return send_file(
+            buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'reporte_produccion_{fecha_inicio}_{fecha_fin}.pdf'
+        )
+        
+    except Exception as e:
+        flash(f"Error al generar reporte: {str(e)}", "danger")
+        import traceback
+        traceback.print_exc()
+        return redirect(url_for("produccion_registrada"))
 
 
 @app.route("/produccion_registrada")
@@ -2227,22 +3599,45 @@ def problemas_registrados():
 def produccion_registrada():
     try:
         cur = db.connection.cursor()
-        cur.execute(
-            """
-            SELECT p.fecha, p.cantidad_bultos, c.nombre as cultivo, u.fullname as registrado_por
+        
+        # Obtener rol del usuario
+        rol = session.get('rol', '')
+        
+        # MOSTRAR TODA LA PRODUCCIÓN DEL SISTEMA (sin filtro por usuario)
+        cur.execute("""
+            SELECT 
+                p.id_produccion,
+                p.fecha,
+                p.cantidad_bultos, 
+                c.nombre as cultivo, 
+                u.fullname as registrado_por,
+                u.rol as rol_usuario
             FROM produccion p
             JOIN cultivos c ON p.id_cultivo = c.id_cultivo
             JOIN user u ON p.id_usuario = u.id
-            WHERE u.id = %s
             ORDER BY p.fecha DESC
-        """,
-            (session["user_id"],),
-        )
+        """)
 
-        registros = cur.fetchall()  # Sin conversión a diccionarios
+        registros = cur.fetchall()
+        
+        # Calcular estadísticas totales
+        cur.execute("""
+            SELECT 
+                COUNT(*) as total_registros,
+                SUM(cantidad_bultos) as total_bultos,
+                COUNT(DISTINCT id_cultivo) as cultivos_diferentes
+            FROM produccion
+        """)
+        stats = cur.fetchone()
+        
         cur.close()
 
-        return render_template("produccion_registrada.html", registros=registros)
+        return render_template(
+            "produccion_registrada.html", 
+            registros=registros,
+            stats=stats,
+            rol=rol
+        )
 
     except Exception as e:
         flash(f"Error al cargar la producción: {str(e)}", "danger")

@@ -416,8 +416,8 @@ body {
 /* Botón hamburguesa */
 .menu-btn {
     position: fixed;
-    top: 20px;
-    left: 25px;
+    top: 30px;
+    left: 120px;
     background: #5f886f;
     border: none;
     padding: 12px 12px;
@@ -428,8 +428,8 @@ body {
 
 .menu-btn span {
     display: block;
-    width: 22px;
-    height: 3px;
+    width: 24px;
+    height: 5px;
     margin: 4px;
     background: #fff;
     border-radius: 2px;
@@ -440,7 +440,7 @@ body {
 .menu {
     position: fixed;
     top: 60px;
-    left: 80px;
+    left: 150px;
     display: none;
     flex-direction: column;
     gap: 10px;

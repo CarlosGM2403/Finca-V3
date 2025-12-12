@@ -14,9 +14,6 @@
     <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
 </div>
 
-<!-- Título -->
-<h1 class="Titulo">Tratamientos Registrados</h1>
-
 <!-- Botón volver al inicio -->
 <div class="logout-btn">
   <a href="{{ url_for('home') }}">
@@ -26,119 +23,308 @@
   </a>
 </div>
 
+<!-- Título -->
+<h1 class="Titulo">
+  <i class="fas fa-medkit"></i> Tratamientos Registrados
+</h1>
+
 <!-- Contenedor principal -->
 <div class="containerSiembra">
 
-  <!-- Buscador -->
-  <div class="buscador-contenedor">
-    <input type="text" id="buscador-tratamientos" placeholder="Buscar tratamientos...">
+  <!-- ========== SECCIÓN DE ESTADÍSTICAS ========== -->
+  <div class="estadisticas-cards">
+    <div class="stat-card card-total">
+      <div class="stat-icon">
+        <i class="fas fa-clipboard-list"></i>
+      </div>
+      <div class="stat-content">
+        <h3>Total Tratamientos</h3>
+        <p class="stat-numero">{{ tratamientos|length }}</p>
+      </div>
+    </div>
+
+    <div class="stat-card card-alta">
+      <div class="stat-icon">
+        <i class="fas fa-exclamation-circle"></i>
+      </div>
+      <div class="stat-content">
+        <h3>Prioridad Alta</h3>
+        <p class="stat-numero">
+          {{ tratamientos|selectattr('4', 'equalto', 'Alta')|list|length }}
+        </p>
+      </div>
+    </div>
+
+    <div class="stat-card card-cultivos">
+      <div class="stat-icon">
+        <i class="fas fa-seedling"></i>
+      </div>
+      <div class="stat-content">
+        <h3>Cultivos Afectados</h3>
+        <p class="stat-numero">
+          {{ tratamientos|map(attribute='1')|unique|list|length }}
+        </p>
+      </div>
+    </div>
   </div>
 
+  <!-- ========== PANEL DE FILTROS Y REPORTE ========== -->
+  {% if rol == 'administrador' or rol == 'supervisor' %}
+  <div class="panel-reporte">
+    <div class="panel-header">
+      <h2><i class="fas fa-file-pdf"></i> Generar Reporte PDF</h2>
+      <button class="btn-toggle-panel" onclick="togglePanel()">
+        <i class="fas fa-chevron-down"></i>
+      </button>
+    </div>
+    
+    <div class="panel-body" id="panelReporte">
+      <form method="POST" action="{{ url_for('generar_reporte_tratamientos') }}" class="form-reporte">
+        
+        <!-- Filtros de fecha -->
+        <div class="filtros-grupo">
+          <div class="filtro-item">
+            <label for="fecha_inicio">
+              <i class="far fa-calendar-alt"></i> Fecha Inicio
+            </label>
+            <input type="date" id="fecha_inicio" name="fecha_inicio" class="input-fecha">
+          </div>
+
+          <div class="filtro-item">
+            <label for="fecha_fin">
+              <i class="far fa-calendar-alt"></i> Fecha Fin
+            </label>
+            <input type="date" id="fecha_fin" name="fecha_fin" class="input-fecha">
+          </div>
+        </div>
+
+        <!-- Filtros adicionales -->
+        <div class="filtros-grupo">
+          <div class="filtro-item">
+            <label for="cultivo_filtro">
+              <i class="fas fa-seedling"></i> Cultivo
+            </label>
+            <select id="cultivo_filtro" name="cultivo_filtro" class="input-select">
+              <option value="">Todos los cultivos</option>
+            </select>
+          </div>
+
+          <div class="filtro-item">
+            <label for="prioridad_filtro">
+              <i class="fas fa-flag"></i> Prioridad
+            </label>
+            <select id="prioridad_filtro" name="prioridad_filtro" class="input-select">
+              <option value="">Todas las prioridades</option>
+              <option value="Alta">Alta</option>
+              <option value="Media">Media</option>
+              <option value="Baja">Baja</option>
+            </select>
+          </div>
+
+          <div class="filtro-item">
+            <label for="problema_filtro">
+              <i class="fas fa-bug"></i> Problema
+            </label>
+            <input 
+              type="text" 
+              id="problema_filtro" 
+              name="problema_filtro" 
+              placeholder="Buscar problema..." 
+              class="input-text"
+            >
+          </div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="filtros-acciones">
+          <button type="button" class="btn-limpiar" onclick="limpiarFiltros()">
+            <i class="fas fa-eraser"></i> Limpiar Filtros
+          </button>
+          <button type="submit" class="btn-generar-pdf">
+            <i class="fas fa-file-pdf"></i> Generar Reporte PDF
+          </button>
+        </div>
+
+        <p class="info-filtros">
+          <i class="fas fa-info-circle"></i>
+          Si no especificas fechas, se generará el reporte de los últimos 30 días
+        </p>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ========== BUSCADOR ========== -->
+  <div class="buscador-contenedor">
+    <div class="input-wrapper">
+      <i class="fas fa-search"></i>
+      <input 
+        type="text" 
+        id="buscador-tratamientos" 
+        placeholder="Buscar por cultivo, tratamiento, problema..."
+      >
+    </div>
+  </div>
+
+  <!-- ========== TABLA DE TRATAMIENTOS ========== -->
   <div class="tabla-contenedor">
     <table class="tabla-tratamientos" id="tabla-tratamientos">
       <thead>
         <tr>
-          <th>Cultivo</th>
-          <th>Tratamiento</th>
-          <th>Problema</th>
-          <th>Prioridad</th>
-          <th>Insumos</th>
-          <th>Fecha Registro</th>
-          <th>Observaciones</th>
-          <th>Acciones</th>
+          <th><i class="fas fa-hashtag"></i> ID</th>
+          <th><i class="fas fa-seedling"></i> Cultivo</th>
+          <th><i class="fas fa-syringe"></i> Tratamiento</th>
+          <th><i class="fas fa-bug"></i> Problema</th>
+          <th><i class="fas fa-flag"></i> Prioridad</th>
+          <th><i class="fas fa-flask"></i> Insumos</th>
+          <th><i class="far fa-calendar"></i> Fecha</th>
+          <th><i class="fas fa-comments"></i> Obs.</th>
+          <th><i class="fas fa-cog"></i> Acciones</th>
         </tr>
       </thead>
       <tbody>
         {% for t in tratamientos %}
-        <tr data-id-tratamiento="{{ t[0] }}">
-          <td>{{ t[1] }}</td> <!-- cultivo -->
-          <td>{{ t[2] }}</td> <!-- tratamiento -->
-          <td>{{ t[3] }}</td> <!-- problema -->
-          <td>{{ t[4] }}</td> <!-- prioridad -->
-          <td>{{ t[5] }}</td> <!-- insumos -->
-          <td>{{ t[6] }}</td> <!-- fecha -->
-          <td>
-  <button class="btn-observaciones" data-id-tratamiento="{{ t[0] }}">
-    <i class="fa-solid fa-comments"></i> 
-    <span class="badge-observaciones">{{ t[7] }}</span>
-  </button>
-</td>
-  <td>
-      <a href="{{ url_for('eliminar_tratamiento', id=t[0]) }}">
-        <button class="btn-guardar">Eliminar</button>
-      </a>
-  </td>
-      </tr>
+        <tr data-id-tratamiento="{{ t[0] }}" data-prioridad="{{ t[4] }}">
+          <td class="td-id">{{ t[0] }}</td>
+          <td class="td-cultivo">
+            <span class="badge-cultivo">{{ t[1] }}</span>
+          </td>
+          <td class="td-tratamiento">{{ t[2][:30] }}...</td>
+          <td class="td-problema">{{ t[3][:25] }}...</td>
+          <td class="td-prioridad">
+            {% if t[4] == 'Alta' %}
+              <span class="badge-prioridad prioridad-alta">
+                <i class="fas fa-exclamation-circle"></i> Alta
+              </span>
+            {% elif t[4] == 'Media' %}
+              <span class="badge-prioridad prioridad-media">
+                <i class="fas fa-exclamation-triangle"></i> Media
+              </span>
+            {% else %}
+              <span class="badge-prioridad prioridad-baja">
+                <i class="fas fa-info-circle"></i> Baja
+              </span>
+            {% endif %}
+          </td>
+          <td class="td-insumos">{{ t[5][:20] }}...</td>
+          <td class="td-fecha">
+            <i class="far fa-clock"></i> {{ t[6] }}
+          </td>
+          <td class="td-observaciones">
+            <button class="btn-observaciones" data-id-tratamiento="{{ t[0] }}">
+              <i class="fa-solid fa-comments"></i> 
+              {% if t[7]|int > 0 %}
+                <span class="badge-observaciones">{{ t[7] }}</span>
+              {% else %}
+                <span class="badge-observaciones-cero">0</span>
+              {% endif %}
+            </button>
+          </td>
+          <td class="td-acciones">
+            {% if rol == 'administrador' %}
+            <a href="{{ url_for('eliminar_tratamiento', id=t[0]) }}" 
+               onclick="return confirm('¿Estás seguro de eliminar este tratamiento?')">
+              <button class="btn-eliminar" title="Eliminar tratamiento">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </a>
+            {% else %}
+            <button class="btn-sin-permiso" disabled title="Sin permisos">
+              <i class="fas fa-lock"></i>
+            </button>
+            {% endif %}
+          </td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
+    
     <p id="no-result-siembra" class="NoResultado">
+      <i class="fas fa-search"></i>
       No se encontraron tratamientos que coincidan con la búsqueda.
     </p>
   </div>
 
-  <!-- Botón inferior -->
+  <!-- ========== BOTÓN INFERIOR ========== -->
   <div class="botones">
     <a href="{{ url_for('seguimiento_cultivo') }}">
-      <button class="btn-guardar">Registrar Nuevo Tratamiento</button>
+      <button class="btn-nuevo-tratamiento">
+        <i class="fas fa-plus-circle"></i> Registrar Nuevo Tratamiento
+      </button>
     </a>
   </div>
 </div>
 
-<!-- Modal de Observaciones -->
+<!-- ========== MODAL DE OBSERVACIONES ========== -->
 <div id="modal-observaciones" class="modal-overlay">
   <div class="modal-content">
     <div class="modal-header">
-      <h2>Observaciones del Tratamiento</h2>
+      <h2>
+        <i class="fas fa-comments"></i> Observaciones del Tratamiento
+      </h2>
       <button class="btn-cerrar-modal" onclick="cerrarModal()">
         <i class="fa-solid fa-times"></i>
       </button>
     </div>
     
     <div class="modal-body">
-  <!-- Campo oculto para el ID del tratamiento (visible pero oculto) -->
-  <input type="hidden" id="id_tratamiento_modal">
-  
-  <!-- Lista de observaciones -->
-  <div id="lista-observaciones" class="lista-observaciones">
-    <p class="texto-cargando">Cargando observaciones...</p>
-  </div>
-  
-  <!-- Formulario para agregar observación (solo para admin/supervisor) -->
-  {% if rol == 'administrador' or rol == 'supervisor' %}
-  <div class="form-observacion">
-    <h3>Agregar Nueva Observación</h3>
-    <form id="form-observacion">
-      <input type="hidden" id="id_tratamiento_form" name="id_tratamiento">
-      <textarea 
-        id="nueva-observacion" 
-        name="observacion" 
-        placeholder="Escribe tu observación (mínimo 5 caracteres)..."
-        rows="4"
-        required
-      ></textarea>
-      <div class="contador-caracteres">
-        <span id="contador">0</span>/5 caracteres mínimos
+      <input type="hidden" id="id_tratamiento_modal">
+      
+      <!-- Lista de observaciones -->
+      <div id="lista-observaciones" class="lista-observaciones">
+        <div class="loading-observaciones">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Cargando observaciones...</p>
+        </div>
       </div>
-      <button type="submit" class="btn-guardar">
-        <i class="fa-solid fa-save"></i> Guardar Observación
-      </button>
-    </form>
-  </div>
-  {% else %}
-  <div class="info-permisos">
-    <i class="fa-solid fa-info-circle"></i>
-    <p>Solo los supervisores y administradores pueden agregar observaciones.</p>
-  </div>
-  {% endif %}
-</div>
+      
+      <!-- Formulario para agregar observación -->
+      {% if rol == 'administrador' or rol == 'supervisor' %}
+      <div class="form-observacion">
+        <h3>
+          <i class="fas fa-plus-circle"></i> Agregar Nueva Observación
+        </h3>
+        <form id="form-observacion">
+          <input type="hidden" id="id_tratamiento_form" name="id_tratamiento">
+          <textarea 
+            id="nueva-observacion" 
+            name="observacion" 
+            placeholder="Escribe tu observación (mínimo 5 caracteres)..."
+            rows="4"
+            required
+          ></textarea>
+          <div class="contador-caracteres">
+            <i class="fas fa-keyboard"></i>
+            <span id="contador">0</span>/5 caracteres mínimos
+          </div>
+          <button type="submit" class="btn-guardar-observacion">
+            <i class="fa-solid fa-save"></i> Guardar Observación
+          </button>
+        </form>
+      </div>
+      {% else %}
+      <div class="info-permisos">
+        <i class="fa-solid fa-lock"></i>
+        <p>Solo los supervisores y administradores pueden agregar observaciones.</p>
+      </div>
+      {% endif %}
+    </div>
   </div>
 </div>
 
 <!-- Imagen decorativa -->
 <img src="{{ url_for('static', filename='img/plantaa.png') }}" class="planta" alt="Planta decorativa">
 
-<script src="{{ url_for('static', filename='js/tratamientos_registrados.js') }}"></script>
+<!-- Flash messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/tratamientos_registrados.js') }}"></script>
 
 {% endblock %}

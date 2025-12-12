@@ -1,104 +1,194 @@
-{% extends 'base.html' %} {% block title %}Ventas Registradas{% endblock %} {%
-block CustomCSS %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/ventas.css') }}"
-/>
-<link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-/>
-{% endblock %} {% block body %}
+{% extends 'base.html' %}
 
-<!------- Logo ------------>
+{% block title %}Ventas Registradas{% endblock %}
+
+{% block CustomCSS %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ventas.css') }}">
+{% endblock %}
+
+{% block body %}
 <div class="logo">
-  <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo" />
+    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
 </div>
 
-<!------- Titulo ------------>
-<h1 class="Titulo">Ventas Registradas</h1>
-
-<!-- Botón volver al inicio -->
+<!-- Botón volver -->
 <div class="logout-btn">
-  <a href="{{ url_for('home') }}">
-    <button title="Volver al inicio">
-      <i class="fa-solid fa-arrow-left"></i>
-    </button>
-  </a>
-</div>
-
-<!-- Contenedor principal -->
-<div class="containerSiembra">
-  <div class="buscador-contenedor">
-    <input type="text" id="buscador-ventas" placeholder="Buscar ventas..." />
-  </div>
-
-  <div class="tabla-contenedor">
-    <table class="tabla-ventas" id="tabla-ventas">
-      <thead>
-        <tr>
-          <th>Cultivo</th>
-          <th>Fecha</th>
-          <th>Cantidad</th>
-          <th>Precio</th>
-          <th>Descripción</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for venta in ventas %}
-        <tr>
-          <td>{{ venta[1] }}</td>
-          <!-- nombre del cultivo -->
-          <td>{{ venta[2] }}</td>
-          <!-- fecha -->
-          <td>{{ venta[3] }}</td>
-          <!-- cantidad -->
-          <td>${{ venta[4] }}</td>
-          <!-- precio -->
-          <td>{{ venta[5] }}</td>
-          <!-- descripcion -->
-          <td>
-            <a href="{{ url_for('eliminar_venta', id=venta[0]) }}">
-              <button class="btn-guardar">Eliminar</button>
-            </a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-
-    <p id="no-result-siembra" class="NoResultado">
-      No se encontraron evidencias que coincidan con la búsqueda.
-    </p>
-  </div>
-
-  <!-- Botones inferiores -->
-  <div class="botones">
-    <a href="{{ url_for('registrar_ventas') }}">
-      <button class="btn-guardar">Registrar Nueva Venta</button>
+    <a href="{{ url_for('home') }}">
+        <button title="Volver al inicio">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
     </a>
-  </div>
 </div>
 
-<!------- Imagen planta ------------>
-<img
-  src="{{ url_for('static', filename='img/plantaa.png') }}"
-  class="planta"
-  alt="Planta decorativa"
-/>
+<div class="ventas-container">
+    <h1><i class="fas fa-shopping-cart"></i> Ventas Registradas</h1>
+    
+    <!-- Cards de estadísticas -->
+    <div class="stats-cards">
+        <div class="stat-card card-ventas">
+            <div class="stat-icon">
+                <i class="fas fa-receipt"></i>
+            </div>
+            <div class="stat-content">
+                <h3>Total Ventas</h3>
+                <p class="stat-numero">{{ stats[0] or 0 }}</p>
+            </div>
+        </div>
 
-{% with messages = get_flashed_messages(with_categories=true) %} {% if messages
-%} {% for category, message in messages %}
-<div
-  id="flash-data"
-  data-icon="{{ category }}"
-  data-message="{{ message }}"
-></div>
-{% endfor %} {% endif %} {% endwith %}
+        <div class="stat-card card-bultos">
+            <div class="stat-icon">
+                <i class="fas fa-boxes"></i>
+            </div>
+            <div class="stat-content">
+                <h3>Bultos Vendidos</h3>
+                <p class="stat-numero">{{ stats[1] or 0 }}</p>
+            </div>
+        </div>
 
-<!-- Conexión con JS -->
-<script src="{{ url_for('static', filename='js/alertas_registros.js') }}"></script>
+        <div class="stat-card card-ingresos">
+            <div class="stat-icon">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="stat-content">
+                <h3>Ingresos Totales</h3>
+                <p class="stat-numero">${{ "{:,.2f}".format(stats[2] or 0) }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controles -->
+    <div class="controles-ventas">
+        <div class="buscador-contenedor">
+            <input 
+                type="text" 
+                id="buscador-ventas" 
+                placeholder="Buscar por cultivo, fecha o descripción..."
+                autocomplete="off"
+            >
+        </div>
+
+        <button class="btn-reporte" onclick="mostrarModalReporte()">
+            <i class="fas fa-file-pdf"></i> Generar Reporte
+        </button>
+    </div>
+
+    <!-- Tabla de ventas -->
+    <div class="tabla-contenedor">
+        <table id="tabla-ventas">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Cultivo</th>
+                    <th>Fecha</th>
+                    <th>Cantidad (Bultos)</th>
+                    <th>Precio Unitario</th>
+                    <th>Total</th>
+                    <th>Descripción</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if ventas %}
+                    {% for venta in ventas %}
+                    <tr>
+                        <td>{{ venta[0] }}</td>
+                        <td><span class="badge-cultivo">{{ venta[1] }}</span></td>
+                        <td>{{ venta[2].strftime('%d/%m/%Y') }}</td>
+                        <td><strong>{{ venta[3] }}</strong></td>
+                        <td>${{ "{:,.2f}".format(venta[4]) }}</td>
+                        <td class="total-cell">${{ "{:,.2f}".format(venta[3] * venta[4]) }}</td>
+                        <td>{{ venta[5] or '-' }}</td>
+                        <td>
+                            <a href="{{ url_for('eliminar_venta', id=venta[0]) }}" 
+                               class="btn-eliminar" 
+                               onclick="return confirm('¿Seguro que deseas eliminar esta venta?')">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr id="no-ventas">
+                        <td colspan="8" style="text-align: center; padding: 40px;">
+                            <i class="fas fa-inbox" style="font-size: 48px; color: #666; margin-bottom: 15px;"></i>
+                            <p style="color: #999;">No hay ventas registradas</p>
+                        </td>
+                    </tr>
+                {% endif %}
+                
+                <tr id="no-result-ventas" style="display: none;">
+                    <td colspan="8" style="text-align: center; padding: 30px; color: #999;">
+                        <i class="fas fa-search"></i> No se encontraron resultados
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal para generar reporte -->
+<div class="modal-overlay" id="modalReporte">
+    <div class="modal-content modal-reporte">
+        <div class="modal-header">
+            <h3><i class="fas fa-calendar-alt"></i> Generar Reporte de Ventas</h3>
+            <button class="modal-close" onclick="cerrarModalReporte()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form method="POST" action="{{ url_for('generar_reporte_ventas') }}">
+                <div class="form-group-modal">
+                    <label for="fecha_inicio">
+                        <i class="fas fa-calendar-day"></i> Fecha Inicio
+                    </label>
+                    <input 
+                        type="date" 
+                        id="fecha_inicio" 
+                        name="fecha_inicio" 
+                        class="input-fecha"
+                        required
+                    >
+                </div>
+
+                <div class="form-group-modal">
+                    <label for="fecha_fin">
+                        <i class="fas fa-calendar-day"></i> Fecha Fin
+                    </label>
+                    <input 
+                        type="date" 
+                        id="fecha_fin" 
+                        name="fecha_fin" 
+                        class="input-fecha"
+                        required
+                    >
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancelar" onclick="cerrarModalReporte()">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-generar">
+                        <i class="fas fa-download"></i> Generar PDF
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="planta">
+    <img src="{{ url_for('static', filename='img/plantaa.png') }}" alt="planta">
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ url_for('static', filename='js/ventas_registradas.js') }}"></script>
 

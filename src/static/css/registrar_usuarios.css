@@ -17,7 +17,7 @@
 /* Fondo general con imagen */
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
+    font-family: 'Poppins', sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -42,28 +42,31 @@ body {
 
 /* Título grande fuera del cuadro */
 .page-title {
+    font-family: 'Poppins', sans-serif;
     font-size: 2.7rem;
-    color: white;
-    margin-bottom: 20px;
+    color: #2cdf7de6;
+    margin-bottom: 50px;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
     font-weight: 700;
 }
 
 /* Cuadro del formulario */
 .form-box {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.305);
     backdrop-filter: blur(10px);
     padding: 25px;
     border-radius: 15px;
     width: 350px;
     margin: 0 auto;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    box-shadow: 0 8px 20px rgba(28, 247, 137, 0.681);
+    border: #00ff88 4px solid;
+    color: #c8c8c8;
 }
 
 /* Inputs */
 form label {
     display: block;
-    color: white;
+    color: #00ff88(46, 234, 43, 0.783);
     text-align: left;
     margin-top: 10px;
     font-size: 0.9rem;
@@ -73,10 +76,12 @@ form input, form select {
     width: 100%;
     padding: 10px;
     margin-top: 5px;
-    border: none;
-    border-radius: 8px;
+    border: 2px solid #00ff88;
+    border-radius: 16px;
     outline: none;
     font-size: 1rem;
+    color: #c4c4c4e7;
+    background-color: #00000064;
 }
 
 .password-container {
@@ -103,18 +108,18 @@ button {
     margin-top: 20px;
     width: 100%;
     padding: 12px;
-    background: #3f9637;
-    color: white;
+    background: #2cdf5364;
+    color: #2cdf53e7;
     font-size: 1.1rem;
     font-weight: bold;
-    border: none;
-    border-radius: 8px;
+    border: 3px solid #2cdf53e7;
+    border-radius: 15px;
     cursor: pointer;
-    transition: 0.3s;
+    transition: 0.5s;
 }
 
 button:hover {
-    background: #196b20;
+    background: #2cdf53c1;
 }
 
 a {

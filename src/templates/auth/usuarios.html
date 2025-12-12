@@ -1,67 +1,213 @@
-{% extends 'base.html' %} {% block title %}Usuarios{% endblock %} {% block
-CustomCSS %}
-<link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/usuarios.css') }}"
-/>
-{% endblock %} {% block body %}
+{% extends 'base.html' %}
 
-<!-- Botón volver al inicio -->
+{% block title %}Gestión de Usuarios{% endblock %}
+
+{% block CustomCSS %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/usuarios.css') }}">
+{% endblock %}
+
+{% block body %}
+<div class="logo">
+    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+</div>
+
+<!-- Botón volver -->
 <div class="logout-btn">
-  <a href="{{ url_for('home') }}">
-    <button title="Volver al inicio">
-      <i class="fa-solid fa-arrow-left"></i>
-    </button>
-  </a>
+    <a href="{{ url_for('home') }}">
+        <button title="Volver al inicio">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+    </a>
 </div>
 
-<h1 class="titulo-principal">Lista de Usuarios</h1>
+<div class="usuarios-container">
+    <h1><i class="fas fa-users-cog"></i> Gestión de Usuarios</h1>
+    
+    <!-- Cards de estadísticas -->
+    <div class="stats-cards">
+        <div class="stat-card card-total">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-content">
+                <h3>Total Usuarios</h3>
+                <p class="stat-numero">{{ usuarios|length }}</p>
+            </div>
+        </div>
 
-<div class="cuadro-usuarios">
-  <div class="buscador-contenedor">
-    <input type="text" id="buscador" placeholder="Buscar usuario..." />
-  </div>
+        <div class="stat-card card-habilitados">
+            <div class="stat-icon">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <div class="stat-content">
+                <h3>Habilitados</h3>
+                <p class="stat-numero">
+                    {% set habilitados = usuarios|selectattr('3', 'equalto', 'Habilitado')|list|length %}
+                    {{ habilitados }}
+                </p>
+            </div>
+        </div>
 
-  <!-- Contenedor con scroll SOLO para la tabla -->
-  <div class="tabla-contenedor">
-    <table class="tabla-usuarios" id="tabla-usuarios">
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Rol</th>
-          <th>Estado</th>
-          <th>Fecha Registro</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for usuario in usuarios %}
-        <tr>
-          <td>{{ usuario[1] }}</td>
-          <td>{{ usuario[2] }}</td>
-          <td>{{ usuario[3] }}</td>
-          <td>{{ usuario[4] }}</td>
-          <td>
-            <a href="{{ url_for('cambiar_estado', id=usuario[0]) }}">
-              <button class="btn-normal">Editar Usuario</button>
+        <div class="stat-card card-inhabilitados">
+            <div class="stat-icon">
+                <i class="fas fa-user-slash"></i>
+            </div>
+            <div class="stat-content">
+                <h3>Inhabilitados</h3>
+                <p class="stat-numero">
+                    {% set inhabilitados = usuarios|selectattr('3', 'equalto', 'Inhabilitado')|list|length %}
+                    {{ inhabilitados }}
+                </p>
+            </div>
+        </div>
+
+        <div class="stat-card card-roles">
+            <div class="stat-icon">
+                <i class="fas fa-user-tag"></i>
+            </div>
+            <div class="stat-content">
+                <h3>Roles Diferentes</h3>
+                <p class="stat-numero">
+                    {% set roles_unicos = usuarios|map(attribute='2')|unique|list|length %}
+                    {{ roles_unicos }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controles -->
+    <div class="controles-usuarios">
+        <div class="buscador-contenedor">
+            <input 
+                type="text" 
+                id="buscador" 
+                placeholder="Buscar por nombre, rol o estado..."
+                autocomplete="off"
+            >
+        </div>
+
+        <div class="filtros-contenedor">
+            <select id="filtro-rol" class="select-filtro">
+                <option value="">Todos los roles</option>
+                <option value="administrador">Administrador</option>
+                <option value="supervisor">Supervisor</option>
+                <option value="empleado">Empleado</option>
+                <option value="cuidador">Cuidador</option>
+            </select>
+
+            <select id="filtro-estado" class="select-filtro">
+                <option value="">Todos los estados</option>
+                <option value="habilitado">Habilitado</option>
+                <option value="inhabilitado">Inhabilitado</option>
+            </select>
+
+            <a href="{{ url_for('registrar_usuario') }}" class="btn-nuevo-usuario">
+                <i class="fas fa-user-plus"></i> Nuevo Usuario
             </a>
-          </td>
-        </tr>
-        {% endfor %}
-        <tr id="no-result" style="display: none">
-          <td colspan="5" style="text-align: center; color: #f00">
-            No se encontraron resultados
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+        </div>
+    </div>
 
-  <script src="{{ url_for('static', filename='js/usuarios.js') }}"></script>
+    <!-- Tabla de usuarios -->
+    <div class="tabla-contenedor">
+        <table id="tabla-usuarios">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-user"></i> Nombre</th>
+                    <th><i class="fas fa-user-tag"></i> Rol</th>
+                    <th><i class="fas fa-toggle-on"></i> Estado</th>
+                    <th><i class="fas fa-calendar-plus"></i> Fecha Registro</th>
+                    <th><i class="fas fa-cog"></i> Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if usuarios %}
+                    {% for usuario in usuarios %}
+                    <tr class="fila-usuario" data-rol="{{ usuario[2].lower() }}" data-estado="{{ usuario[3].lower() }}">
+                        <td>
+                            <div class="usuario-info">
+                                <div class="usuario-avatar">
+                                    {{ usuario[1][0]|upper }}
+                                </div>
+                                <strong>{{ usuario[1] }}</strong>
+                            </div>
+                        </td>
+                        <td>
+                            {% if usuario[2] == 'administrador' %}
+                                <span class="badge-rol badge-administrador">
+                                    <i class="fas fa-crown"></i> {{ usuario[2]|capitalize }}
+                                </span>
+                            {% elif usuario[2] == 'supervisor' %}
+                                <span class="badge-rol badge-supervisor">
+                                    <i class="fas fa-user-tie"></i> {{ usuario[2]|capitalize }}
+                                </span>
+                            {% elif usuario[2] == 'empleado' %}
+                                <span class="badge-rol badge-empleado">
+                                    <i class="fas fa-user"></i> {{ usuario[2]|capitalize }}
+                                </span>
+                            {% else %}
+                                <span class="badge-rol badge-cuidador">
+                                    <i class="fas fa-seedling"></i> {{ usuario[2]|capitalize }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if usuario[3] == 'Habilitado' %}
+                                <span class="badge-estado badge-habilitado">
+                                    <i class="fas fa-check-circle"></i> {{ usuario[3] }}
+                                </span>
+                            {% else %}
+                                <span class="badge-estado badge-inhabilitado">
+                                    <i class="fas fa-times-circle"></i> {{ usuario[3] }}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="fecha-registro">
+                                <i class="far fa-calendar"></i>
+                                {{ usuario[4].strftime('%d/%m/%Y') if usuario[4] else 'N/A' }}
+                            </div>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('cambiar_estado', id=usuario[0]) }}" class="btn-editar">
+                                <i class="fas fa-edit"></i> Editar
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr id="sin-usuarios">
+                        <td colspan="5" style="text-align: center; padding: 40px;">
+                            <i class="fas fa-users-slash" style="font-size: 48px; color: #666; margin-bottom: 15px;"></i>
+                            <p style="color: #999;">No hay usuarios registrados</p>
+                        </td>
+                    </tr>
+                {% endif %}
+                
+                <tr id="no-result" style="display: none;">
+                    <td colspan="5" style="text-align: center; padding: 30px; color: #999;">
+                        <i class="fas fa-search"></i> No se encontraron resultados
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-  {% endblock %}
+    <!-- Info de paginación -->
+    <div class="tabla-footer">
+        <p>Mostrando <span id="total-visible">{{ usuarios|length }}</span> de <span id="total-usuarios">{{ usuarios|length }}</span> usuarios</p>
+    </div>
 </div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/usuarios.js') }}"></script>
+
+{% endblock %}

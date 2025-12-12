@@ -1,56 +1,254 @@
-{% extends 'base.html' %} {% block title %}Problemas Registrados{% endblock %}
+{% extends 'base.html' %}
+
+{% block title %}Problemas Registrados{% endblock %}
+
 {% block CustomCSS %}
-<link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-/>
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/problemas_registrados.css') }}"
-/>
-{% endblock %} {% block body %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/problemas_registrados.css') }}">
+{% endblock %}
+
+{% block body %}
 <div class="logo">
-  <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo" />
+    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
 </div>
 
-<!-- Botón volver al inicio -->
+<!-- Botón volver -->
 <div class="logout-btn">
-  <a href="{{ url_for('home') }}">
-    <button title="Volver al inicio">
-      <i class="fa-solid fa-arrow-left"></i>
-    </button>
-  </a>
-</div>
-
-<h1>Problemas reportados por {{ usuario }}</h1>
-
-<div class="buscador-contenedor">
-  <input type="text" id="buscador-siembra" placeholder="Buscar..." />
+    <a href="{{ url_for('home') }}">
+        <button title="Volver al inicio">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+    </a>
 </div>
 
 <div class="problemas-container">
-  <div class="row">
-    {% for p in problemas %}
-    <div class="col-md-4 mb-4">
-      <div class="card">
-        {% if p.ruta %}
-        <img src="{{ p.ruta }}" class="card-img-top" alt="Evidencia" />
+    <h1>
+        <i class="fas fa-bug"></i> 
+        {% if rol in ['administrador', 'supervisor'] %}
+            Problemas de Cultivo - Todos los Registros
+        {% else %}
+            Mis Problemas Reportados
         {% endif %}
-        <div class="card-body">
-          <h5 class="card-title">{{ p.tipo }}</h5>
-          <p class="card-text">{{ p.descripcion }}</p>
-          <p class="fecha">Fecha: {{ p.fecha }}</p>
+    </h1>
+    
+    <!-- Cards de estadísticas -->
+    <div class="stats-cards">
+        <div class="stat-card card-total">
+            <div class="stat-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="stat-content">
+                <h3>Total Problemas</h3>
+                <p class="stat-numero">{{ stats[0] or 0 }}</p>
+            </div>
         </div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
 
-  <p id="no-result-siembra" class="NoResultado">
-    No se encontraron evidencias que coincidan con la búsqueda.
-  </p>
+        <div class="stat-card card-tipos">
+            <div class="stat-icon">
+                <i class="fas fa-list"></i>
+            </div>
+            <div class="stat-content">
+                <h3>Tipos Diferentes</h3>
+                <p class="stat-numero">{{ stats[1] or 0 }}</p>
+            </div>
+        </div>
+
+        <div class="stat-card card-usuarios">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-content">
+                <h3>
+                    {% if rol in ['administrador', 'supervisor'] %}
+                        Usuarios Reportaron
+                    {% else %}
+                        Mis Reportes
+                    {% endif %}
+                </h3>
+                <p class="stat-numero">{{ stats[2] or 0 }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controles -->
+    <div class="controles-problemas">
+        <div class="buscador-contenedor">
+            <input 
+                type="text" 
+                id="buscador-problemas" 
+                placeholder="Buscar por tipo, descripción o usuario..."
+                autocomplete="off"
+            >
+        </div>
+
+        <div class="filtros-contenedor">
+            <select id="filtro-tipo" class="select-filtro">
+                <option value="">Todos los tipos</option>
+            </select>
+
+            {% if rol in ['administrador', 'supervisor'] %}
+            <button class="btn-reporte" onclick="mostrarModalReporte()">
+                <i class="fas fa-file-pdf"></i> Generar Reporte
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Grid de problemas -->
+    <div class="problemas-grid">
+        {% if problemas %}
+            {% for p in problemas %}
+            <div class="problema-card" data-tipo="{{ p.tipo }}" data-usuario="{{ p.usuario }}">
+                {% if p.ruta %}
+                <div class="problema-imagen">
+                    <img src="{{ p.ruta }}" alt="Evidencia del problema">
+                    <div class="imagen-overlay">
+                        <i class="fas fa-search-plus"></i>
+                    </div>
+                </div>
+                {% else %}
+                <div class="problema-sin-imagen">
+                    <i class="fas fa-image"></i>
+                    <p>Sin evidencia</p>
+                </div>
+                {% endif %}
+
+                <div class="problema-contenido">
+                    <div class="problema-header">
+                        <span class="badge-tipo badge-{{ p.tipo.lower().replace(' ', '-') }}">
+                            {{ p.tipo }}
+                        </span>
+                        <span class="problema-id">#{{ p.id }}</span>
+                    </div>
+
+                    <p class="problema-descripcion">{{ p.descripcion }}</p>
+
+                    <div class="problema-footer">
+                        <div class="problema-usuario">
+                            <i class="fas fa-user"></i>
+                            <span>{{ p.usuario }}</span>
+                            {% if rol in ['administrador', 'supervisor'] %}
+                                <span class="badge-rol badge-{{ p.rol_usuario }}">
+                                    {{ p.rol_usuario }}
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div class="problema-fecha">
+                            <i class="far fa-calendar"></i>
+                            <span>{{ p.fecha.strftime('%d/%m/%Y') }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="sin-problemas">
+                <i class="fas fa-check-circle"></i>
+                <h3>¡Excelente!</h3>
+                <p>No hay problemas registrados en este momento</p>
+            </div>
+        {% endif %}
+
+        <div id="no-result-problemas" class="sin-resultados" style="display: none;">
+            <i class="fas fa-search"></i>
+            <p>No se encontraron problemas que coincidan con la búsqueda</p>
+        </div>
+    </div>
 </div>
 
+<!-- Modal para generar reporte -->
+{% if rol in ['administrador', 'supervisor'] %}
+<div class="modal-overlay" id="modalReporte">
+    <div class="modal-content modal-reporte">
+        <div class="modal-header">
+            <h3><i class="fas fa-file-chart-line"></i> Generar Reporte de Problemas</h3>
+            <button class="modal-close" onclick="cerrarModalReporte()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form method="POST" action="{{ url_for('generar_reporte_problemas') }}">
+                <div class="form-row">
+                    <div class="form-group-modal">
+                        <label for="fecha_inicio">
+                            <i class="fas fa-calendar-day"></i> Fecha Inicio
+                        </label>
+                        <input 
+                            type="date" 
+                            id="fecha_inicio" 
+                            name="fecha_inicio" 
+                            class="input-fecha"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group-modal">
+                        <label for="fecha_fin">
+                            <i class="fas fa-calendar-day"></i> Fecha Fin
+                        </label>
+                        <input 
+                            type="date" 
+                            id="fecha_fin" 
+                            name="fecha_fin" 
+                            class="input-fecha"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <div class="form-group-modal">
+                    <label for="tipo_filtro">
+                        <i class="fas fa-filter"></i> Filtrar por Tipo (Opcional)
+                    </label>
+                    <select id="tipo_filtro" name="tipo_filtro" class="input-select">
+                        <option value="">Todos los tipos</option>
+                        <!-- Se llenarán dinámicamente con JS -->
+                    </select>
+                </div>
+
+                <div class="form-group-modal">
+                    <label for="usuario_filtro">
+                        <i class="fas fa-user"></i> Filtrar por Usuario (Opcional)
+                    </label>
+                    <select id="usuario_filtro" name="usuario_filtro" class="input-select">
+                        <option value="">Todos los usuarios</option>
+                        <!-- Se llenarán dinámicamente con JS -->
+                    </select>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancelar" onclick="cerrarModalReporte()">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn-generar">
+                        <i class="fas fa-download"></i> Generar PDF
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Modal para ver imagen ampliada -->
+<div class="modal-overlay" id="modalImagen">
+    <div class="modal-imagen-container">
+        <button class="modal-close modal-close-imagen" onclick="cerrarModalImagen()">
+            <i class="fas fa-times"></i>
+        </button>
+        <img id="imagenAmpliada" src="" alt="Evidencia ampliada">
+    </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ url_for('static', filename='js/problemas_registrados.js') }}"></script>
 
 {% endblock %}
