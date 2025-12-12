@@ -74,6 +74,113 @@ body {
     right: 30px;        /* AUMENTADO: más a la derecha para separar del perfil */
     z-index: 1000;
 }
+/* ===================== CAMPANA DE NOTIFICACIONES ===================== */
+.notificaciones-btn {
+    position: fixed;
+    top: 28px;            /* Misma altura del logout */
+    left: 25px;           /* Lado contrario del perfil/logout */
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.notificaciones-btn i {
+    font-size: 35px;
+    color: #ffffff;       /* Blanco para combinar */
+    transition: 0.3s ease;
+}
+
+.notificaciones-btn:hover i {
+    color: #b6ffb6;       /* Verde claro al pasar el mouse */
+    transform: scale(1.12);
+}
+
+/* Badge (contador rojo/verde discreto arriba a la derecha del ícono) */
+.badge-notificacion {
+    position: absolute;
+    top: -8px;
+    right: -10px;
+    background: #46a346; /* Verde, coherente con tu app */
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    display: none;        /* Se muestra solo cuando hay notificaciones */
+    box-shadow: 0 0 8px rgba(0,0,0,0.4);
+}
+
+/* ===================== CAMPANA EN EL MENÚ LATERAL ===================== */
+.notificaciones-menu-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.badge-menu {
+    background: #46a346;
+    color: white;
+    padding: 3px 7px;
+    font-size: 12px;
+    border-radius: 12px;
+    font-weight: bold;
+    display: none;
+}
+/* === FORZAR que los botones superiores se vean === */
+.notificaciones-btn,
+.profile-btn,
+.logout-btn,
+.theme-btn {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    z-index: 9999 !important;
+}
+
+/* --- CAMPANA DE NOTIFICACIONES EN EL HEADER --- */
+.notificaciones-btn-header {
+    position: fixed;
+    top: 30px;
+    left: 50px; /* Ajusta si quieres moverla más a la izquierda */
+    z-index: 1000;
+}
+
+.notificacion-icon-btn {
+    background: #4c9677; /* verde que combina con la app */
+    border: none;
+    color: white;
+    font-size: 26px;
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    transition: transform 0.3s, background 0.3s;
+}
+
+.notificacion-icon-btn:hover {
+    background: #3f7e63;
+    transform: scale(1.1);
+}
+
+/* Badge del número */
+.badge-notif {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff3b3b;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 50%;
+    font-size: 13px;
+    font-weight: bold;
+    display: none; /* Se muestra solo si hay notificaciones */
+}
 
 .logout-btn button {
     background: transparent;
@@ -577,6 +684,57 @@ body {
 }
 .menu-mobile {
   display: flex;
+}
+
+/* ========== DESPLEGABLE BOTÓN SOLICITUDES ========== */
+.btn-wrapper-solicitudes {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 3;
+}
+
+/* Menú desplegable hacia arriba */
+#solicitudes-dropdown {
+    position: absolute;
+    bottom: 70px; /* Ajusta según la altura del botón */
+    left: 50%;
+    transform: translateX(-50%);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    z-index: 3;
+}
+
+/* Botón de despliegue */
+.solicitudes-drop-btn {
+    width: 220px;
+    height: 40px;
+    border-radius: 30px;
+    background: #7aaa87;
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    transition: background 0.3s, transform 0.3s;
+    cursor: pointer;
+    border: none;
+}
+
+.solicitudes-drop-btn:hover {
+    background: #699276;
+    transform: scale(1.05);
+}
+
+/* Mostrar menú con animación */
+#solicitudes-dropdown.show {
+    display: flex;
+    animation: fadeIn 0.4s ease forwards;
 }
 
 @keyframes fadeIn {

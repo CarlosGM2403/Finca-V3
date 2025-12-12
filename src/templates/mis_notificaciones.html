@@ -35,12 +35,6 @@
             <button class="btn-filtro active" data-filtro="todas">
                 <i class="fa-solid fa-list"></i> Todas
             </button>
-            <button class="btn-filtro" data-filtro="aceptada">
-                <i class="fa-solid fa-check-circle"></i> Aceptadas
-            </button>
-            <button class="btn-filtro" data-filtro="rechazada">
-                <i class="fa-solid fa-times-circle"></i> Rechazadas
-            </button>
             <button class="btn-filtro" data-filtro="no-leidas">
                 <i class="fa-solid fa-envelope"></i> No leídas
             </button>
@@ -50,70 +44,120 @@
     <div class="notificaciones-grid">
         {% if notificaciones %}
             {% for notif in notificaciones %}
-            <div class="notificacion-card {{ notif[5] }} {% if notif[6] == 1 %}leida{% endif %}" 
-                 data-tipo="{{ notif[5] }}" 
-                 data-leida="{{ notif[6] }}">
+            
+            {# ===== NOTIFICACIONES GENERALES (Para administradores) ===== #}
+            {% if notif.tipo_notif == 'general' %}
+            <div class="notificacion-card general {% if notif.leida == 1 %}leida{% endif %}" 
+                 data-tipo="general" 
+                 data-leida="{{ notif.leida }}">
                 <div class="notificacion-header">
-                    <span class="tipo-badge {{ notif[5] }}">
-                        {% if notif[5] == 'aceptada' %}
-                        <i class="fa-solid fa-check-circle"></i> Aceptada
+                    <span class="tipo-badge general">
+                        {% if notif.tipo == 'nueva_actividad' %}
+                        <i class="fa-solid fa-tasks"></i> Nueva Actividad
+                        {% elif notif.tipo == 'nueva_produccion' %}
+                        <i class="fa-solid fa-seedling"></i> Nueva Producción
+                        {% elif notif.tipo == 'nueva_venta' %}
+                        <i class="fa-solid fa-dollar-sign"></i> Nueva Venta
+                        {% elif notif.tipo == 'solicitud_insumo' %}
+                        <i class="fa-solid fa-box"></i> Solicitud de Insumo
+                        {% elif notif.tipo == 'nuevo_tratamiento' %}
+                        <i class="fa-solid fa-leaf"></i> Nuevo Tratamiento
+                        {% elif notif.tipo == 'nuevo_problema' %}
+                        <i class="fa-solid fa-exclamation-triangle"></i> Problema Reportado
                         {% else %}
-                        <i class="fa-solid fa-times-circle"></i> Rechazada
+                        <i class="fa-solid fa-bell"></i> Notificación
                         {% endif %}
                     </span>
                     <span class="fecha">
                         <i class="fa-regular fa-clock"></i>
-                        {{ notif[7].strftime('%d/%m/%Y %H:%M') }}
+                        {{ notif.fecha.strftime('%d/%m/%Y %H:%M') }}
                     </span>
                 </div>
 
                 <div class="notificacion-body">
-                    <div class="insumo-info">
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fa-solid fa-box"></i> Tipo de Insumo
-                            </div>
-                            <div class="info-value">{{ notif[2] }}</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fa-solid fa-calculator"></i> Cantidad
-                            </div>
-                            <div class="info-value">{{ notif[3] }}</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fa-solid fa-hashtag"></i> Solicitud
-                            </div>
-                            <div class="info-value">#{{ notif[1] }}</div>
-                        </div>
-                    </div>
-
                     <div class="mensaje">
-                        {{ notif[4] }}
+                        {{ notif.mensaje }}
                     </div>
+                    
+                    {% if notif.referencia_id %}
+                    <div class="info-adicional">
+                        <i class="fa-solid fa-hashtag"></i> Referencia: #{{ notif.referencia_id }}
+                    </div>
+                    {% endif %}
                 </div>
 
                 <div class="notificacion-footer">
-                    {% if notif[6] == 0 and notif[5] == 'aceptada' %}
-                    <form method="POST" action="{{ url_for('marcar_notificacion_leida', id=notif[0]) }}" style="width: 100%; max-width: 300px;">
+                    {% if notif.leida == 0 %}
+                    <form method="POST" action="{{ url_for('marcar_notificacion_leida', id=notif.id) }}" style="width: 100%; max-width: 300px;">
+                        <input type="hidden" name="tipo_notif" value="general">
                         <button type="submit" class="btn-confirmar">
-                            <i class="fa-solid fa-check"></i> Sí, lo recibí
+                            <i class="fa-solid fa-check"></i> Marcar como leída
                         </button>
                     </form>
-                    {% elif notif[6] == 1 %}
+                    {% else %}
                     <span class="estado-leida">
-                        <i class="fa-solid fa-check-double"></i> Confirmada
+                        <i class="fa-solid fa-check-double"></i> Leída
                     </span>
                     {% endif %}
                 </div>
             </div>
+            
+            {# ===== NOTIFICACIONES PERSONALES (Insumos) ===== #}
+            {% elif notif.tipo_notif == 'personal' %}
+            <div class="notificacion-card {{ notif.tipo }} {% if notif.leida == 1 %}leida{% endif %}" 
+                 data-tipo="{{ notif.tipo }}" 
+                 data-leida="{{ notif.leida }}">
+                <div class="notificacion-header">
+                    <span class="tipo-badge {{ notif.tipo }}">
+                        {% if notif.tipo == 'aceptada' %}
+                        <i class="fa-solid fa-check-circle"></i> Aceptada
+                        {% elif notif.tipo == 'rechazada' %}
+                        <i class="fa-solid fa-times-circle"></i> Rechazada
+                        {% else %}
+                        <i class="fa-solid fa-clock"></i> Pendiente
+                        {% endif %}
+                    </span>
+                    <span class="fecha">
+                        <i class="fa-regular fa-clock"></i>
+                        {{ notif.fecha.strftime('%d/%m/%Y %H:%M') }}
+                    </span>
+                </div>
+
+                <div class="notificacion-body">
+                    <div class="mensaje">
+                        {{ notif.mensaje }}
+                    </div>
+                    
+                    {% if notif.solicitud_id %}
+                    <div class="info-adicional">
+                        <i class="fa-solid fa-hashtag"></i> Solicitud: #{{ notif.solicitud_id }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="notificacion-footer">
+                    {% if notif.leida == 0 %}
+                    <form method="POST" action="{{ url_for('marcar_notificacion_leida', id=notif.id) }}" style="width: 100%; max-width: 300px;">
+                        <input type="hidden" name="tipo_notif" value="personal">
+                        <button type="submit" class="btn-confirmar">
+                            <i class="fa-solid fa-check"></i> Marcar como leída
+                        </button>
+                    </form>
+                    {% else %}
+                    <span class="estado-leida">
+                        <i class="fa-solid fa-check-double"></i> Leída
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
             {% endfor %}
         {% else %}
         <div class="sin-notificaciones">
             <i class="fa-regular fa-bell-slash"></i>
             <h3>No tienes notificaciones</h3>
-            <p>Aquí aparecerán las respuestas a tus solicitudes de insumos</p>
+            <p>Aquí aparecerán las notificaciones del sistema</p>
         </div>
         {% endif %}
     </div>
@@ -127,61 +171,4 @@
   {% endif %}
 {% endwith %}
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    // Mostrar alertas de SweetAlert si hay mensajes flash
-    const flashData = document.getElementById('flash-data');
-    if (flashData) {
-        const icon = flashData.getAttribute('data-icon');
-        const message = flashData.getAttribute('data-message');
-        Swal.fire({
-            icon: icon,
-            title: icon === 'success' ? '¡Éxito!' : 'Error',
-            text: message,
-            confirmButtonColor: '#667eea',
-            timer: 3000,
-            timerProgressBar: true
-        });
-    }
-
-    // Sistema de filtros
-    const filtros = document.querySelectorAll('.btn-filtro');
-    const notificaciones = document.querySelectorAll('.notificacion-card');
-
-    filtros.forEach(filtro => {
-        filtro.addEventListener('click', function() {
-            // Remover clase active de todos
-            filtros.forEach(f => f.classList.remove('active'));
-            // Agregar clase active al clickeado
-            this.classList.add('active');
-
-            const filtroSeleccionado = this.getAttribute('data-filtro');
-
-            notificaciones.forEach(notif => {
-                const tipo = notif.getAttribute('data-tipo');
-                const leida = notif.getAttribute('data-leida');
-
-                if (filtroSeleccionado === 'todas') {
-                    notif.style.display = 'block';
-                } else if (filtroSeleccionado === 'no-leidas') {
-                    notif.style.display = leida === '0' ? 'block' : 'none';
-                } else {
-                    notif.style.display = tipo === filtroSeleccionado ? 'block' : 'none';
-                }
-            });
-        });
-    });
-
-    // Animación de entrada
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.animation = 'fadeInUp 0.6s ease-out';
-            }
-        });
-    });
-
-    notificaciones.forEach(notif => observer.observe(notif));
-</script>
-
-{% endblock %}
+{%endblock%}

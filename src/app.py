@@ -20,6 +20,9 @@ import os
 import base64
 import uuid
 
+
+
+
 # ---------------------- UTILIDADES ----------------------
 from werkzeug.utils import secure_filename
 from itsdangerous import URLSafeTimedSerializer
@@ -78,6 +81,54 @@ print("UPLOAD_FOLDER configurado en:", UPLOAD_FOLDER)
 # ---------------------- BASE DE DATOS ----------------------
 db = MySQL(app)
 
+# ---------------------- FUNCIONES DE NOTIFICACIÓN ----------------------
+
+def crear_notificacion_admin(tipo, usuario_id, mensaje, referencia_id, cultivo_id):
+    """
+    Crea una notificación para todos los administradores
+    """
+    try:
+        cur = db.connection.cursor()
+        
+        # Insertar notificación general para administradores
+        cur.execute("""
+            INSERT INTO notificaciones_generales 
+            (tipo, usuario_id, mensaje, referencia_id, cultivo_id, fecha_creacion, leida)
+            VALUES (%s, %s, %s, %s, %s, NOW(), 0)
+        """, (tipo, usuario_id, mensaje, referencia_id, cultivo_id))
+        
+        db.connection.commit()
+        cur.close()
+        return True
+        
+    except Exception as e:
+        print(f"Error al crear notificación admin: {str(e)}")
+        db.connection.rollback()
+        return False
+
+
+def crear_notificacion_insumo(solicitud_id, usuario_id, tipo_insumo, cantidad, mensaje, tipo_notificacion):
+    """
+    Crea una notificación personal para un usuario específico
+    """
+    try:
+        cur = db.connection.cursor()
+        
+        # Insertar notificación personal
+        cur.execute("""
+            INSERT INTO notificaciones 
+            (usuario_id, solicitud_id, tipo_insumo, cantidad, mensaje, tipo, fecha_creacion, leida)
+            VALUES (%s, %s, %s, %s, %s, %s, NOW(), 0)
+        """, (usuario_id, solicitud_id, tipo_insumo, cantidad, mensaje, tipo_notificacion))
+        
+        db.connection.commit()
+        cur.close()
+        return True
+        
+    except Exception as e:
+        print(f"Error al crear notificación de insumo: {str(e)}")
+        db.connection.rollback()
+        return False
 # ---------------------- LOGIN MANAGER ----------------------
 login_manager_app = LoginManager(app)
 login_manager_app.login_view = "login"
@@ -301,7 +352,6 @@ def login():
 
     return render_template("auth/login.html")
 
-
 # ---------------------- PRODUCCIÓN REGISTRADA ----------------------
 
 
@@ -313,6 +363,78 @@ def logout():
     print("Sesión después de logout:", session)
     return redirect(url_for("login"))
 
+
+
+
+def obtener_notificaciones_unificadas(usuario_id, rol, cur):
+    """
+    Obtiene todas las notificaciones según el rol del usuario
+    """
+    notificaciones = []
+    
+    # Si es administrador, obtener notificaciones generales
+    if rol == "administrador":
+        cur.execute("""
+            SELECT id, tipo, mensaje, leida, fecha_creacion, referencia_id
+            FROM notificaciones_generales
+            ORDER BY fecha_creacion DESC
+        """)
+        generales = cur.fetchall()
+        
+        for row in generales:
+            notificaciones.append({
+                "id": row[0],
+                "tipo_notif": "general",
+                "tipo": row[1],
+                "mensaje": row[2],
+                "leida": row[3],
+                "fecha": row[4],
+                "referencia_id": row[5]
+            })
+        
+        print(f"✓ Admin tiene {len(generales)} notificaciones generales")  # Debug
+    
+    # Notificaciones personales (todos los usuarios)
+    cur.execute("""
+        SELECT id, tipo, mensaje, leida, fecha_creacion, solicitud_id
+        FROM notificaciones
+        WHERE usuario_id = %s
+        ORDER BY fecha_creacion DESC
+    """, (usuario_id,))
+    personales = cur.fetchall()
+    
+    for row in personales:
+        notificaciones.append({
+            "id": row[0],
+            "tipo_notif": "personal",
+            "tipo": row[1],
+            "mensaje": row[2],
+            "leida": row[3],
+            "fecha": row[4],
+            "solicitud_id": row[5]
+        })
+    
+    print(f"✓ Usuario {usuario_id} tiene {len(personales)} notificaciones personales")  # Debug
+    
+    return notificaciones
+
+
+def contar_notificaciones_unificadas(usuario_id, rol, cur):
+    """
+    Cuenta el total de notificaciones no leídas
+    """
+    total = 0
+
+    # Contar generales si es administrador
+    if rol == "administrador":
+        cur.execute("SELECT COUNT(*) FROM notificaciones_generales WHERE leida = 0")
+        total += cur.fetchone()[0]
+
+    # Contar personales
+    cur.execute("SELECT COUNT(*) FROM notificaciones WHERE usuario_id = %s AND leida = 0", (usuario_id,))
+    total += cur.fetchone()[0]
+
+    return total
 
 # ---------------------- HOME ----------------------
 @app.route("/home")
@@ -981,7 +1103,7 @@ def registrar_cultivo():
             (nombre, tipo, id_usuario),
         )
         db.connection.commit()
-        cur.close()
+
         flash("Cultivo registrado con éxito.", "success")
         return redirect(url_for("registrar_cultivo"))
 
@@ -996,26 +1118,11 @@ def registrar_cultivo():
 def registrar_actividad():
     if request.method == "POST":
         actividad = request.form.get("actividad")
-        # Obtener lista de insumos (multiple)
         insumos_lista = request.form.getlist("insumos")
-        # Convertir a string para DB
         insumos_str = ", ".join(insumos_lista) if insumos_lista else None
         observaciones = request.form.get("observaciones")
         evidencia_base64 = request.form.get("evidencia")
 
-        # --- DEBUG: imprimir en la consola de Flask (no en SQL) ---
-        print("DEBUG - Datos recibidos:")
-        print("Actividad:", actividad)
-        print("INSUMOS RECIBIDOS (lista):", insumos_lista)
-        print("INSUMOS STRING a guardar:", insumos_str)
-        print("Observaciones:", observaciones)
-        print(
-            "Evidencia (len):",
-            len(evidencia_base64) if evidencia_base64 else "No llegó",
-        )
-        # -----------------------------------------------------------
-
-        # Validación: evitar insertar NULL si la columna es NOT NULL
         if not insumos_str:
             flash("Debes seleccionar al menos un insumo.", "danger")
             return redirect(url_for("registrar_actividad"))
@@ -1031,35 +1138,48 @@ def registrar_actividad():
                 with open(filepath, "wb") as f:
                     f.write(image_data)
             except Exception as e:
-                print("Error al guardar imagen:", e)
                 flash(f"Error al guardar la imagen: {str(e)}", "danger")
                 return redirect(url_for("registrar_actividad"))
 
         try:
             cursor = db.connection.cursor()
-            cursor.execute(
-                """
+            
+            # Insertar actividad
+            cursor.execute("""
                 INSERT INTO actividades (id_usuario, actividad, insumos, observaciones, evidencia, fecha)
                 VALUES (%s, %s, %s, %s, %s, NOW())
-            """,
-                (session["user_id"], actividad, insumos_str, observaciones, filename),
-            )
+            """, (session["user_id"], actividad, insumos_str, observaciones, filename))
+            
+            actividad_id = cursor.lastrowid
+            
+            # Obtener nombre del usuario
+            cursor.execute("SELECT fullname FROM user WHERE id = %s", (session["user_id"],))
+            usuario_info = cursor.fetchone()
+            usuario_nombre = usuario_info[0] if usuario_info else "Usuario"
+            
             db.connection.commit()
+            
+            # 🔔 NOTIFICACIÓN PARA ADMINISTRADORES
+            mensaje = f"{usuario_nombre} registró una actividad: {actividad}"
+            crear_notificacion_admin(
+                'nueva_actividad',
+                session["user_id"],
+                mensaje,
+                actividad_id,
+                None
+            )
+            
             cursor.close()
-
             flash("Actividad registrada correctamente", "success")
             return render_template("registrar_actividad.html")
 
         except Exception as e:
             db.connection.rollback()
-            print("Error al guardar en la BD:", e)
-            import traceback
-
-            traceback.print_exc()
             flash(f"Error al registrar actividad: {str(e)}", "danger")
             return render_template("registrar_actividad.html")
 
     return render_template("registrar_actividad.html")
+
 
 
 @app.route("/ver_fotos")
@@ -1125,14 +1245,11 @@ def ver_fotos():
 @app.route("/registrar_ventas", methods=["GET", "POST"])
 @login_required
 def registrar_ventas():
-    # Verificar que sea administrador
     if session.get('rol') != 'administrador':
         flash('No tienes permisos para registrar ventas', 'danger')
         return redirect(url_for('home'))
     
     cur = db.connection.cursor()
-
-    # Traer cultivos con su stock disponible
     cur.execute("""
         SELECT c.id_cultivo, c.nombre, 
                COALESCE(i.stock_actual, 0) as stock_disponible
@@ -1150,7 +1267,6 @@ def registrar_ventas():
         precio = request.form["precio"]
         descripcion = request.form["descripcion"]
 
-        # Verificar stock disponible
         cur.execute("""
             SELECT COALESCE(stock_actual, 0) as stock
             FROM inventario
@@ -1169,18 +1285,37 @@ def registrar_ventas():
             return render_template("auth/registrar_ventas.html", cultivos=cultivos)
 
         try:
-            # Insertar en la tabla ventas
-            cur.execute(
-                """
+            # Obtener nombre del cultivo
+            cur.execute("SELECT nombre FROM cultivos WHERE id_cultivo = %s", (cod_cultivo,))
+            cultivo_info = cur.fetchone()
+            cultivo_nombre = cultivo_info[0] if cultivo_info else "Cultivo"
+            
+            # Obtener nombre del usuario
+            cur.execute("SELECT fullname FROM user WHERE id = %s", (session["user_id"],))
+            usuario_info = cur.fetchone()
+            usuario_nombre = usuario_info[0] if usuario_info else "Administrador"
+            
+            # Insertar venta
+            cur.execute("""
                 INSERT INTO ventas (cod_cultivo, fecha_venta, cantidad_bultos, precio, descripcion)
                 VALUES (%s, %s, %s, %s, %s)
-            """,
-                (cod_cultivo, fecha, cantidad_bultos, precio, descripcion),
-            )
+            """, (cod_cultivo, fecha, cantidad_bultos, precio, descripcion))
+            
+            venta_id = cur.lastrowid
             db.connection.commit()
             
             # Actualizar inventario
             actualizar_inventario(cod_cultivo)
+            
+            # 🔔 NOTIFICACIÓN PARA ADMINISTRADORES
+            mensaje = f"{usuario_nombre} registró venta de {cultivo_nombre}: {cantidad_bultos} bultos por ${precio}"
+            crear_notificacion_admin(
+                'nueva_venta',
+                session["user_id"],
+                mensaje,
+                venta_id,
+                None
+            )
             
             flash("Venta registrada e inventario actualizado con éxito", "success")
             return redirect(url_for("ventas_registradas"))
@@ -1190,6 +1325,7 @@ def registrar_ventas():
             flash(f"Error al registrar venta: {str(e)}", "danger")
 
     return render_template("auth/registrar_ventas.html", cultivos=cultivos)
+
 
 @app.route("/ventas_registradas")
 def ventas_registradas():
@@ -1252,16 +1388,47 @@ def registrar_siembra():
         detalle = request.form["detalle"]
         cod_cultivos = request.form["cultivo"]
 
-        cur.execute(
-            """
-            INSERT INTO siembra (fecha_siembra, detalle, cod_cultivos)
-            VALUES (%s, %s, %s)
-        """,
-            (fecha, detalle, cod_cultivos),
-        )
-        db.connection.commit()
-        flash("Registro exitoso", "success")
-        return redirect(url_for("registrar_siembra"))
+        try:
+            # Obtener nombre del cultivo
+            cur.execute("SELECT nombre FROM Cultivos WHERE Id_cultivo = %s", (cod_cultivos,))
+            cultivo_info = cur.fetchone()
+            cultivo_nombre = cultivo_info[0] if cultivo_info else "Cultivo"
+            
+            # Obtener nombre del usuario
+            cur.execute("SELECT fullname FROM user WHERE id = %s", (session["user_id"],))
+            usuario_info = cur.fetchone()
+            usuario_nombre = usuario_info[0] if usuario_info else "Usuario"
+            
+            # Insertar siembra
+            cur.execute(
+                """
+                INSERT INTO siembra (fecha_siembra, detalle, cod_cultivos)
+                VALUES (%s, %s, %s)
+            """,
+                (fecha, detalle, cod_cultivos),
+            )
+            
+            siembra_id = cur.lastrowid
+            db.connection.commit()
+            
+            # 🔔 NOTIFICACIÓN PARA ADMINISTRADORES
+            mensaje = f"{usuario_nombre} registró una siembra de {cultivo_nombre} - Fecha: {fecha}"
+            crear_notificacion_admin(
+                'nueva_siembra',
+                session["user_id"],
+                mensaje,
+                siembra_id,
+                cod_cultivos
+            )
+            
+            flash("Registro exitoso", "success")
+            return redirect(url_for("registrar_siembra"))
+            
+        except Exception as e:
+            db.connection.rollback()
+            flash(f"Error al registrar siembra: {str(e)}", "danger")
+            
+    cur.close()
     return render_template("registrar_siembra.html", cultivos=cultivos)
 
 
@@ -1290,43 +1457,61 @@ def solicitar_insumo():
 
     if request.method == "POST":
         try:
-            # Obtener los datos del formulario
             insumos_values = request.form.getlist("insumo_value[]")
             insumos_nombres = request.form.getlist("insumo_nombre[]")
             
-            # Validar que haya al menos un insumo
             if not insumos_values:
                 flash("Debes agregar al menos un insumo para hacer la solicitud", "error")
                 return redirect(url_for("solicitar_insumo"))
             
             cur = db.connection.cursor()
             
-            # Recorrer cada insumo seleccionado
+            # Obtener nombre del usuario
+            cur.execute("SELECT fullname FROM user WHERE id = %s", (session["user_id"],))
+            usuario_info = cur.fetchone()
+            usuario_nombre = usuario_info[0] if usuario_info else "Usuario"
+            
             for i, insumo_value in enumerate(insumos_values):
                 cantidad = request.form.get(f"cantidad_{insumo_value}")
                 unidad = request.form.get(f"unidad_{insumo_value}")
-                observaciones = request.form.get(f"observaciones_{insumo_value}")  # Observación específica
+                observaciones = request.form.get(f"observaciones_{insumo_value}")
                 insumo_nombre = insumos_nombres[i]
                 
-                # Validar que tenga cantidad y unidad
                 if not cantidad or not unidad:
                     flash(f"El insumo {insumo_nombre} requiere cantidad y unidad", "error")
                     continue
                 
-                # Formatear el tipo de insumo y cantidad
                 tipo_insumo_completo = f"{insumo_nombre}"
                 cantidad_completa = f"{cantidad} {unidad}"
-                
-                # Si no hay observaciones, usar un texto por defecto
                 obs_final = observaciones if observaciones and observaciones.strip() else "Sin observaciones"
                 
-                # Insertar cada insumo como una solicitud separada
-                cur.execute(
-                    """
+                # Insertar solicitud
+                cur.execute("""
                     INSERT INTO solicitud_insumo (usuario_id, tipo_insumo, cantidad, observaciones, fecha_solicitud, estado)
                     VALUES (%s, %s, %s, %s, NOW(), 'Pendiente')
-                    """,
-                    (session["user_id"], tipo_insumo_completo, cantidad_completa, obs_final)
+                """, (session["user_id"], tipo_insumo_completo, cantidad_completa, obs_final))
+                
+                solicitud_id = cur.lastrowid
+                
+                # 🔔 NOTIFICACIÓN PARA EL EMPLEADO
+                mensaje_empleado = f"Tu solicitud de {tipo_insumo_completo} ({cantidad_completa}) ha sido enviada y está pendiente de revisión."
+                crear_notificacion_insumo(
+                    solicitud_id, 
+                    session["user_id"], 
+                    tipo_insumo_completo, 
+                    cantidad_completa, 
+                    mensaje_empleado, 
+                    'pendiente'
+                )
+                
+                # 🔔 NOTIFICACIÓN PARA ADMINISTRADORES
+                mensaje_admin = f"{usuario_nombre} solicitó {tipo_insumo_completo} ({cantidad_completa})"
+                crear_notificacion_admin(
+                    'solicitud_insumo',
+                    session["user_id"],
+                    mensaje_admin,
+                    solicitud_id,
+                    None
                 )
             
             db.connection.commit()
@@ -1376,7 +1561,7 @@ def ver_solicitudes():
 
     cur = db.connection.cursor()
 
-    # Solicitudes pendientes
+    # Solo solicitudes pendientes
     cur.execute(
         """
         SELECT s.id, u.fullname, s.tipo_insumo, s.cantidad, s.observaciones, s.fecha_solicitud, s.estado
@@ -1387,88 +1572,43 @@ def ver_solicitudes():
     """
     )
     solicitudes_pendientes = cur.fetchall()
-
-    # Solicitudes procesadas (aceptadas o rechazadas) - AGREGAR observacion_supervisor
-    cur.execute(
-        """
-        SELECT s.id, u.fullname, s.tipo_insumo, s.cantidad, s.observaciones, s.fecha_solicitud, s.estado, s.observacion_supervisor
-        FROM solicitud_insumo s
-        JOIN user u ON s.usuario_id = u.id
-        WHERE s.estado IN ('Aceptada', 'Rechazada')
-        ORDER BY s.fecha_solicitud DESC
-    """
-    )
-    solicitudes_procesadas = cur.fetchall()
     cur.close()
 
     return render_template(
         "ver_solicitudes.html",
-        solicitudes_pendientes=solicitudes_pendientes,
-        solicitudes_procesadas=solicitudes_procesadas,
+        solicitudes_pendientes=solicitudes_pendientes
     )
-
 
 # ---------------------- ACTUALIZAR SOLICITUD CON OBSERVACIONES ----------------------
 @app.route("/actualizar_solicitud/<int:id>/<string:accion>", methods=["POST"])
 @login_required
 def actualizar_solicitud(id, accion):
-    """
-    Actualiza el estado de la solicitud: 'Aceptada' o 'Rechazada' con observaciones del supervisor
-    y crea una notificación para el usuario
-    """
     observacion_supervisor = request.form.get("observacion_supervisor", "")
-    nuevo_estado = None
-
-    if accion == "aceptar":
-        nuevo_estado = "Aceptada"
-    elif accion == "rechazar":
-        nuevo_estado = "Rechazada"
+    nuevo_estado = "Aceptada" if accion == "aceptar" else "Rechazada"
 
     if nuevo_estado:
         try:
             cur = db.connection.cursor()
+            
+            # Actualizar estado
+            cur.execute("""
+                UPDATE solicitud_insumo
+                SET estado = %s, observacion_supervisor = %s
+                WHERE id = %s
+            """, (nuevo_estado, observacion_supervisor, id))
 
-            # Verificar si la columna observacion_supervisor existe, si no, agregarla
-            try:
-                cur.execute(
-                    """
-                    UPDATE solicitud_insumo
-                    SET estado = %s, observacion_supervisor = %s
-                    WHERE id = %s
-                """,
-                    (nuevo_estado, observacion_supervisor, id),
-                )
-            except Exception as columna_error:
-                if "Unknown column" in str(columna_error):
-                    cur.execute(
-                        "ALTER TABLE solicitud_insumo ADD COLUMN observacion_supervisor TEXT"
-                    )
-                    cur.execute(
-                        """
-                        UPDATE solicitud_insumo
-                        SET estado = %s, observacion_supervisor = %s
-                        WHERE id = %s
-                    """,
-                        (nuevo_estado, observacion_supervisor, id),
-                    )
-                else:
-                    raise columna_error
-
-            # Obtener información de la solicitud para crear la notificación
-            cur.execute(
-                """
+            # Obtener información de la solicitud
+            cur.execute("""
                 SELECT usuario_id, tipo_insumo, cantidad
                 FROM solicitud_insumo
                 WHERE id = %s
-            """,
-                (id,),
-            )
+            """, (id,))
             solicitud_info = cur.fetchone()
 
             if solicitud_info:
                 usuario_id, tipo_insumo, cantidad = solicitud_info
 
-                # Crear el mensaje de notificación
+                # Crear mensaje de notificación para el empleado
                 if nuevo_estado == "Aceptada":
                     mensaje = f"Tu solicitud de {tipo_insumo} (Cantidad: {cantidad}) ha sido ACEPTADA."
                     if observacion_supervisor:
@@ -1480,14 +1620,14 @@ def actualizar_solicitud(id, accion):
                         mensaje += f" Motivo: {observacion_supervisor}"
                     tipo_notif = "rechazada"
 
-                # Insertar notificación
-                cur.execute(
-                    """
-                    INSERT INTO notificaciones 
-                    (solicitud_id, usuario_id, tipo_insumo, cantidad, mensaje, tipo, leida)
-                    VALUES (%s, %s, %s, %s, %s, %s, 0)
-                """,
-                    (id, usuario_id, tipo_insumo, cantidad, mensaje, tipo_notif),
+                # Insertar notificación para el empleado
+                crear_notificacion_insumo(
+                    id, 
+                    usuario_id, 
+                    tipo_insumo, 
+                    cantidad, 
+                    mensaje, 
+                    tipo_notif
                 )
 
             db.connection.commit()
@@ -1499,6 +1639,111 @@ def actualizar_solicitud(id, accion):
             flash(f"Error al actualizar la solicitud: {str(e)}", "danger")
 
     return redirect(url_for("ver_solicitudes"))
+
+
+# ---------------------- SOLICITUDES PROCESADAS ----------------------
+@app.route("/solicitudes_procesadas", methods=["GET", "POST"])
+@login_required
+def solicitudes_procesadas():
+    """
+    Muestra las solicitudes Aceptadas y Rechazadas
+    Permite buscar por número de solicitud y marcar como Entregada
+    """
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    cur = db.connection.cursor()
+    
+    # Variable para almacenar la solicitud buscada
+    solicitud_buscada = None
+    numero_busqueda = None
+
+    # Si es una búsqueda POST
+    if request.method == "POST":
+        numero_busqueda = request.form.get("numero_solicitud", "").strip()
+        
+        if numero_busqueda:
+            cur.execute(
+                """
+                SELECT s.id, u.fullname, s.tipo_insumo, s.cantidad, 
+                       s.observaciones, s.fecha_solicitud, s.estado, 
+                       s.observacion_supervisor
+                FROM solicitud_insumo s
+                JOIN user u ON s.usuario_id = u.id
+                WHERE s.id = %s AND s.estado IN ('Aceptada', 'Rechazada', 'Entregada')
+            """,
+                (numero_busqueda,),
+            )
+            solicitud_buscada = cur.fetchone()
+
+    # Todas las solicitudes procesadas
+    cur.execute(
+        """
+        SELECT s.id, u.fullname, s.tipo_insumo, s.cantidad, s.observaciones, 
+               s.fecha_solicitud, s.estado, s.observacion_supervisor
+        FROM solicitud_insumo s
+        JOIN user u ON s.usuario_id = u.id
+        WHERE s.estado IN ('Aceptada', 'Rechazada', 'Entregada')
+        ORDER BY s.fecha_solicitud DESC
+    """
+    )
+    solicitudes_procesadas = cur.fetchall()
+    cur.close()
+
+    return render_template(
+        "solicitudes_procesadas.html",
+        solicitudes_procesadas=solicitudes_procesadas,
+        solicitud_buscada=solicitud_buscada,
+        numero_busqueda=numero_busqueda,
+    )
+
+
+@app.route("/marcar_entregada/<int:id>", methods=["POST"])
+@login_required
+def marcar_entregada(id):
+    """
+    Marca una solicitud Aceptada como Entregada
+    """
+    try:
+        cur = db.connection.cursor()
+
+        # Verificar que la solicitud esté en estado "Aceptada"
+        cur.execute(
+            "SELECT estado FROM solicitud_insumo WHERE id = %s", (id,)
+        )
+        solicitud = cur.fetchone()
+
+        if not solicitud:
+            flash("Solicitud no encontrada", "error")
+            return redirect(url_for("solicitudes_procesadas"))
+
+        if solicitud[0] != "Aceptada":
+            flash(
+                "Solo se pueden marcar como entregadas las solicitudes aceptadas",
+                "error",
+            )
+            return redirect(url_for("solicitudes_procesadas"))
+
+        # Actualizar estado a "Entregada"
+        cur.execute(
+            """
+            UPDATE solicitud_insumo
+            SET estado = 'Entregada'
+            WHERE id = %s
+        """,
+            (id,),
+        )
+
+        db.connection.commit()
+        cur.close()
+
+        flash(f"Solicitud #{id} marcada como entregada correctamente", "success")
+
+    except Exception as e:
+        db.connection.rollback()
+        flash(f"Error al marcar como entregada: {str(e)}", "error")
+
+    return redirect(url_for("solicitudes_procesadas"))
 
 # ---------------------- EVIDENCIAS ----------------------
 
@@ -1616,14 +1861,11 @@ def seguimiento_cultivo():
 
     if request.method == "POST":
         cultivo_id = request.form.get("cultivo")
-
-        # 🔹 getlist() para los campos múltiples
         tratamientos = request.form.getlist("tratamiento")
         problemas = request.form.getlist("problema")
         prioridades = request.form.getlist("prioridad")
         insumos = request.form.getlist("insumos")
 
-        # 🔹 Convertir las listas a texto separado por comas
         tratamiento_str = ", ".join(tratamientos) if tratamientos else None
         problema_str = ", ".join(problemas) if problemas else None
         prioridad_str = ", ".join(prioridades) if prioridades else None
@@ -1637,24 +1879,31 @@ def seguimiento_cultivo():
             if cultivo_nombre_row:
                 cultivo_nombre = cultivo_nombre_row[0]
                 usuario_id = session.get("user_id")
+                
+                # Obtener nombre del usuario
+                cur.execute("SELECT fullname FROM user WHERE id = %s", (usuario_id,))
+                usuario_info = cur.fetchone()
+                usuario_nombre = usuario_info[0] if usuario_info else "Usuario"
 
-                # Insertar en la tabla tratamientos, guardando también usuario_id
-                cur.execute(
-                    """
+                # Insertar tratamiento
+                cur.execute("""
                     INSERT INTO tratamientos (cultivo, tratamiento, problema, prioridad, insumos, fecha_registro, usuario_id)
                     VALUES (%s, %s, %s, %s, %s, NOW(), %s)
-                    """,
-                    (
-                        cultivo_nombre,
-                        tratamiento_str,
-                        problema_str,
-                        prioridad_str,
-                        insumo_str,
-                        usuario_id,
-                    ),
-                )
+                """, (cultivo_nombre, tratamiento_str, problema_str, prioridad_str, insumo_str, usuario_id))
 
+                tratamiento_id = cur.lastrowid
                 db.connection.commit()
+                
+                # 🔔 NOTIFICACIÓN PARA ADMINISTRADORES
+                mensaje = f"{usuario_nombre} registró un tratamiento para {cultivo_nombre} - Prioridad: {prioridad_str}"
+                crear_notificacion_admin(
+                    'nuevo_tratamiento',
+                    usuario_id,
+                    mensaje,
+                    tratamiento_id,
+                    None
+                )
+                
                 flash("Seguimiento registrado con éxito", "success")
                 return redirect(url_for("seguimiento_cultivo"))
             else:
@@ -1666,6 +1915,7 @@ def seguimiento_cultivo():
 
     cur.close()
     return render_template("auth/seguimiento_cultivo.html", cultivos=cultivos)
+
 
 # ---------------------- TRATAMIENTOS REGISTRADOS ----------------------
 # Ruta para ver tratamientos con sus observaciones
@@ -1867,51 +2117,53 @@ def registrar_problema():
         descripcion = request.form["descripcion"]
         evidencia_base64 = request.form["evidencia"]
 
-        print("DEBUG - Datos recibidos:")
-        print("Tipo:", tipo)
-        print("Descripción:", descripcion)
-        print("Evidencia:", len(evidencia_base64) if evidencia_base64 else "No llegó")
-
         filename = None
-
         if evidencia_base64:
             try:
                 if "," in evidencia_base64:
                     evidencia_base64 = evidencia_base64.split(",")[1]
-
                 image_data = base64.b64decode(evidencia_base64)
                 filename = f"{uuid.uuid4().hex}.jpg"
                 filepath = os.path.join(UPLOAD_FOLDER, filename)
-
                 with open(filepath, "wb") as f:
                     f.write(image_data)
-
             except Exception as e:
-                print("Error al guardar imagen:", e)
                 flash(f"Error al guardar la imagen: {str(e)}", "danger")
                 return redirect(url_for("registrar_problema"))
 
         try:
             cursor = db.connection.cursor()
-            cursor.execute(
-                """
+            
+            # Obtener nombre del usuario
+            cursor.execute("SELECT fullname FROM user WHERE id = %s", (session["user_id"],))
+            usuario_info = cursor.fetchone()
+            usuario_nombre = usuario_info[0] if usuario_info else "Usuario"
+            
+            # Insertar problema
+            cursor.execute("""
                 INSERT INTO problemas_cultivo (id_usuario, tipo_problema, descripcion, evidencia, fecha_registro)
                 VALUES (%s, %s, %s, %s, NOW())
-            """,
-                (session["user_id"], tipo, descripcion, filename),
-            )
+            """, (session["user_id"], tipo, descripcion, filename))
+            
+            problema_id = cursor.lastrowid
             db.connection.commit()
+            
+            # 🔔 NOTIFICACIÓN PARA ADMINISTRADORES
+            mensaje = f"{usuario_nombre} reportó un problema: {tipo} - {descripcion[:50]}..."
+            crear_notificacion_admin(
+                'nuevo_problema',
+                session["user_id"],
+                mensaje,
+                problema_id,
+                None
+            )
+            
             cursor.close()
-
             flash("Problema registrado correctamente", "success")
             return redirect(url_for("ver_problemas"))
 
         except Exception as e:
             db.connection.rollback()
-            print("Error al guardar en la BD:", e)
-            import traceback
-
-            traceback.print_exc()
             flash(f"Error al registrar problema: {str(e)}", "danger")
 
     return render_template("/registrar_problema.html", tipos=tipos)
@@ -1982,15 +2234,12 @@ def produccion_registrada():
 @app.route("/registrar_produccion", methods=["GET", "POST"])
 @login_required
 def registrar_produccion():
-    # Verificar que sea administrador
     if session.get('rol') != 'administrador':
         flash('No tienes permisos para registrar producción', 'danger')
         return redirect(url_for('home'))
     
     cursor = db.connection.cursor()
-    cursor.execute(
-        "SELECT id_cultivo, nombre FROM cultivos WHERE estado = 'Habilitado'"
-    )
+    cursor.execute("SELECT id_cultivo, nombre FROM cultivos WHERE estado = 'Habilitado'")
     cultivos = cursor.fetchall()
 
     if request.method == "POST":
@@ -1999,20 +2248,41 @@ def registrar_produccion():
         cantidad = request.form["cantidad"]
 
         try:
-            cursor.execute(
-                """
+            # Obtener nombre del cultivo
+            cursor.execute("SELECT nombre FROM cultivos WHERE id_cultivo = %s", (id_cultivo,))
+            cultivo_info = cursor.fetchone()
+            cultivo_nombre = cultivo_info[0] if cultivo_info else "Cultivo"
+            
+            # Obtener nombre del usuario
+            cursor.execute("SELECT fullname FROM user WHERE id = %s", (session["user_id"],))
+            usuario_info = cursor.fetchone()
+            usuario_nombre = usuario_info[0] if usuario_info else "Administrador"
+            
+            # Insertar producción
+            cursor.execute("""
                 INSERT INTO produccion (id_usuario, id_cultivo, fecha, cantidad_bultos)
                 VALUES (%s, %s, %s, %s)
-            """,
-                (session["user_id"], id_cultivo, fecha, cantidad),
-            )
+            """, (session["user_id"], id_cultivo, fecha, cantidad))
+            
+            produccion_id = cursor.lastrowid
             db.connection.commit()
             
             # Actualizar inventario
             actualizar_inventario(id_cultivo)
             
+            # 🔔 NOTIFICACIÓN PARA ADMINISTRADORES
+            mensaje = f"{usuario_nombre} registró producción de {cultivo_nombre}: {cantidad} bultos"
+            crear_notificacion_admin(
+                'nueva_produccion',
+                session["user_id"],
+                mensaje,
+                produccion_id,
+                None
+            )
+            
             flash("Producción registrada e inventario actualizado correctamente", "success")
             return redirect(url_for("produccion_registrada"))
+            
         except Exception as e:
             db.connection.rollback()
             flash(f"Error al registrar producción: {str(e)}", "danger")
@@ -2024,98 +2294,76 @@ def registrar_produccion():
 @app.route("/mis_notificaciones")
 @login_required
 def mis_notificaciones():
-    """
-    Muestra todas las notificaciones del usuario actual
-    """
+    rol = session.get("rol")
+    usuario_id = session.get("user_id")
+
     cur = db.connection.cursor()
-    
-    # Obtener notificaciones del usuario ordenadas por más recientes
-    cur.execute(
-        """
-        SELECT id, solicitud_id, tipo_insumo, cantidad, mensaje, tipo, leida, fecha_creacion
-        FROM notificaciones
-        WHERE usuario_id = %s
-        ORDER BY fecha_creacion DESC
-    """,
-        (session["user_id"],),
-    )
-    
-    notificaciones = cur.fetchall()
-    
-    # Contar notificaciones no leídas
-    cur.execute(
-        """
-        SELECT COUNT(*) 
-        FROM notificaciones 
-        WHERE usuario_id = %s AND leida = 0
-    """,
-        (session["user_id"],),
-    )
-    
-    no_leidas = cur.fetchone()[0]
+    notificaciones = obtener_notificaciones_unificadas(usuario_id, rol, cur)
+    no_leidas = contar_notificaciones_unificadas(usuario_id, rol, cur)
     cur.close()
-    
+
+    print(f"✓ Mostrando {len(notificaciones)} notificaciones para {rol}")  # Debug
+    print(f"✓ Total no leídas: {no_leidas}")  # Debug
+
     return render_template(
-        "mis_notificaciones.html", 
+        "mis_notificaciones.html",
         notificaciones=notificaciones,
-        no_leidas=no_leidas
+        no_leidas=no_leidas,
+        rol=rol
     )
 
 
 @app.route("/marcar_notificacion_leida/<int:id>", methods=["POST"])
 @login_required
 def marcar_notificacion_leida(id):
-    """
-    Marca una notificación como leída cuando el usuario presiona 'Sí, lo recibí'
-    """
+    rol = session.get("rol")
+    usuario_id = session.get("user_id")
+    tipo = request.form.get("tipo_notif", "personal")
+
+    cur = db.connection.cursor()
+
     try:
-        cur = db.connection.cursor()
-        
-        # Verificar que la notificación pertenece al usuario actual
-        cur.execute(
-            """
-            UPDATE notificaciones
-            SET leida = 1
-            WHERE id = %s AND usuario_id = %s
-        """,
-            (id, session["user_id"]),
-        )
-        
+        if tipo == "general" and rol == "administrador":
+            # Marcar notificación general
+            cur.execute("UPDATE notificaciones_generales SET leida = 1 WHERE id = %s", (id,))
+            print(f"✓ Notificación general {id} marcada como leída")
+        else:
+            # Marcar notificación personal
+            cur.execute("""
+                UPDATE notificaciones
+                SET leida = 1
+                WHERE id = %s AND usuario_id = %s
+            """, (id, usuario_id))
+            print(f"✓ Notificación personal {id} marcada como leída")
+
         db.connection.commit()
-        cur.close()
-        
         flash("Notificación marcada como leída", "success")
+        
     except Exception as e:
         db.connection.rollback()
-        flash(f"Error al marcar la notificación: {str(e)}", "danger")
+        print(f"✗ Error al marcar notificación: {str(e)}")
+        flash("Error al marcar la notificación", "error")
     
+    cur.close()
     return redirect(url_for("mis_notificaciones"))
+
 
 
 @app.route("/contar_notificaciones_pendientes")
 @login_required
 def contar_notificaciones_pendientes():
-    """
-    Retorna el número de notificaciones no leídas (para badges en el menú)
-    """
     cur = db.connection.cursor()
-    cur.execute(
-        """
-        SELECT COUNT(*) 
-        FROM notificaciones 
-        WHERE usuario_id = %s AND leida = 0
-    """,
-        (session["user_id"],),
-    )
-    
-    count = cur.fetchone()[0]
+    total = contar_notificaciones_unificadas(session["user_id"], session["rol"], cur)
     cur.close()
-    
-    return {"count": count}
+    return {"count": total}
+
 
 # ---------------------- MAIN ----------------------
 if __name__ == "__main__":
     app.config.from_object(config["development"])
     app.register_error_handler(401, status_401)
     app.register_error_handler(404, status_404)
+
+    app.run()
+
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))

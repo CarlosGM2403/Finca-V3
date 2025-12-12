@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const body = document.getElementById('page-body');
+    const body = document.body;
     const themeButton = document.getElementById('theme-toggle-btn');
     const themeIcon = document.getElementById('theme-icon');
 

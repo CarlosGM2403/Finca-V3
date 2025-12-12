@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}Solicitudes Procesadas{% endblock %}
+
+{% block CustomCSS %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/ver_solicitudes.css') }}">
+{% endblock %}
+
+{% block body %}
+
+<div class="logo">
+    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+</div>
+
+<div class="logout-btn">
+  <a href="{{ url_for('home') }}">
+    <button title="Volver al inicio">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+  </a>
+</div>
+
+<div class="container">
+    <h1>Solicitudes Procesadas</h1>
+    
+    <!-- Buscador por número de solicitud -->
+    <div class="buscador-numero">
+        <form method="POST" action="{{ url_for('solicitudes_procesadas') }}">
+            <div class="input-busqueda">
+                <input 
+                    type="number" 
+                    name="numero_solicitud" 
+                    placeholder="Buscar por número de solicitud..." 
+                    value="{{ numero_busqueda if numero_busqueda else '' }}"
+                    min="1">
+                <button type="submit" class="btn-buscar">
+                    <i class="fa-solid fa-search"></i> Buscar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Resultado de búsqueda -->
+    {% if numero_busqueda %}
+        {% if solicitud_buscada %}
+        <div class="resultado-busqueda">
+            <h2>Resultado de la búsqueda: Solicitud #{{ numero_busqueda }}</h2>
+            <table class="tabla-solicitudes">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Usuario</th>
+                        <th>Tipo de Insumo</th>
+                        <th>Cantidad</th>
+                        <th>Observaciones Usuario</th>
+                        <th>Observaciones Supervisor</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="fila-destacada">
+                        <td>{{ solicitud_buscada[0] }}</td>
+                        <td>{{ solicitud_buscada[1] }}</td>
+                        <td>{{ solicitud_buscada[2] }}</td>
+                        <td>{{ solicitud_buscada[3] }}</td>
+                        <td>{{ solicitud_buscada[4] }}</td>
+                        <td>{{ solicitud_buscada[7] if solicitud_buscada[7] else 'Sin observaciones' }}</td>
+                        <td>{{ solicitud_buscada[5] }}</td>
+                        <td>
+                            <span class="badge-estado {{ solicitud_buscada[6].lower() }}">
+                                {{ solicitud_buscada[6] }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if solicitud_buscada[6] == 'Aceptada' %}
+                            <form method="POST" action="{{ url_for('marcar_entregada', id=solicitud_buscada[0]) }}" style="display: inline;">
+                                <button type="submit" class="btn-entregar" 
+                                        onclick="return confirm('¿Confirmar que se entregó la solicitud #{{ solicitud_buscada[0] }}?')">
+                                    <i class="fa-solid fa-box-open"></i> Entregar
+                                </button>
+                            </form>
+                            {% elif solicitud_buscada[6] == 'Entregada' %}
+                            <span class="badge-entregada">
+                                <i class="fa-solid fa-check-double"></i> Entregada
+                            </span>
+                            {% else %}
+                            <span class="badge-rechazada">
+                                <i class="fa-solid fa-ban"></i> Rechazada
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="sin-resultado">
+            <i class="fa-solid fa-search"></i>
+            <p>No se encontró ninguna solicitud procesada con el número <strong>#{{ numero_busqueda }}</strong></p>
+        </div>
+        {% endif %}
+        <hr class="separador">
+    {% endif %}
+
+    <!-- Buscador general de tabla -->
+    <div class="buscador-produccion">
+        <input type="text" id="buscador-solicitudes" placeholder="Buscar en todas las solicitudes...">
+    </div>
+
+    <!-- Tabla de todas las solicitudes procesadas -->
+    <h2>Todas las Solicitudes Procesadas</h2>
+    <table id="tabla-procesadas" class="tabla-solicitudes">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Usuario</th>
+                <th>Tipo de Insumo</th>
+                <th>Cantidad</th>
+                <th>Observaciones Usuario</th>
+                <th>Observaciones Supervisor</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for solicitud in solicitudes_procesadas %}
+            <tr>
+                <td>{{ solicitud[0] }}</td>
+                <td>{{ solicitud[1] }}</td>
+                <td>{{ solicitud[2] }}</td>
+                <td>{{ solicitud[3] }}</td>
+                <td>{{ solicitud[4] }}</td>
+                <td>{{ solicitud[7] if solicitud[7] else 'Sin observaciones' }}</td>
+                <td>{{ solicitud[5] }}</td>
+                <td>
+                    <span class="badge-estado {{ solicitud[6].lower() }}">
+                        {{ solicitud[6] }}
+                    </span>
+                </td>
+                <td>
+                    {% if solicitud[6] == 'Aceptada' %}
+                    <form method="POST" action="{{ url_for('marcar_entregada', id=solicitud[0]) }}" style="display: inline;">
+                        <button type="submit" class="btn-entregar" 
+                                onclick="return confirm('¿Confirmar que se entregó la solicitud #{{ solicitud[0] }}?')">
+                            <i class="fa-solid fa-box-open"></i> Entregar
+                        </button>
+                    </form>
+                    {% elif solicitud[6] == 'Entregada' %}
+                    <span class="badge-entregada">
+                        <i class="fa-solid fa-check-double"></i> Entregada
+                    </span>
+                    {% else %}
+                    <span class="badge-rechazada">
+                        <i class="fa-solid fa-ban"></i> Rechazada
+                    </span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="9" style="text-align:center; color: gray;">
+                    No hay solicitudes procesadas
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p id="no-result-solicitudes" style="display:none; text-align:center; color:gray;">
+        No se encontraron solicitudes procesadas que coincidan con la búsqueda.
+    </p>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/ver_solicitudes.js') }}"></script>
+{% endblock %}
