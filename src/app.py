@@ -2377,6 +2377,7 @@ def contar_notificaciones_pendientes():
 
 
 
+
 # ---------------------- PRODUCTIVIDAD DE EMPLEADOS ----------------------
 
 @app.route("/productividad_empleados")
@@ -2826,6 +2827,79 @@ def detalle_productividad(user_id):
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
 
+# ---------------------- INSUMOS DE EMPLEADOS ----------------------
+@app.route("/insumos_empleados", methods=["GET", "POST"])
+@login_required
+def insumos_empleados():
+    """
+    Muestra todos los insumos con estado 'Entregada'
+    Permite filtrar por usuario específico
+    """
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    cur = db.connection.cursor()
+    
+    # Obtener todos los usuarios para el filtro
+    cur.execute(
+        """
+        SELECT DISTINCT u.id, u.fullname
+        FROM user u
+        INNER JOIN solicitud_insumo s ON u.id = s.usuario_id
+        WHERE s.estado = 'Entregada'
+        ORDER BY u.fullname
+    """
+    )
+    usuarios = cur.fetchall()
+    
+    # Variable para almacenar el usuario seleccionado
+    usuario_seleccionado = None
+    insumos_filtrados = []
+    
+    # Si hay filtro por usuario
+    if request.method == "POST":
+        usuario_id = request.form.get("usuario_id")
+        if usuario_id:
+            usuario_seleccionado = usuario_id
+            cur.execute(
+                """
+                SELECT s.id, u.fullname, s.tipo_insumo, s.cantidad,
+                       s.observaciones, s.observacion_supervisor,
+                       s.fecha_solicitud, s.estado
+                FROM solicitud_insumo s
+                JOIN user u ON s.usuario_id = u.id
+                WHERE s.estado = 'Entregada' AND u.id = %s
+                ORDER BY s.fecha_solicitud DESC
+            """,
+                (usuario_id,),
+            )
+            insumos_filtrados = cur.fetchall()
+    
+    # Todos los insumos entregados (para mostrar por defecto)
+    cur.execute(
+        """
+        SELECT s.id, u.fullname, s.tipo_insumo, s.cantidad,
+               s.observaciones, s.observacion_supervisor,
+               s.fecha_solicitud, s.estado
+        FROM solicitud_insumo s
+        JOIN user u ON s.usuario_id = u.id
+        WHERE s.estado = 'Entregada'
+        ORDER BY s.fecha_solicitud DESC
+    """
+    )
+    todos_insumos = cur.fetchall()
+    
+    cur.close()
+    
+    return render_template(
+        "insumos_empleados.html",
+        usuarios=usuarios,
+        insumos_filtrados=insumos_filtrados,
+        todos_insumos=todos_insumos,
+        usuario_seleccionado=usuario_seleccionado,
+    )
+
+
 # ---------------------- MAIN ----------------------
 if __name__ == "__main__":
     app.config.from_object(config["development"])
@@ -2836,4 +2910,6 @@ if __name__ == "__main__":
     app.run()
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
     app.run()
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+
 

@@ -90,15 +90,20 @@
 
 <!-- MENÚ LATERAL -->
 <div class="menu" id="menu">
+  <!-- Para empleados y cuidadores -->
   {% if rol == 'empleado' or rol == 'cuidador'%}
-  <a href="{{ url_for('registrar_actividad') }}">Registrar Actividad</a>
+  <a href="{{ url_for('registrar_actividad') }}">
+    <i class="fa-solid fa-clipboard-check"></i> Registrar Actividad
+  </a>
   {% endif %} 
   
   {% if rol == 'supervisor' or rol == 'empleado' or rol == 'cuidador'%}
-  <a href="{{url_for('solicitar_insumo') }}">Solicitudes de Insumos</a>
+  <a href="{{url_for('solicitar_insumo') }}">
+    <i class="fa-solid fa-box"></i> Solicitudes de Insumos
+  </a>
   {% endif %}
 
-  <!-- NUEVO: Notificaciones en el menú (solo para empleados y cuidadores) -->
+  <!-- Notificaciones -->
   {% if rol == 'empleado' or rol == 'cuidador' or rol == 'supervisor' %}
   <a href="{{ url_for('mis_notificaciones') }}" class="notificaciones-menu-item">
     <span>
@@ -109,32 +114,61 @@
   </a>
   {% endif %}
 
-  <!-- Botones de abajo (solo visibles en móvil) -->
-  <div class="menu-mobile">
-    {% if rol == 'administrador' %}
-    <a href="{{ url_for('usuarios') }}">Usuarios</a>
-    {% else %}
-    <a href="{{ url_for('registrar_actividad') }}">Registrar Actividad</a>
-    {% endif %} 
-    
-    {% if rol == 'administrador' or rol == 'supervisor' %}
-    <a href="{{ url_for('ver_solicitudes') }}">Solicitudes</a>
-    {% else %}
-    <a href="{{ url_for('registrar_siembra') }}">Registro de Siembra</a>
-    {% endif %} 
-    
-    {% if rol == 'administrador' %}
-    <a href="{{ url_for('en_construccion') }}">Ventas</a>
-    {% else %}
-    <a href="{{ url_for('solicitar_insumo') }}">Solicitar Insumos</a>
-    {% endif %} 
-    
-    {% if rol == 'administrador' %}
-    <a href="{{ url_for('ver_evidencias') }}">Evidencias</a>
-    {% else %}
-    <a href="{{ url_for('en_construccion') }}">Tratamientos</a>
-    {% endif %}
+  <!-- DESPLEGABLE USUARIOS (solo admin) -->
+  {% if rol == 'administrador' %}
+  <div class="menu-dropdown-section">
+    <button class="menu-dropdown-trigger" id="menu-usuarios-trigger">
+      <span><i class="fa-solid fa-users"></i> Usuarios</span>
+      <i class="fa-solid fa-chevron-down"></i>
+    </button>
+    <div class="menu-dropdown-content" id="menu-usuarios-content">
+      <a href="{{ url_for('usuarios') }}">
+        <i class="fa-solid fa-user-group"></i> Ver usuarios
+      </a>
+      <a href="{{ url_for('registrar_usuario') }}">
+        <i class="fa-solid fa-user-plus"></i> Registrar usuarios
+      </a>
+      <a href="{{ url_for('insumos_empleados') }}">
+        <i class="fa-solid fa-box-open"></i> Insumos de empleados
+      </a>
+    </div>
   </div>
+  {% endif %}
+
+  <!-- DESPLEGABLE SOLICITUDES (admin y supervisor) -->
+  {% if rol == 'administrador' or rol == 'supervisor' %}
+  <div class="menu-dropdown-section">
+    <button class="menu-dropdown-trigger" id="menu-solicitudes-trigger">
+      <span><i class="fa-solid fa-file-invoice"></i> Solicitudes</span>
+      <i class="fa-solid fa-chevron-down"></i>
+    </button>
+    <div class="menu-dropdown-content" id="menu-solicitudes-content">
+      <a href="{{ url_for('ver_solicitudes') }}">
+        <i class="fa-solid fa-clock"></i> Solicitudes Pendientes
+      </a>
+      <a href="{{ url_for('solicitudes_procesadas') }}">
+        <i class="fa-solid fa-check-circle"></i> Solicitudes Procesadas
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Otros enlaces según rol -->
+  {% if rol == 'administrador' %}
+  <a href="{{ url_for('registrar_ventas') }}">
+    <i class="fa-solid fa-cash-register"></i> Ventas
+  </a>
+  <a href="{{ url_for('ver_evidencias') }}">
+    <i class="fa-solid fa-images"></i> Evidencias
+  </a>
+  {% else %}
+  <a href="{{ url_for('registrar_siembra') }}">
+    <i class="fa-solid fa-seedling"></i> Registro de Siembra
+  </a>
+  <a href="{{ url_for('seguimiento_cultivo') }}">
+    <i class="fa-solid fa-leaf"></i> Tratamientos
+  </a>
+  {% endif %}
 </div>
 
 <!-- GRUPOS DE BOTONES -->
@@ -151,8 +185,13 @@
       <a href="{{ url_for('registrar_usuario') }}">
         <button class="usuarios-drop-btn">Registrar usuarios</button>
       </a>
+
       <a href="{{ url_for('productividad_empleados') }}">
         <button class="usuarios-drop-btn">Productividad</button>
+
+      <a href="{{ url_for('insumos_empleados') }}">
+      <button class="usuarios-drop-btn">Insumos de empleados</button>
+
       </a>
     </div>
   </div>
@@ -163,12 +202,11 @@
   {% endif %} 
   
   {% if rol == 'administrador' or rol == 'supervisor' %}
-  <a href="{{ url_for('ver_solicitudes') }}">
-    <div class="btn-wrapper-solicitudes">
+<div class="btn-wrapper-solicitudes">
   <button class="btn-normal" id="solicitudes-btn">Solicitudes</button>
 
-  <!-- Contenedor desplegable -->
-  <div class="dropdown-content" id="solicitudes-dropdown">
+  <!-- Contenedor desplegable hacia arriba -->
+  <div class="dropdown-solicitudes" id="solicitudes-dropdown">
     <a href="{{ url_for('ver_solicitudes') }}">
       <button class="solicitudes-drop-btn">Solicitudes Pendientes</button>
     </a>
@@ -177,7 +215,6 @@
     </a>
   </div>
 </div>
-
 {% else %}
 <a href="{{ url_for('registrar_siembra') }}">
   <button class="btn-normal">Registra Siembra</button>

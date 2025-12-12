@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}Insumos de Empleados{% endblock %}
+
+{% block CustomCSS %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/insumos_empleados.css') }}">
+{% endblock %}
+
+{% block body %}
+
+<div class="logo">
+    <img src="{{ url_for('static', filename='img/logo_icon.png') }}" alt="Logo">
+</div>
+
+<div class="logout-btn">
+  <a href="{{ url_for('home') }}">
+    <button title="Volver al inicio">
+      <i class="fa-solid fa-arrow-left"></i>
+    </button>
+  </a>
+</div>
+
+<div class="container">
+    <h1><i class="fa-solid fa-box-open"></i> Insumos Entregados a Empleados</h1>
+    
+    <!-- Filtro por usuario -->
+    <div class="filtro-usuario">
+        <form method="POST" action="{{ url_for('insumos_empleados') }}">
+            <div class="input-filtro">
+                <label for="usuario_id">
+                    <i class="fa-solid fa-user"></i> Filtrar por empleado:
+                </label>
+                <select name="usuario_id" id="usuario_id" onchange="this.form.submit()">
+                    <option value="">-- Todos los empleados --</option>
+                    {% for usuario in usuarios %}
+                    <option value="{{ usuario[0] }}" 
+                            {% if usuario_seleccionado and usuario_seleccionado == usuario[0]|string %}selected{% endif %}>
+                        {{ usuario[1] }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn-filtrar">
+                    <i class="fa-solid fa-filter"></i> Filtrar
+                </button>
+            </div>
+        </form>
+        
+        {% if usuario_seleccionado %}
+        <a href="{{ url_for('insumos_empleados') }}" class="btn-limpiar">
+            <i class="fa-solid fa-times"></i> Limpiar filtro
+        </a>
+        {% endif %}
+    </div>
+
+    
+
+    <!-- Buscador general -->
+    <div class="buscador-contenedor">
+        <input type="text" id="buscador-insumos" placeholder="Buscar por insumo, cantidad, observaciones...">
+    </div>
+
+    <!-- Tabla de insumos -->
+    <table id="tabla-insumos" class="tabla-insumos">
+        <thead>
+            <tr>
+                <th>ID Solicitud</th>
+                <th>Empleado</th>
+                <th>Tipo de Insumo</th>
+                <th>Cantidad</th>
+                <th>Observaciones Usuario</th>
+                <th>Observaciones Supervisor</th>
+                <th>Fecha Solicitud</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set insumos_mostrar = insumos_filtrados if usuario_seleccionado else todos_insumos %}
+            
+            {% if insumos_mostrar %}
+                {% for insumo in insumos_mostrar %}
+                <tr>
+                    <td><strong>#{{ insumo[0] }}</strong></td>
+                    <td>{{ insumo[1] }}</td>
+                    <td>{{ insumo[2] }}</td>
+                    <td><strong>{{ insumo[3] }}</strong></td>
+                    <td>{{ insumo[4] if insumo[4] else 'Sin observaciones' }}</td>
+                    <td>{{ insumo[5] if insumo[5] else 'Sin observaciones' }}</td>
+                    <td>{{ insumo[6].strftime('%d/%m/%Y %H:%M') if insumo[6] else 'N/A' }}</td>
+                    <td>
+                        <span class="badge-entregado">
+                            <i class="fa-solid fa-check-circle"></i> {{ insumo[7] }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="8" class="sin-datos">
+                        <i class="fa-solid fa-inbox"></i>
+                        <p>
+                            {% if usuario_seleccionado %}
+                            No hay insumos entregados para este empleado
+                            {% else %}
+                            No hay insumos entregados registrados
+                            {% endif %}
+                        </p>
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <p id="no-result" style="display:none; text-align:center; color:#888; padding:40px;">
+        No se encontraron resultados que coincidan con la búsqueda.
+    </p>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div id="flash-data" data-icon="{{ category }}" data-message="{{ message }}"></div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{{ url_for('static', filename='js/insumos_empleados.js') }}"></script>
+
+{% endblock %}
