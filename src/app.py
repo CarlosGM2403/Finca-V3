@@ -30,6 +30,20 @@ from werkzeug.security import check_password_hash, generate_password_hash
 import os
 
 from datetime import datetime
+# ---------------------- IMPORTACIONES ADICIONALES ----------------------
+from datetime import timedelta
+from io import BytesIO
+from flask import send_file
+try:
+    from reportlab.lib.pagesizes import letter, A4
+    from reportlab.lib import colors
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+    from reportlab.lib.units import inch
+    REPORTLAB_AVAILABLE = True
+except ImportError:
+    REPORTLAB_AVAILABLE = False
+    print("⚠️ ReportLab no está instalado. Instala con: pip install reportlab")
 
 # ---------------------- CONFIGURACIÓN ----------------------
 
@@ -1384,11 +1398,12 @@ def registrar_siembra():
     cultivos = cur.fetchall()
 
     if request.method == "POST":
-        fecha = request.form["fecha"]
-        detalle = request.form["detalle"]
-        cod_cultivos = request.form["cultivo"]
-
         try:
+            # Obtener datos del formulario
+            fecha = request.form["fecha"]
+            detalle = request.form["detalle"]
+            cod_cultivos = request.form["cultivo"]
+            
             # Obtener nombre del cultivo
             cur.execute("SELECT nombre FROM Cultivos WHERE Id_cultivo = %s", (cod_cultivos,))
             cultivo_info = cur.fetchone()
@@ -1422,12 +1437,15 @@ def registrar_siembra():
             )
             
             flash("Registro exitoso", "success")
-            return redirect(url_for("registrar_siembra"))
             
         except Exception as e:
             db.connection.rollback()
             flash(f"Error al registrar siembra: {str(e)}", "danger")
+        finally:
+            cur.close()
             
+        return redirect(url_for("registrar_siembra"))
+    
     cur.close()
     return render_template("registrar_siembra.html", cultivos=cultivos)
 
@@ -2358,12 +2376,464 @@ def contar_notificaciones_pendientes():
     return {"count": total}
 
 
+
+# ---------------------- PRODUCTIVIDAD DE EMPLEADOS ----------------------
+
+@app.route("/productividad_empleados")
+@login_required
+def productividad_empleados():
+    """
+    Dashboard principal de productividad de empleados
+    Solo accesible para administradores y supervisores
+    Usa la VISTA para obtener métricas en tiempo real
+    """
+    rol = session.get("rol", "")
+    
+    if rol not in ["administrador", "supervisor"]:
+        flash("No tienes permisos para ver esta sección", "danger")
+        return redirect(url_for("home"))
+    
+    try:
+        cur = db.connection.cursor()
+        
+        # Definir período actual (últimos 15 días)
+        periodo_fin = datetime.now().date()
+        periodo_inicio = periodo_fin - timedelta(days=14)
+        
+        # USAR LA VISTA directamente para obtener métricas en tiempo real
+        # Filtrar por fecha en Python después de obtener los datos
+        cur.execute("""
+            SELECT 
+                u.id,
+                u.fullname,
+                u.rol,
+                -- Actividades del período
+                COUNT(DISTINCT CASE 
+                    WHEN DATE(a.fecha) BETWEEN %s AND %s 
+                    THEN a.id 
+                END) as total_actividades,
+                -- Actividades con evidencia del período
+                COUNT(DISTINCT CASE 
+                    WHEN DATE(a.fecha) BETWEEN %s AND %s 
+                        AND a.evidencia IS NOT NULL AND a.evidencia != '' 
+                    THEN a.id 
+                END) as actividades_con_evidencia,
+                -- Problemas del período
+                COUNT(DISTINCT CASE 
+                    WHEN DATE(pc.fecha_registro) BETWEEN %s AND %s 
+                    THEN pc.id_problema 
+                END) as total_problemas,
+                -- Solicitudes del período
+                COUNT(DISTINCT CASE 
+                    WHEN DATE(si.fecha_solicitud) BETWEEN %s AND %s 
+                    THEN si.id 
+                END) as total_solicitudes,
+                -- Tratamientos del período
+                COUNT(DISTINCT CASE 
+                    WHEN DATE(t.fecha_registro) BETWEEN %s AND %s 
+                    THEN t.id_tratamiento 
+                END) as total_tratamientos,
+                -- Siembras del período
+                COUNT(DISTINCT CASE 
+                    WHEN s.fecha_siembra BETWEEN %s AND %s 
+                    THEN s.id_siembra 
+                END) as total_siembras,
+                -- Puntuación calculada del período
+                ROUND(
+                    (COUNT(DISTINCT CASE WHEN DATE(a.fecha) BETWEEN %s AND %s THEN a.id END) * 2) +
+                    (COUNT(DISTINCT CASE WHEN DATE(a.fecha) BETWEEN %s AND %s AND a.evidencia IS NOT NULL THEN a.id END) * 3) +
+                    (COUNT(DISTINCT CASE WHEN DATE(pc.fecha_registro) BETWEEN %s AND %s THEN pc.id_problema END) * 1.5) +
+                    (COUNT(DISTINCT CASE WHEN DATE(si.fecha_solicitud) BETWEEN %s AND %s AND si.estado = 'Aceptada' THEN si.id END) * 2.5) +
+                    (COUNT(DISTINCT CASE WHEN DATE(t.fecha_registro) BETWEEN %s AND %s THEN t.id_tratamiento END) * 2) +
+                    (COUNT(DISTINCT CASE WHEN s.fecha_siembra BETWEEN %s AND %s THEN s.id_siembra END) * 1.5)
+                , 2) as puntuacion_productividad
+            FROM user u
+            LEFT JOIN actividades a ON u.id = a.id_usuario
+            LEFT JOIN problemas_cultivo pc ON u.id = pc.id_usuario
+            LEFT JOIN solicitud_insumo si ON u.id = si.usuario_id
+            LEFT JOIN tratamientos t ON u.id = t.usuario_id
+            LEFT JOIN siembra s ON u.id = s.id_usuario
+            WHERE u.estado = 'habilitado'
+                AND u.rol IN ('empleado', 'cuidador', 'supervisor')
+            GROUP BY u.id, u.fullname, u.rol
+            ORDER BY puntuacion_productividad DESC, u.fullname ASC
+        """, (
+            periodo_inicio, periodo_fin,  # total_actividades
+            periodo_inicio, periodo_fin,  # actividades_con_evidencia
+            periodo_inicio, periodo_fin,  # total_problemas
+            periodo_inicio, periodo_fin,  # total_solicitudes
+            periodo_inicio, periodo_fin,  # total_tratamientos
+            periodo_inicio, periodo_fin,  # total_siembras
+            periodo_inicio, periodo_fin,  # puntuación - actividades
+            periodo_inicio, periodo_fin,  # puntuación - evidencias
+            periodo_inicio, periodo_fin,  # puntuación - problemas
+            periodo_inicio, periodo_fin,  # puntuación - solicitudes aceptadas
+            periodo_inicio, periodo_fin,  # puntuación - tratamientos
+            periodo_inicio, periodo_fin   # puntuación - siembras
+        ))
+        
+        empleados = cur.fetchall()
+        
+        # Obtener fecha del último reporte guardado (para info solamente)
+        cur.execute("""
+            SELECT MAX(periodo_fin) 
+            FROM reportes_productividad
+        """)
+        ultimo_reporte = cur.fetchone()[0]
+        
+        # Calcular próxima fecha de reporte (cada 15 días)
+        if ultimo_reporte:
+            proxima_fecha = ultimo_reporte + timedelta(days=15)
+            dias_restantes = (proxima_fecha - datetime.now().date()).days
+        else:
+            proxima_fecha = None
+            dias_restantes = None
+        
+        cur.close()
+        
+        return render_template(
+            "productividad_empleados.html",
+            empleados=empleados,
+            periodo_inicio=periodo_inicio,
+            periodo_fin=periodo_fin,
+            proxima_fecha=proxima_fecha,
+            dias_restantes=dias_restantes,
+            ultimo_reporte=ultimo_reporte
+        )
+        
+    except Exception as e:
+        flash(f"Error al cargar productividad: {str(e)}", "danger")
+        import traceback
+        traceback.print_exc()
+        return redirect(url_for("home"))
+
+
+@app.route("/calcular_productividad", methods=["POST"])
+@login_required
+def calcular_productividad():
+    """
+    Guarda un snapshot de las métricas actuales en la tabla metricas_productividad
+    y registra el reporte
+    """
+    rol = session.get("rol", "")
+    
+    if rol not in ["administrador", "supervisor"]:
+        return jsonify({"success": False, "error": "No tienes permisos"}), 403
+    
+    try:
+        cur = db.connection.cursor()
+        
+        # Definir período de cálculo (últimos 15 días)
+        periodo_fin = datetime.now().date()
+        periodo_inicio = periodo_fin - timedelta(days=14)
+        
+        # Llamar al procedimiento almacenado para guardar el snapshot
+        cur.execute("""
+            CALL calcular_metricas_productividad(%s, %s, NULL)
+        """, (periodo_inicio, periodo_fin))
+        
+        # Registrar la generación del reporte
+        cur.execute("""
+            INSERT INTO reportes_productividad (periodo_inicio, periodo_fin, generado_por)
+            VALUES (%s, %s, %s)
+        """, (periodo_inicio, periodo_fin, session["user_id"]))
+        
+        db.connection.commit()
+        cur.close()
+        
+        flash("✓ Productividad calculada y guardada correctamente", "success")
+        return redirect(url_for("productividad_empleados"))
+        
+    except Exception as e:
+        db.connection.rollback()
+        flash(f"Error al calcular productividad: {str(e)}", "danger")
+        import traceback
+        traceback.print_exc()
+        return redirect(url_for("productividad_empleados"))
+
+
+@app.route("/descargar_reporte_productividad")
+@login_required
+def descargar_reporte_productividad():
+    """
+    Genera y descarga un reporte PDF de productividad usando datos en tiempo real
+    """
+    rol = session.get("rol", "")
+    
+    if rol not in ["administrador", "supervisor"]:
+        flash("No tienes permisos para descargar reportes", "danger")
+        return redirect(url_for("home"))
+    
+    if not REPORTLAB_AVAILABLE:
+        flash("ReportLab no está instalado. Contacta al administrador.", "danger")
+        return redirect(url_for("productividad_empleados"))
+    
+    try:
+        cur = db.connection.cursor()
+        
+        # Definir período del reporte
+        periodo_fin = datetime.now().date()
+        periodo_inicio = periodo_fin - timedelta(days=14)
+        
+        # Obtener datos usando la misma consulta que la vista principal
+        cur.execute("""
+            SELECT 
+                u.fullname,
+                u.rol,
+                COUNT(DISTINCT CASE WHEN DATE(a.fecha) BETWEEN %s AND %s THEN a.id END),
+                COUNT(DISTINCT CASE WHEN DATE(a.fecha) BETWEEN %s AND %s AND a.evidencia IS NOT NULL THEN a.id END),
+                COUNT(DISTINCT CASE WHEN DATE(pc.fecha_registro) BETWEEN %s AND %s THEN pc.id_problema END),
+                COUNT(DISTINCT CASE WHEN DATE(si.fecha_solicitud) BETWEEN %s AND %s THEN si.id END),
+                COUNT(DISTINCT CASE WHEN DATE(t.fecha_registro) BETWEEN %s AND %s THEN t.id_tratamiento END),
+                COUNT(DISTINCT CASE WHEN s.fecha_siembra BETWEEN %s AND %s THEN s.id_siembra END),
+                ROUND(
+                    (COUNT(DISTINCT CASE WHEN DATE(a.fecha) BETWEEN %s AND %s THEN a.id END) * 2) +
+                    (COUNT(DISTINCT CASE WHEN DATE(a.fecha) BETWEEN %s AND %s AND a.evidencia IS NOT NULL THEN a.id END) * 3) +
+                    (COUNT(DISTINCT CASE WHEN DATE(pc.fecha_registro) BETWEEN %s AND %s THEN pc.id_problema END) * 1.5) +
+                    (COUNT(DISTINCT CASE WHEN DATE(si.fecha_solicitud) BETWEEN %s AND %s AND si.estado = 'Aceptada' THEN si.id END) * 2.5) +
+                    (COUNT(DISTINCT CASE WHEN DATE(t.fecha_registro) BETWEEN %s AND %s THEN t.id_tratamiento END) * 2) +
+                    (COUNT(DISTINCT CASE WHEN s.fecha_siembra BETWEEN %s AND %s THEN s.id_siembra END) * 1.5)
+                , 2)
+            FROM user u
+            LEFT JOIN actividades a ON u.id = a.id_usuario
+            LEFT JOIN problemas_cultivo pc ON u.id = pc.id_usuario
+            LEFT JOIN solicitud_insumo si ON u.id = si.usuario_id
+            LEFT JOIN tratamientos t ON u.id = t.usuario_id
+            LEFT JOIN siembra s ON u.id = s.id_usuario
+            WHERE u.estado = 'habilitado'
+                AND u.rol IN ('empleado', 'cuidador', 'supervisor')
+            GROUP BY u.id, u.fullname, u.rol
+            ORDER BY 9 DESC, u.fullname ASC
+        """, (
+            periodo_inicio, periodo_fin,  # actividades
+            periodo_inicio, periodo_fin,  # evidencias
+            periodo_inicio, periodo_fin,  # problemas
+            periodo_inicio, periodo_fin,  # solicitudes
+            periodo_inicio, periodo_fin,  # tratamientos
+            periodo_inicio, periodo_fin,  # siembras
+            periodo_inicio, periodo_fin,  # punt - actividades
+            periodo_inicio, periodo_fin,  # punt - evidencias
+            periodo_inicio, periodo_fin,  # punt - problemas
+            periodo_inicio, periodo_fin,  # punt - solicitudes
+            periodo_inicio, periodo_fin,  # punt - tratamientos
+            periodo_inicio, periodo_fin   # punt - siembras
+        ))
+        
+        datos = cur.fetchall()
+        cur.close()
+        
+        # Crear PDF en memoria
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        elementos = []
+        
+        # Estilos
+        styles = getSampleStyleSheet()
+        titulo_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=18,
+            textColor=colors.HexColor('#2C3E50'),
+            spaceAfter=30,
+            alignment=1
+        )
+        
+        # Título
+        titulo = Paragraph(
+            f"<b>Reporte de Productividad de Empleados</b><br/>"
+            f"<font size=12>Período: {periodo_inicio.strftime('%d/%m/%Y')} - {periodo_fin.strftime('%d/%m/%Y')}</font>",
+            titulo_style
+        )
+        elementos.append(titulo)
+        elementos.append(Spacer(1, 0.3*inch))
+        
+        # Crear tabla
+        datos_tabla = [
+            ['Empleado', 'Rol', 'Actividades', 'Evidencias', 'Problemas', 
+             'Solicitudes', 'Tratamientos', 'Siembras', 'Puntuación']
+        ]
+        
+        for fila in datos:
+            datos_tabla.append([
+                fila[0],  # Nombre
+                fila[1],  # Rol
+                str(fila[2]),  # Actividades
+                str(fila[3]),  # Evidencias
+                str(fila[4]),  # Problemas
+                str(fila[5]),  # Solicitudes
+                str(fila[6]),  # Tratamientos
+                str(fila[7]),  # Siembras
+                f"{fila[8]:.1f}"  # Puntuación
+            ])
+        
+        tabla = Table(datos_tabla, colWidths=[1.2*inch, 0.8*inch, 0.7*inch, 0.7*inch, 
+                                               0.7*inch, 0.7*inch, 0.8*inch, 0.7*inch, 0.7*inch])
+        
+        # Estilo de la tabla
+        tabla.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#34495E')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.lightgrey]),
+        ]))
+        
+        elementos.append(tabla)
+        
+        # Pie de página
+        elementos.append(Spacer(1, 0.5*inch))
+        pie = Paragraph(
+            f"<i>Reporte generado el {datetime.now().strftime('%d/%m/%Y %H:%M')}</i><br/>"
+            f"<i>Por: {session.get('fullname', 'Sistema')}</i>",
+            styles['Normal']
+        )
+        elementos.append(pie)
+        
+        # Construir PDF
+        doc.build(elementos)
+        buffer.seek(0)
+        
+        return send_file(
+            buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'reporte_productividad_{periodo_inicio}_{periodo_fin}.pdf'
+        )
+        
+    except Exception as e:
+        flash(f"Error al generar reporte: {str(e)}", "danger")
+        import traceback
+        traceback.print_exc()
+        return redirect(url_for("productividad_empleados"))
+
+
+@app.route("/detalle_productividad/<int:user_id>")
+@login_required
+def detalle_productividad(user_id):
+    """
+    Muestra el detalle completo de productividad de un empleado específico
+    """
+    rol = session.get("rol", "")
+    
+    if rol not in ["administrador", "supervisor"]:
+        return jsonify({"success": False, "error": "No tienes permisos"}), 403
+    
+    try:
+        cur = db.connection.cursor()
+        
+        # Obtener información del empleado
+        cur.execute("SELECT fullname, rol FROM user WHERE id = %s", (user_id,))
+        empleado = cur.fetchone()
+        
+        if not empleado:
+            return jsonify({"success": False, "error": "Empleado no encontrado"}), 404
+        
+        # Definir período
+        periodo_fin = datetime.now().date()
+        periodo_inicio = periodo_fin - timedelta(days=14)
+        
+        # Obtener actividades recientes
+        cur.execute("""
+            SELECT actividad, DATE_FORMAT(fecha, '%%d/%%m/%%Y'), insumos
+            FROM actividades
+            WHERE id_usuario = %s 
+                AND DATE(fecha) BETWEEN %s AND %s
+            ORDER BY fecha DESC
+            LIMIT 10
+        """, (user_id, periodo_inicio, periodo_fin))
+        actividades = cur.fetchall()
+        
+        # Obtener problemas reportados
+        cur.execute("""
+            SELECT tipo_problema, descripcion, DATE_FORMAT(fecha_registro, '%%d/%%m/%%Y')
+            FROM problemas_cultivo
+            WHERE id_usuario = %s 
+                AND DATE(fecha_registro) BETWEEN %s AND %s
+            ORDER BY fecha_registro DESC
+            LIMIT 5
+        """, (user_id, periodo_inicio, periodo_fin))
+        problemas = cur.fetchall()
+        
+        # Obtener tratamientos
+        cur.execute("""
+            SELECT cultivo, tratamiento, prioridad, DATE_FORMAT(fecha_registro, '%%d/%%m/%%Y')
+            FROM tratamientos
+            WHERE usuario_id = %s 
+                AND DATE(fecha_registro) BETWEEN %s AND %s
+            ORDER BY fecha_registro DESC
+            LIMIT 5
+        """, (user_id, periodo_inicio, periodo_fin))
+        tratamientos = cur.fetchall()
+        
+        # Obtener siembras
+        cur.execute("""
+            SELECT c.nombre, s.detalle, DATE_FORMAT(s.fecha_siembra, '%%d/%%m/%%Y')
+            FROM siembra s
+            JOIN cultivos c ON s.cod_cultivos = c.id_cultivo
+            WHERE s.id_usuario = %s 
+                AND s.fecha_siembra BETWEEN %s AND %s
+            ORDER BY s.fecha_siembra DESC
+            LIMIT 5
+        """, (user_id, periodo_inicio, periodo_fin))
+        siembras = cur.fetchall()
+        
+        cur.close()
+        
+        return jsonify({
+            "success": True,
+            "empleado": {
+                "nombre": empleado[0],
+                "rol": empleado[1]
+            },
+            "actividades": [
+                {
+                    "actividad": a[0],
+                    "fecha": a[1],
+                    "insumos": a[2]
+                } for a in actividades
+            ],
+            "problemas": [
+                {
+                    "tipo": p[0],
+                    "descripcion": p[1],
+                    "fecha": p[2]
+                } for p in problemas
+            ],
+            "tratamientos": [
+                {
+                    "cultivo": t[0],
+                    "tratamiento": t[1],
+                    "prioridad": t[2],
+                    "fecha": t[3]
+                } for t in tratamientos
+            ],
+            "siembras": [
+                {
+                    "cultivo": s[0],
+                    "detalle": s[1],
+                    "fecha": s[2]
+                } for s in siembras
+            ]
+        })
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
+
 # ---------------------- MAIN ----------------------
 if __name__ == "__main__":
     app.config.from_object(config["development"])
     app.register_error_handler(401, status_401)
     app.register_error_handler(404, status_404)
 
+
+    app.run()
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
     app.run()
 
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
